@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link href="https://fonts.googleapis.com/css?family=DM+Sans:400,500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background: transparent;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="leetguard-popup">
+      <div class="timer-section">
+        <h3><img src="icons/leetguard-logo-black.png" alt="LeetGuard" class="logo"> TIMER</h3>
+        <div class="time-setter">
+          <button class="time-btn" id="decreaseTime">-</button>
+          <span id="timeDisplay">25</span>
+          <button class="time-btn" id="increaseTime">+</button>
+        </div>
+        <span class="time-unit">minutes</span>
+      </div>
+      <div class="button-group">
+        <button id="toggleFocus">Focus</button>
+        <button id="editList">Edit List</button>
+      </div>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html> 

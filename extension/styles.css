@@ -1,0 +1,261 @@
+#leetguard-popup {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  width: 280px;
+  min-height: 200px;
+  background: white;
+  color: rgb(0, 0, 0);
+  padding: 32px 36px 24px 36px;
+  border-radius: 0;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  font-size: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid rgb(0, 0, 0);
+}
+#leetguard-popup .timer-section {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+#leetguard-popup .timer-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 500;
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+#leetguard-popup .logo {
+  width: 20px;
+  height: 20px;
+}
+#leetguard-popup .time-setter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 4px;
+  flex: 1;
+  align-items: center;
+}
+#leetguard-popup .time-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #ccc;
+  background: white;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#leetguard-popup #timeDisplay {
+  font-size: 24px;
+  font-weight: 500;
+  min-width: 40px;
+}
+#leetguard-popup .time-unit {
+  font-size: 14px;
+  color: #666;
+}
+#leetguard-popup .button-group {
+  width: 100%;
+  display: flex;
+  gap: 12px;
+}
+#leetguard-popup #toggleFocus,
+#leetguard-popup #editList {
+  flex: 1;
+  padding: 14px 0;
+  font-size: 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  border-radius: 0;
+  border: none;
+  background: #222;
+  color: #fff;
+  cursor: pointer;
+}
+#leetguard-popup .close-btn {
+  margin-left: 20px;
+  cursor: pointer;
+}
+
+/* Congratulations popup styles for LeetCode pages */
+#leetguard-congrats-popup {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 999999;
+  background: white;
+  color: rgb(0, 0, 0);
+  padding: 20px 30px;
+  border-radius: 8px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  font-size: 18px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  border: 1px solid rgb(0, 0, 0);
+  font-family: 'DM Sans', sans-serif;
+}
+
+#leetguard-congrats-popup .close-btn {
+  margin-left: 20px;
+  cursor: pointer;
+  font-size: 16px;
+  color: #666;
+}
+
+#leetguard-congrats-popup .close-btn:hover {
+  color: #000;
+}
+
+/* Countdown content styles within main popup */
+#leetguard-popup .countdown-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+}
+
+#leetguard-popup .countdown-content h3 {
+  margin: 0 0 32px 0;
+  font-size: 18px;
+  font-weight: 500;
+  color: #000;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+#leetguard-popup .countdown-timer {
+  font-size: 48px;
+  font-weight: 500;
+  color: #000;
+  margin: 0;
+  font-family: 'DM Sans', sans-serif;
+  text-align: center;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#leetguard-popup .countdown-message {
+  font-size: 16px;
+  color: #666;
+  text-align: center;
+  margin: 16px 0;
+}
+
+#leetguard-popup .countdown-buttons {
+  width: 100%;
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+#leetguard-popup .countdown-buttons button {
+  flex: 1;
+  padding: 14px 0;
+  font-size: 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  border-radius: 0;
+  border: none;
+  background: #222;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* Countdown Popup Styles */
+#countdown-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 999999;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  background: white;
+  color: rgb(0, 0, 0);
+  padding: 32px 36px 24px 36px;
+  border-radius: 0;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  font-size: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(0, 0, 0);
+}
+
+#countdown-popup .countdown-content {
+  width: 280px;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  padding: 32px 36px 24px 36px;
+  border: 1px solid rgb(0, 0, 0);
+}
+
+#countdown-popup h3 {
+  margin: 0 0 24px 0;
+  font-size: 18px;
+  font-weight: 500;
+  color: #000;
+  text-align: center;
+}
+
+#countdown-popup .countdown-timer {
+  font-size: 48px;
+  font-weight: 500;
+  color: #000;
+  margin: 32px 0;
+  font-family: 'DM Sans', sans-serif;
+}
+
+#countdown-popup .countdown-message {
+  font-size: 16px;
+  color: #666;
+  text-align: center;
+  margin: 16px 0;
+}
+
+#countdown-popup .countdown-buttons {
+  width: 100%;
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+}
+
+#countdown-popup button {
+  flex: 1;
+  padding: 14px 0;
+  font-size: 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  border-radius: 0;
+  border: none;
+  background: #222;
+  color: #fff;
+  cursor: pointer;
+} 

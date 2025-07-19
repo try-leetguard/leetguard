@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "LeetGuard",
+  "version": "0.1.0",
+  "description": "Learning to build extensions",
+
+  "icons": {
+    "16": "icons/leetguard-logo-black.png",
+    "32": "icons/leetguard-logo-black.png",
+    "48": "icons/leetguard-logo-black.png",
+    "128": "icons/leetguard-logo-black.png"
+  },
+
+  "action": {
+    "default_popup": "popup.html"
+  },
+
+  "background": {
+    "service_worker": "background.js" 
+  },
+  "permissions": [
+    "tabs",
+    "storage",
+    "declarativeNetRequest"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "declarative_net_request": {
+    "rule_resources": []
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["injected.js", "styles.css"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://leetcode.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ]
+}
