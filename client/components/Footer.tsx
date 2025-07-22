@@ -165,7 +165,7 @@ export default function Footer() {
           {/* Social Links */}
           <div className="flex items-center space-x-4">
             <a
-              href="https://github.com/LeetGuard"
+              href="https://github.com/try-leetguard"
               className={`${
                 isDark
                   ? "text-neutral-400 hover:text-white"
