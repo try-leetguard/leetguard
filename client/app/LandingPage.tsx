@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Chrome, Play, Sparkles } from "lucide-react";
+import { ArrowUpRight, Play, Sparkles } from "lucide-react";
 import Image from "next/image";
 import NavbarLight from "@/components/NavbarLight";
 import Features from "@/components/Features";
@@ -36,7 +36,7 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
               <button className="inline-flex items-center justify-center px-6 py-3 h-12 rounded-lg bg-black text-white text-sm font-medium transition-all duration-200 border border-black/20 hover:border-black/50 hover:text-white hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] hover:shadow-black/30">
                 <span>Start Your Focus Journey</span>
-                <Chrome className="ml-2 w-5 h-5" />
+                <ArrowUpRight className="ml-2 w-5 h-5" />
               </button>
             </div>
           </div>
