@@ -26,15 +26,15 @@ export default function LandingPage() {
     setIsHeroVisible(true);
 
     // Staggered text animations
-    setTimeout(() => setIsTitleLine1Visible(true), 50);
-    setTimeout(() => setIsTitleLine2Visible(true), 150);
-    setTimeout(() => setIsSubtitleVisible(true), 250);
-    setTimeout(() => setIsButtonVisible(true), 350);
+    setTimeout(() => setIsTitleLine1Visible(true), 100);
+    setTimeout(() => setIsTitleLine2Visible(true), 200);
+    setTimeout(() => setIsSubtitleVisible(true), 300);
+    setTimeout(() => setIsButtonVisible(true), 400);
 
     // Trigger image fade-in after text animations
     const timer = setTimeout(() => {
       setIsImageVisible(true);
-    }, 600);
+    }, 500);
 
     return () => clearTimeout(timer);
   }, []);
@@ -108,8 +108,10 @@ export default function LandingPage() {
           alt="Demo"
           width={1600}
           height={500}
-          className={`w-full max-w-5xl h-[500px] shadow-lg object-cover object-top mx-auto mt-[-7rem] mb-12 z-20 relative border border-gray-200 transition-opacity duration-1000 ease-out ${
-            isImageVisible ? "opacity-100" : "opacity-0"
+          className={`w-full max-w-5xl h-[500px] shadow-lg object-cover object-top mx-auto mt-[-7rem] mb-12 z-20 relative border border-gray-200 transition-all duration-500 ease-out ${
+            isImageVisible
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-4"
           }`}
           priority
         />
