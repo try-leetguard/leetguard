@@ -78,7 +78,7 @@ export default function SignupPage() {
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 required
-                className="w-full border-gray-300 focus:border-black focus:ring-black text-base h-11 text-black placeholder:text-gray-500"
+                className="w-full border-gray-300 focus:border-black focus:ring-black text-base h-11 text-black placeholder:text-gray-500 rounded-none"
               />
             </div>
 
@@ -100,7 +100,7 @@ export default function SignupPage() {
                     handleInputChange("password", e.target.value)
                   }
                   required
-                  className="w-full border-gray-300 focus:border-black focus:ring-black pr-10 text-base h-11 text-black placeholder:text-gray-500"
+                  className="w-full border-gray-300 focus:border-black focus:ring-black pr-10 text-base h-11 text-black placeholder:text-gray-500 rounded-none"
                 />
                 <button
                   type="button"
@@ -150,7 +150,7 @@ export default function SignupPage() {
             <Button
               type="submit"
               disabled={!agreeToTerms}
-              className={`w-full h-12 rounded-lg font-medium text-base ${
+              className={`w-full h-12 rounded-none font-medium text-base ${
                 agreeToTerms
                   ? "bg-black text-white hover:bg-gray-800"
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
@@ -178,7 +178,7 @@ export default function SignupPage() {
             <Button
               type="button"
               variant="outline"
-              className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-black h-10 rounded-lg font-medium text-sm"
+              className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-black h-10 rounded-none font-medium text-sm"
             >
               <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                 <path
@@ -203,7 +203,7 @@ export default function SignupPage() {
             <Button
               type="button"
               variant="outline"
-              className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-black h-10 rounded-lg font-medium text-sm"
+              className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-black h-10 rounded-none font-medium text-sm"
             >
               <Github className="w-4 h-4 mr-2" />
               GitHub
