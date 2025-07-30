@@ -3,9 +3,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
-from app.auth.schemas.user import UserCreate, UserOut, EmailVerificationInput, SignupResponse, LoginVerificationResponse
+from app.auth.schemas.user import UserCreate, UserOut, UserUpdate, EmailVerificationInput, SignupResponse, LoginVerificationResponse
 from app.auth.schemas.token import Token
-from app.crud.user import get_user_by_email, create_user, verify_password
+from app.crud.user import get_user_by_email, create_user, verify_password, update_user_profile
 from app.utils import jwt as jwt_utils
 from app.dependencies import get_current_user
 from app.utils.email import send_verification_email, send_welcome_email
@@ -123,6 +123,23 @@ def refresh_token(refresh_token: str = Body(...)):
 @app.get("/me", response_model=UserOut)
 def read_current_user(current_user: UserOut = Depends(get_current_user)):
     return current_user
+
+# Update user profile endpoint. Allows users to update their display name.
+@app.put("/me", response_model=UserOut)
+def update_profile(
+    user_update: UserUpdate,
+    current_user: UserOut = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    updated_user = update_user_profile(db, current_user.id, user_update)
+    if not updated_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
+    return UserOut(
+        id=updated_user.id,
+        email=updated_user.email,
+        display_name=updated_user.display_name
+    )
 
 # Email verification endpoint. Allows users to verify their email with a 6-digit code.
 @app.post("/auth/verify-email-code")

@@ -6,6 +6,7 @@ import { ArrowLeft, Target, Clock, Brain, Zap, Shield } from "lucide-react";
 import Link from "next/link";
 import NavbarLight from "@/components/NavbarLight";
 import Footer from "@/components/Footer";
+import { MarketingPageWrapper } from "@/components/MarketingPageWrapper";
 
 export default function WhyItMattersPage() {
   useEffect(() => {
@@ -15,6 +16,7 @@ export default function WhyItMattersPage() {
   }, []);
 
   return (
+    <MarketingPageWrapper>
     <div className="relative min-h-screen bg-white text-black">
       <NavbarLight />
 
@@ -250,5 +252,6 @@ export default function WhyItMattersPage() {
 
       <Footer />
     </div>
+    </MarketingPageWrapper>
   );
 }

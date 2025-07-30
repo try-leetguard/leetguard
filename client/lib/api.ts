@@ -39,6 +39,11 @@ export interface EmailVerificationRequest {
 export interface User {
   id: number;
   email: string;
+  display_name?: string;
+}
+
+export interface UserUpdateRequest {
+  display_name?: string;
 }
 
 class ApiClient {
@@ -119,6 +124,16 @@ class ApiClient {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
+    });
+  }
+
+  async updateProfile(token: string, data: UserUpdateRequest): Promise<User> {
+    return this.request<User>('/me', {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
     });
   }
 

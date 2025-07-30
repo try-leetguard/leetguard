@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
 import {
   Activity,
   Shield,
@@ -29,12 +31,20 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activePage = "dashboard" }: SidebarProps) {
+  const { logout, user } = useAuth();
+  const router = useRouter();
+
   const [settingsExpanded, setSettingsExpanded] = useState(
     activePage === "settings" ||
       activePage === "settings-profile" ||
       activePage === "settings-security" ||
       activePage === "settings-data"
   );
+
+  const handleSignOut = () => {
+    logout();
+    router.push("/login");
+  };
 
   return (
     <div className="w-56 bg-[#F9F6F0] border-r border-gray-200 flex flex-col">
@@ -140,13 +150,13 @@ export default function Sidebar({ activePage = "dashboard" }: SidebarProps) {
                     <Shield className="w-3 h-3" />
                     <span className="font-normal text-sm">Data & Privacy</span>
                   </Link>
-                  <Link
-                    href="/signout"
-                    className="flex items-center space-x-2 px-2 py-1.5 text-black hover:bg-[#F3F1EB] transition-colors duration-200"
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full flex items-center space-x-2 px-2 py-1.5 text-black hover:bg-[#F3F1EB] transition-colors duration-200"
                   >
                     <LogOut className="w-3 h-3" />
                     <span className="font-normal text-sm">Sign Out</span>
-                  </Link>
+                  </button>
                 </div>
               </div>
             )}
@@ -172,9 +182,11 @@ export default function Sidebar({ activePage = "dashboard" }: SidebarProps) {
             <User className="w-4 h-4 text-gray-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-black truncate">John Doe</p>
+            <p className="text-sm font-medium text-black truncate">
+              {user?.display_name || (user?.email ? user.email.split("@")[0] : "User")}
+            </p>
             <p className="text-xs text-gray-500 truncate">
-              john.doe@example.com
+              {user?.email || "user@example.com"}
             </p>
           </div>
         </div>

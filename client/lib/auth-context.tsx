@@ -28,6 +28,7 @@ interface AuthContextType {
     email: string,
     code: string
   ) => Promise<{ success: boolean; message: string }>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -129,6 +130,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null);
     clearTokens();
+
+    // Dispatch a custom event to notify other components about logout
+    window.dispatchEvent(new CustomEvent("userLoggedOut"));
   };
 
   const verifyEmail = async (email: string, code: string) => {
@@ -159,6 +163,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const refreshUser = async () => {
+    const accessToken = getAccessToken();
+    if (accessToken) {
+      try {
+        const userData = await apiClient.getCurrentUser(accessToken);
+        setUser(userData);
+      } catch (error) {
+        console.error("Failed to refresh user data:", error);
+      }
+    }
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
@@ -168,6 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
     verifyEmail,
     resendVerificationCode,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

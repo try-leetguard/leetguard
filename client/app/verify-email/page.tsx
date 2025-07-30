@@ -104,16 +104,7 @@ export default function VerifyEmailPage() {
       {/* Main Content */}
       <div className="flex min-h-screen items-center justify-center px-6 pt-8">
         <div className="w-full max-w-sm">
-          {/* Back Button */}
-          <div className="mb-6">
-            <Link
-              href="/login"
-              className="inline-flex items-center text-sm text-gray-600 hover:text-black"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to login
-            </Link>
-          </div>
+
 
           {/* Header */}
           <div className="text-center mb-6">
@@ -142,12 +133,6 @@ export default function VerifyEmailPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Verification Code Field */}
             <div className="space-y-2">
-              <label
-                htmlFor="code"
-                className="text-sm font-medium text-gray-700"
-              >
-                Verification Code
-              </label>
               <Input
                 id="code"
                 type="text"

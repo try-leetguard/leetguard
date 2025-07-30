@@ -1,15 +1,59 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
+import { useAuth } from "@/lib/auth-context";
+import { apiClient } from "@/lib/api";
 
 export default function SettingsPage() {
+  const { user, refreshUser } = useAuth();
+  const [displayName, setDisplayName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
   useEffect(() => {
     // Set light mode for settings page
     document.documentElement.classList.remove("dark");
     localStorage.setItem("theme", "light");
   }, []);
+
+  // Set display name when user data is available
+  useEffect(() => {
+    if (user?.display_name) {
+      setDisplayName(user.display_name);
+    } else if (user?.email) {
+      const name = user.email.split("@")[0];
+      setDisplayName(name);
+    }
+  }, [user]);
+
+  const handleSaveDisplayName = async () => {
+    if (!user) return;
+
+    setIsLoading(true);
+    setMessage("");
+
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        setMessage("Authentication error. Please log in again.");
+        return;
+      }
+
+      await apiClient.updateProfile(token, { display_name: displayName });
+      setMessage("Display name updated successfully!");
+
+      // Refresh user data to get the updated display name
+      await refreshUser();
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Failed to update display name"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-black">
@@ -53,6 +97,17 @@ export default function SettingsPage() {
               <div className="w-[768px]">
                 {/* Display Name Section */}
                 <div className="bg-white border border-gray-400 p-6 mb-6">
+                  {message && (
+                    <div
+                      className={`mb-4 p-3 rounded text-sm ${
+                        message.includes("successfully")
+                          ? "bg-green-50 text-green-700 border border-green-200"
+                          : "bg-red-50 text-red-700 border border-red-200"
+                      }`}
+                    >
+                      {message}
+                    </div>
+                  )}
                   <div className="mb-4">
                     <h3 className="text-xl font-medium text-black mb-2">
                       Display name
@@ -65,6 +120,8 @@ export default function SettingsPage() {
                       type="text"
                       placeholder="Enter your display name"
                       maxLength={32}
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
                       className="w-96 border border-gray-300 px-4 py-2 text-black placeholder-gray-500 focus:outline-none focus:border-gray-400"
                     />
                   </div>
@@ -72,8 +129,16 @@ export default function SettingsPage() {
                     <p className="text-black text-sm">
                       Please use 32 characters at maximum
                     </p>
-                    <button className="px-4 py-2 bg-black text-white text-sm font-medium hover:bg-gray-800 transition-colors duration-200">
-                      Change
+                    <button
+                      onClick={handleSaveDisplayName}
+                      disabled={isLoading}
+                      className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                        isLoading
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          : "bg-black text-white hover:bg-gray-800"
+                      }`}
+                    >
+                      {isLoading ? "Saving..." : "Change"}
                     </button>
                   </div>
                 </div>

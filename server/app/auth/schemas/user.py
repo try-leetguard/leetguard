@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr
+from typing import Union
 
 # Schema for user registration input. Used when a new user signs up.
 class UserCreate(BaseModel):
@@ -9,9 +10,14 @@ class UserCreate(BaseModel):
 class UserOut(BaseModel):
     id: int
     email: EmailStr
+    display_name: Union[str, None] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+# Schema for updating user profile
+class UserUpdate(BaseModel):
+    display_name: Union[str, None] = None
 
 # Schema for signup response that includes email status
 class SignupResponse(BaseModel):
@@ -20,7 +26,7 @@ class SignupResponse(BaseModel):
     message: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Schema for login response when email verification is needed
 class LoginVerificationResponse(BaseModel):

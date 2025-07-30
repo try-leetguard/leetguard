@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from app.auth.models.user import User
-from app.auth.schemas.user import UserCreate
+from app.auth.schemas.user import UserCreate, UserUpdate
 from passlib.context import CryptContext
 import random
 from datetime import datetime, timedelta, timezone
@@ -37,3 +37,17 @@ def verify_password(plain_password: str, hashed_password: str):
 # Retrieves a user from the database by their unique user ID. Used for protected routes to fetch the current user.
 def get_user_by_id(db: Session, user_id: int):
     return db.query(User).filter(User.id == user_id).first()
+
+# Updates a user's profile information
+def update_user_profile(db: Session, user_id: int, user_update: UserUpdate):
+    db_user = get_user_by_id(db, user_id)
+    if not db_user:
+        return None
+    
+    # Update display name if provided
+    if user_update.display_name is not None:
+        db_user.display_name = user_update.display_name
+    
+    db.commit()
+    db.refresh(db_user)
+    return db_user
