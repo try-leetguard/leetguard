@@ -4,29 +4,60 @@ import { useState } from "react";
 import { ArrowRight, Eye, EyeOff, Github } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/lib/auth-context";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signupSchema, SignupFormData } from "@/lib/validation";
 
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
+  const router = useRouter();
+  const { signup } = useAuth();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    watch,
+  } = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const watchedPassword = watch("password");
+
+  const onSubmit = async (data: SignupFormData) => {
     if (!agreeToTerms) {
-      alert("Please agree to the Terms of Service and Privacy Policy");
+      setMessage("Please agree to the Terms of Service and Privacy Policy");
       return;
     }
-    // Handle signup logic here
-    console.log("Signup attempt:", { ...formData, agreeToTerms });
-  };
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setIsLoading(true);
+    setMessage("");
+
+    try {
+      const result = await signup(data.email, data.password);
+      if (result.success) {
+        setIsSuccess(true);
+        setMessage(result.message);
+        // Redirect to verification page after a short delay
+        setTimeout(() => {
+          router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
+        }, 2000);
+      } else {
+        setMessage(result.message);
+      }
+    } catch (error) {
+      setMessage("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -61,8 +92,21 @@ export default function SignupPage() {
             </p>
           </div>
 
+          {/* Message Display */}
+          {message && (
+            <div
+              className={`mb-4 p-3 rounded text-sm ${
+                isSuccess
+                  ? "bg-green-50 text-green-700 border border-green-200"
+                  : "bg-red-50 text-red-700 border border-red-200"
+              }`}
+            >
+              {message}
+            </div>
+          )}
+
           {/* Signup Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Email Field */}
             <div className="space-y-2">
               <label
@@ -75,11 +119,12 @@ export default function SignupPage() {
                 id="email"
                 type="email"
                 placeholder="Enter your email"
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
-                required
+                {...register("email")}
                 className="w-full border-gray-300 focus:border-black focus:ring-black text-base h-11 text-black placeholder:text-gray-500 rounded-none"
               />
+              {errors.email && (
+                <p className="text-sm text-red-600">{errors.email.message}</p>
+              )}
             </div>
 
             {/* Password Field */}
@@ -95,11 +140,7 @@ export default function SignupPage() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Create a password"
-                  value={formData.password}
-                  onChange={(e) =>
-                    handleInputChange("password", e.target.value)
-                  }
-                  required
+                  {...register("password")}
                   className="w-full border-gray-300 focus:border-black focus:ring-black pr-10 text-base h-11 text-black placeholder:text-gray-500 rounded-none"
                 />
                 <button
@@ -114,6 +155,11 @@ export default function SignupPage() {
                   )}
                 </button>
               </div>
+              {errors.password && (
+                <p className="text-sm text-red-600">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
 
             {/* Terms Agreement */}
@@ -149,15 +195,21 @@ export default function SignupPage() {
             {/* Signup Button */}
             <Button
               type="submit"
-              disabled={!agreeToTerms}
+              disabled={!agreeToTerms || isLoading}
               className={`w-full h-12 rounded-none font-medium text-base ${
-                agreeToTerms
+                agreeToTerms && !isLoading
                   ? "bg-black text-white hover:bg-gray-800"
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
             >
-              <span>Create Account</span>
-              <ArrowRight className="ml-2 w-4 h-4" />
+              {isLoading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                <>
+                  <span>Create Account</span>
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </>
+              )}
             </Button>
           </form>
 

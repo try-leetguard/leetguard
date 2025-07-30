@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from app.main import app
 from app.db.session import get_db
-from app.models.user import Base
+from app.auth.models.user import Base
 from app.config import settings
 
 # Test database URL (use SQLite for testing)

@@ -1,14 +1,24 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 import Sidebar from "@/components/Sidebar";
 
 export default function DashboardPage() {
+  const { user, logout } = useAuth();
+  const router = useRouter();
+
   useEffect(() => {
     // Set light mode for dashboard page
     document.documentElement.classList.remove("dark");
     localStorage.setItem("theme", "light");
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
 
   return (
     <div className="min-h-screen text-black">
@@ -18,8 +28,19 @@ export default function DashboardPage() {
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
           {/* Header */}
-          <header className="h-32 border-b border-gray-200 flex items-center px-6 bg-white">
+          <header className="h-32 border-b border-gray-200 flex items-center justify-between px-6 bg-white">
             <h1 className="text-4xl font-normal text-black">Dashboard</h1>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">
+                Welcome, {user?.email}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 rounded transition-colors"
+              >
+                Logout
+              </button>
+            </div>
           </header>
 
           {/* Content Area */}

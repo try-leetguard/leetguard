@@ -4,7 +4,7 @@ Unit tests for authentication functionality.
 import pytest
 from datetime import datetime, timedelta, timezone
 from app.crud.user import verify_password, get_user_by_email, create_user
-from app.schemas.user import UserCreate
+from app.auth.schemas.user import UserCreate
 from app.utils.jwt import create_access_token, decode_access_token, create_refresh_token, decode_refresh_token
 
 class TestPasswordHashing:

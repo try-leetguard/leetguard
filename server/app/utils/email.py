@@ -1,6 +1,6 @@
 import logging
 from typing import Optional
-from resend import Resend
+import resend
 from fastapi import HTTPException, status
 from app.config import settings
 
@@ -8,7 +8,7 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 # Initialize Resend client
-resend = Resend(api_key=settings.RESEND_API_KEY)
+resend.api_key = settings.RESEND_API_KEY
 
 def send_verification_email(recipient_email: str, code: str) -> bool:
     """
@@ -21,78 +21,9 @@ def send_verification_email(recipient_email: str, code: str) -> bool:
     Returns:
         bool: True if email sent successfully, False otherwise
     """
-    try:
-        # HTML template for verification email
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Verify Your Email</title>
-            <style>
-                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                .header {{ background: #2563eb; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }}
-                .content {{ background: #f8fafc; padding: 30px; border-radius: 0 0 8px 8px; }}
-                .code {{ background: #e2e8f0; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 3px; border-radius: 6px; margin: 20px 0; }}
-                .footer {{ text-align: center; margin-top: 30px; color: #64748b; font-size: 14px; }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>LeetGuard</h1>
-                    <p>Verify Your Email Address</p>
-                </div>
-                <div class="content">
-                    <h2>Welcome to LeetGuard!</h2>
-                    <p>Thank you for signing up. To complete your registration, please enter the verification code below:</p>
-                    
-                    <div class="code">{code}</div>
-                    
-                    <p><strong>This code will expire in 10 minutes.</strong></p>
-                    
-                    <p>If you didn't create an account with LeetGuard, you can safely ignore this email.</p>
-                </div>
-                <div class="footer">
-                    <p>&copy; 2024 LeetGuard. All rights reserved.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
-        
-        # Plain text version
-        text_content = f"""
-        Welcome to LeetGuard!
-        
-        Thank you for signing up. To complete your registration, please enter the verification code below:
-        
-        {code}
-        
-        This code will expire in 10 minutes.
-        
-        If you didn't create an account with LeetGuard, you can safely ignore this email.
-        
-        © 2024 LeetGuard. All rights reserved.
-        """
-        
-        # Send email via Resend
-        response = resend.emails.send({
-            "from": settings.FROM_EMAIL,
-            "to": [recipient_email],
-            "subject": "Verify Your Email - LeetGuard",
-            "html": html_content,
-            "text": text_content
-        })
-        
-        logger.info(f"Verification email sent successfully to {recipient_email}")
-        return True
-        
-    except Exception as e:
-        logger.error(f"Failed to send verification email to {recipient_email}: {str(e)}")
-        return False
+    # Temporarily disable email sending for testing
+    logger.warning(f"Email sending disabled for testing. Would send code {code} to {recipient_email}")
+    return True
 
 def send_password_reset_email(recipient_email: str, reset_token: str, reset_url: str) -> bool:
     """

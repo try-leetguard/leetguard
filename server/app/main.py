@@ -1,9 +1,10 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Body
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
-from app.schemas.user import UserCreate, UserOut, EmailVerificationInput, SignupResponse, LoginVerificationResponse
-from app.schemas.token import Token
+from app.auth.schemas.user import UserCreate, UserOut, EmailVerificationInput, SignupResponse, LoginVerificationResponse
+from app.auth.schemas.token import Token
 from app.crud.user import get_user_by_email, create_user, verify_password
 from app.utils import jwt as jwt_utils
 from app.dependencies import get_current_user
@@ -14,6 +15,15 @@ from app.config import settings
 from typing import Union
 
 app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "https://leetguard.com"],  # Frontend URLs
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
+)
 
 def get_db():
     db = SessionLocal()
@@ -49,7 +59,7 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
         print(f"Warning: Failed to send verification email to {new_user.email}")
     
     return SignupResponse(
-        user=new_user,
+        user=UserOut(id=new_user.id, email=new_user.email),
         email_sent=email_sent,
         message=message
     )

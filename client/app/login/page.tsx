@@ -4,19 +4,50 @@ import { useState } from "react";
 import { ArrowRight, Eye, EyeOff, Github } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/lib/auth-context";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema, LoginFormData } from "@/lib/validation";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const router = useRouter();
+  const { login } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle login logic here
-    console.log("Login attempt:", { email, password, rememberMe });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  const onSubmit = async (data: LoginFormData) => {
+    setIsLoading(true);
+    setMessage("");
+
+    try {
+      const result = await login(data.email, data.password);
+      if (result.success) {
+        // Redirect to dashboard on successful login
+        router.push("/dashboard");
+      } else if (result.needsVerification) {
+        // Redirect to email verification page
+        router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
+      } else {
+        setMessage(result.message || "Login failed");
+      }
+    } catch (error) {
+      setMessage("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -51,8 +82,15 @@ export default function LoginPage() {
             </p>
           </div>
 
+          {/* Message Display */}
+          {message && (
+            <div className="mb-4 p-3 rounded text-sm bg-red-50 text-red-700 border border-red-200">
+              {message}
+            </div>
+          )}
+
           {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Email Field */}
             <div className="space-y-2">
               <label
@@ -65,11 +103,12 @@ export default function LoginPage() {
                 id="email"
                 type="email"
                 placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                {...register("email")}
                 className="w-full border-gray-300 focus:border-black focus:ring-black text-base h-11 text-black placeholder:text-gray-500 rounded-none"
               />
+              {errors.email && (
+                <p className="text-sm text-red-600">{errors.email.message}</p>
+              )}
             </div>
 
             {/* Password Field */}
@@ -85,9 +124,7 @@ export default function LoginPage() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
+                  {...register("password")}
                   className="w-full border-gray-300 focus:border-black focus:ring-black pr-10 text-base h-11 text-black placeholder:text-gray-500 rounded-none"
                 />
                 <button
@@ -132,10 +169,21 @@ export default function LoginPage() {
             {/* Login Button */}
             <Button
               type="submit"
-              className="w-full bg-black text-white hover:bg-gray-800 h-12 rounded-none font-medium text-base"
+              disabled={isLoading}
+              className={`w-full h-12 rounded-none font-medium text-base ${
+                isLoading
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-black text-white hover:bg-gray-800"
+              }`}
             >
-              <span>Sign In</span>
-              <ArrowRight className="ml-2 w-4 h-4" />
+              {isLoading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                <>
+                  <span>Sign In</span>
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </>
+              )}
             </Button>
           </form>
 

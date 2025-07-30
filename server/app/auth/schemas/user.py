@@ -31,4 +31,4 @@ class LoginVerificationResponse(BaseModel):
 # Schema for email verification input. Used when a user submits their code.
 class EmailVerificationInput(BaseModel):
     email: EmailStr
-    code: str
+    code: str 

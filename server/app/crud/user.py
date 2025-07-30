@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.models.user import User
-from app.schemas.user import UserCreate
+from app.auth.models.user import User
+from app.auth.schemas.user import UserCreate
 from passlib.context import CryptContext
 import random
 from datetime import datetime, timedelta, timezone

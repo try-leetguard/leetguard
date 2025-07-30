@@ -12,7 +12,7 @@ except Exception as e:
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-from app.models.user import Base
+from app.auth.models.user import Base
 Base.metadata.create_all(bind=engine)
 
 # Dependency for getting a database session. Use with FastAPI Depends.
