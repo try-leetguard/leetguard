@@ -1,17 +1,51 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import Sidebar from "@/components/Sidebar";
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { Trash2 } from "lucide-react";
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const [blocklist, setBlocklist] = useState<string[]>([
+    "facebook.com",
+    "netflix.com",
+    "instagram.com",
+    "youtube.com",
+  ]);
 
   useEffect(() => {
     // Set light mode for dashboard page
     document.documentElement.classList.remove("dark");
     localStorage.setItem("theme", "light");
   }, []);
+
+  // Generate mini activity data (last 7 days)
+  const generateMiniActivityData = () => {
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    return days.map((day) => ({
+      day,
+      focusedTime: Math.floor(Math.random() * 240) + 60, // Random minutes between 60-300
+    }));
+  };
+
+  const miniActivityData = generateMiniActivityData();
+
+  // Helper to extract domain for favicon
+  function getDomain(site: string) {
+    try {
+      let url = site;
+      if (!/^https?:\/\//.test(site)) url = "http://" + site;
+      return new URL(url).hostname;
+    } catch {
+      return site;
+    }
+  }
+
+  const removeSite = (site: string) => {
+    setBlocklist(blocklist.filter((s) => s !== site));
+  };
 
   return (
     <div className="min-h-screen text-black">
@@ -36,29 +70,117 @@ export default function DashboardPage() {
                 {/* My Activity Card */}
                 <a
                   href="/activity"
-                  className="flex-1 bg-white border border-gray-400 shadow-md p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col items-center text-center font-dm-sans"
+                  className="flex-1 bg-white border border-gray-400 shadow-md p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col font-dm-sans"
                 >
-                  <span className="text-2xl font-medium mb-2">My Activity</span>
-                  <span className="text-neutral-600 mb-4">
-                    View your recent coding activity and progress.
+                  <span className="text-2xl font-medium mb-2 text-center">
+                    My Activity
                   </span>
-                  <span className="mt-auto text-blue-600 font-medium hover:underline">
-                    Go to Activity →
+                  <span className="text-neutral-600 mb-4 text-center text-sm">
+                    Your focus time this week
                   </span>
+
+                  {/* Static Activity Graph */}
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="w-full h-32 border border-gray-200 p-2">
+                      <div className="flex items-end justify-between h-full gap-1">
+                        <div
+                          className="flex-1 border border-black"
+                          style={{
+                            height: "60%",
+                            backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 2px, #000 4px, #000 4px)`,
+                          }}
+                        ></div>
+                        <div
+                          className="flex-1 border border-black"
+                          style={{
+                            height: "80%",
+                            backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 2px, #000 4px, #000 4px)`,
+                          }}
+                        ></div>
+                        <div
+                          className="flex-1 border border-black"
+                          style={{
+                            height: "40%",
+                            backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 2px, #000 4px, #000 4px)`,
+                          }}
+                        ></div>
+                        <div
+                          className="flex-1 border border-black"
+                          style={{
+                            height: "90%",
+                            backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 2px, #000 4px, #000 4px)`,
+                          }}
+                        ></div>
+                        <div
+                          className="flex-1 border border-black"
+                          style={{
+                            height: "70%",
+                            backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 2px, #000 4px, #000 4px)`,
+                          }}
+                        ></div>
+                        <div
+                          className="flex-1 border border-black"
+                          style={{
+                            height: "50%",
+                            backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 2px, #000 4px, #000 4px)`,
+                          }}
+                        ></div>
+                        <div
+                          className="flex-1 border border-black"
+                          style={{
+                            height: "85%",
+                            backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 2px, #000 4px, #000 4px)`,
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
                 </a>
+
                 {/* Block List Card */}
                 <a
                   href="/blocklist"
-                  className="flex-1 bg-white border border-gray-400 shadow-md p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col items-center text-center font-dm-sans"
+                  className="flex-1 bg-white border border-gray-400 shadow-md p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col font-dm-sans"
                 >
-                  <span className="text-2xl font-medium mb-2">Block List</span>
-                  <span className="text-neutral-600 mb-4">
-                    Manage the sites and distractions you want to block.
+                  <span className="text-2xl font-medium mb-2 text-center">
+                    Block List
                   </span>
-                  <span className="mt-auto text-blue-600 font-medium hover:underline">
-                    Go to Block List →
+                  <span className="text-neutral-600 mb-4 text-center text-sm">
+                    Currently blocked sites
                   </span>
+
+                  {/* Mini Blocklist */}
+                  <div className="flex-1 flex flex-col gap-1">
+                    {blocklist.map((site) => (
+                      <div
+                        key={site}
+                        className="flex items-center justify-between bg-gray-50 border border-gray-200 px-3 py-1.5 text-sm"
+                      >
+                        <span className="flex items-center text-black truncate">
+                          <img
+                            src={`https://icons.duckduckgo.com/ip3/${getDomain(
+                              site
+                            )}.ico`}
+                            alt=""
+                            className="w-4 h-4 mr-2 rounded-none flex-shrink-0"
+                          />
+                          <span className="truncate">{site}</span>
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            removeSite(site);
+                          }}
+                          className="text-red-500 hover:text-red-700 p-1 flex-shrink-0"
+                          aria-label={`Remove ${site}`}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </a>
+
                 {/* Focus Sessions Card */}
                 <a
                   href="/focus"
@@ -69,9 +191,6 @@ export default function DashboardPage() {
                   </span>
                   <span className="text-neutral-600 mb-4">
                     Start or review your focus sessions for deep work.
-                  </span>
-                  <span className="mt-auto text-blue-600 font-medium hover:underline">
-                    Go to Focus Sessions →
                   </span>
                 </a>
               </div>
