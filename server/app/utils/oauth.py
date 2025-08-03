@@ -44,6 +44,9 @@ async def get_github_user_info(access_token: str) -> Optional[Dict[str, Any]]:
 
 async def exchange_google_code(code: str, redirect_uri: str) -> Optional[str]:
     """Exchange authorization code for Google access token"""
+    if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
+        raise ValueError("Google OAuth credentials not configured")
+    
     async with httpx.AsyncClient() as client:
         response = await client.post(
             "https://oauth2.googleapis.com/token",
@@ -62,6 +65,9 @@ async def exchange_google_code(code: str, redirect_uri: str) -> Optional[str]:
 
 async def exchange_github_code(code: str, redirect_uri: str) -> Optional[str]:
     """Exchange authorization code for GitHub access token"""
+    if not settings.GITHUB_CLIENT_ID or not settings.GITHUB_CLIENT_SECRET:
+        raise ValueError("GitHub OAuth credentials not configured")
+    
     async with httpx.AsyncClient() as client:
         response = await client.post(
             "https://github.com/login/oauth/access_token",

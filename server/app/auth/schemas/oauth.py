@@ -3,7 +3,6 @@ from typing import Optional
 
 # Schema for OAuth login request
 class OAuthLoginRequest(BaseModel):
-    provider: str  # "google" or "github"
     code: str
     redirect_uri: str
 

@@ -46,11 +46,35 @@ def health_check(db: Session = Depends(get_db)):
 @app.post("/auth/signup", response_model=SignupResponse)
 def signup(user: UserCreate, db: Session = Depends(get_db)):
     db_user = get_user_by_email(db, user.email)
+    
     if db_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
-        )
+        # Check if this is an OAuth user trying to add a password
+        if not db_user.hashed_password or db_user.hashed_password is None:
+            # OAuth user wants to add password - update their account
+            from app.crud.user import update_user_password
+            update_user_password(db, db_user.id, user.password)
+            
+            # Send verification email for the updated account
+            email_sent = send_verification_email(db_user.email, db_user.verification_code)
+            
+            if email_sent:
+                message = "Password added successfully! Please check your email for verification code."
+            else:
+                message = "Password added successfully! However, we couldn't send the verification email. Please use the resend feature or contact support."
+            
+            return SignupResponse(
+                user=UserOut(id=db_user.id, email=db_user.email),
+                email_sent=email_sent,
+                message=message
+            )
+        else:
+            # Regular user trying to sign up with existing email
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+    
+    # Create new user
     new_user = create_user(db, user)
     
     # Send verification email
@@ -213,6 +237,7 @@ def resend_verification_code(data: EmailVerificationInput, db: Session = Depends
 @app.post("/auth/oauth/google")
 async def google_oauth_login(oauth_data: OAuthLoginRequest, db: Session = Depends(get_db)):
     """Handle Google OAuth login"""
+    print(f"Received OAuth data: {oauth_data}")
     # Exchange code for access token
     access_token = await exchange_google_code(oauth_data.code, oauth_data.redirect_uri)
     if not access_token:
@@ -230,13 +255,9 @@ async def google_oauth_login(oauth_data: OAuthLoginRequest, db: Session = Depend
     # Check if user exists
     db_user = get_user_by_email(db, email)
     if not db_user:
-        # Create new user
-        from app.auth.schemas.user import UserCreate
-        user_create = UserCreate(email=email, password="")  # OAuth users don't need password
-        db_user = create_user(db, user_create)
-        db_user.is_verified = True  # OAuth users are pre-verified
-        db_user.display_name = user_info.get("name")
-        db.commit()
+        # Create new OAuth user
+        from app.crud.user import create_oauth_user
+        db_user = create_oauth_user(db, email, user_info.get("name"))
     
     # Generate JWT tokens
     jwt_access_token = jwt_utils.create_access_token(data={"sub": str(db_user.id)})
@@ -274,13 +295,9 @@ async def github_oauth_login(oauth_data: OAuthLoginRequest, db: Session = Depend
     # Check if user exists
     db_user = get_user_by_email(db, email)
     if not db_user:
-        # Create new user
-        from app.auth.schemas.user import UserCreate
-        user_create = UserCreate(email=email, password="")  # OAuth users don't need password
-        db_user = create_user(db, user_create)
-        db_user.is_verified = True  # OAuth users are pre-verified
-        db_user.display_name = user_info.get("name")
-        db.commit()
+        # Create new OAuth user
+        from app.crud.user import create_oauth_user
+        db_user = create_oauth_user(db, email, user_info.get("name"))
     
     # Generate JWT tokens
     jwt_access_token = jwt_utils.create_access_token(data={"sub": str(db_user.id)})

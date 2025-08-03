@@ -44,6 +44,12 @@ class Settings:
     INITIAL_RESEND_COOLDOWN_SECONDS: int = int(os.getenv("INITIAL_RESEND_COOLDOWN_SECONDS", "30"))
     MAX_RESEND_ATTEMPTS: int = int(os.getenv("MAX_RESEND_ATTEMPTS", "5"))
     
+    # OAuth Settings
+    GOOGLE_CLIENT_ID: Optional[str] = os.getenv("GOOGLE_CLIENT_ID")
+    GOOGLE_CLIENT_SECRET: Optional[str] = os.getenv("GOOGLE_CLIENT_SECRET")
+    GITHUB_CLIENT_ID: Optional[str] = os.getenv("GITHUB_CLIENT_ID")
+    GITHUB_CLIENT_SECRET: Optional[str] = os.getenv("GITHUB_CLIENT_SECRET")
+    
     # Environment
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     DEBUG: bool = ENVIRONMENT == "development"

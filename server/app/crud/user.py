@@ -30,6 +30,23 @@ def create_user(db: Session, user: UserCreate):
     db.refresh(db_user)
     return db_user
 
+# Creates a new OAuth user in the database without a password. Used during OAuth registration.
+def create_oauth_user(db: Session, email: str, display_name: str = None):
+    now = datetime.now(timezone.utc)
+    db_user = User(
+        email=email,
+        hashed_password=None,  # OAuth users don't have passwords initially
+        is_verified=True,  # OAuth users are pre-verified
+        verification_code=None,
+        verification_code_expires=None,
+        last_code_sent_at=None,
+        display_name=display_name
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
 # Verifies that a plain password matches the hashed password stored in the database. Used during login.
 def verify_password(plain_password: str, hashed_password: str):
     return pwd_context.verify(plain_password, hashed_password)
@@ -47,6 +64,28 @@ def update_user_profile(db: Session, user_id: int, user_update: UserUpdate):
     # Update display name if provided
     if user_update.display_name is not None:
         db_user.display_name = user_update.display_name
+    
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+# Updates a user's password (for OAuth users adding password)
+def update_user_password(db: Session, user_id: int, password: str):
+    db_user = get_user_by_id(db, user_id)
+    if not db_user:
+        return None
+    
+    # Hash the new password
+    hashed_password = pwd_context.hash(password)
+    db_user.hashed_password = hashed_password
+    
+    # Generate verification code for the updated account
+    verification_code = f"{random.randint(0, 999999):06d}"
+    verification_code_expires = datetime.now(timezone.utc) + timedelta(minutes=10)
+    db_user.verification_code = verification_code
+    db_user.verification_code_expires = verification_code_expires
+    db_user.last_code_sent_at = datetime.now(timezone.utc)
+    db_user.is_verified = False  # Require verification for password addition
     
     db.commit()
     db.refresh(db_user)

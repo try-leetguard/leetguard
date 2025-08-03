@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import Image from "next/image";
@@ -10,12 +10,16 @@ export default function AuthCallbackPage() {
     "loading"
   );
   const [message, setMessage] = useState("");
+  const isProcessingRef = useRef(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const { loginWithGoogle, loginWithGitHub } = useAuth();
 
   useEffect(() => {
     const handleCallback = async () => {
+      // Prevent multiple executions
+      if (isProcessingRef.current) return;
+      isProcessingRef.current = true;
       const code = searchParams.get("code");
       const error = searchParams.get("error");
       const state = searchParams.get("state");
@@ -35,30 +39,53 @@ export default function AuthCallbackPage() {
       try {
         const redirectUri = `${window.location.origin}/auth/callback`;
 
-        // Determine which OAuth provider was used based on the state or other indicators
-        // For now, we'll try Google first, then GitHub
+        // Try both OAuth providers
         let result;
 
+        // Try Google OAuth first
         try {
           result = await loginWithGoogle(code, redirectUri);
+          if (result.success) {
+            setStatus("success");
+            setMessage("Authentication successful! Redirecting...");
+            setTimeout(() => {
+              router.push("/dashboard");
+            }, 1000);
+            return;
+          }
         } catch (googleError) {
-          // If Google fails, try GitHub
-          result = await loginWithGitHub(code, redirectUri);
+          console.log("Google OAuth failed, trying GitHub:", googleError);
         }
 
-        if (result.success) {
-          setStatus("success");
-          setMessage("Authentication successful! Redirecting...");
-          setTimeout(() => {
-            router.push("/dashboard");
-          }, 1000);
-        } else {
-          setStatus("error");
-          setMessage(result.message || "Authentication failed.");
+        // If Google failed, try GitHub
+        try {
+          result = await loginWithGitHub(code, redirectUri);
+          if (result.success) {
+            setStatus("success");
+            setMessage("Authentication successful! Redirecting...");
+            setTimeout(() => {
+              router.push("/dashboard");
+            }, 1000);
+            return;
+          }
+        } catch (githubError) {
+          console.log("GitHub OAuth also failed:", githubError);
         }
-      } catch (error) {
+
+        // If both failed, show error
+        console.log("OAuth result:", result);
         setStatus("error");
-        setMessage("An unexpected error occurred. Please try again.");
+        setMessage(
+          result?.message || "Authentication failed with both providers."
+        );
+      } catch (error) {
+        console.error("OAuth callback error:", error);
+        setStatus("error");
+        setMessage(
+          `Authentication failed: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`
+        );
       }
     };
 
