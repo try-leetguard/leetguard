@@ -29,6 +29,8 @@ interface AuthContextType {
     code: string
   ) => Promise<{ success: boolean; message: string }>;
   refreshUser: () => Promise<void>;
+  loginWithGoogle: (code: string, redirectUri: string) => Promise<{ success: boolean; message?: string }>;
+  loginWithGitHub: (code: string, redirectUri: string) => Promise<{ success: boolean; message?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -175,6 +177,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const loginWithGoogle = async (code: string, redirectUri: string) => {
+    try {
+      const response = await apiClient.googleOAuth({ code, redirect_uri: redirectUri });
+      setTokens(response.access_token, response.refresh_token);
+      const userData = await apiClient.getCurrentUser(response.access_token);
+      setUser(userData);
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : "Google login failed",
+      };
+    }
+  };
+
+  const loginWithGitHub = async (code: string, redirectUri: string) => {
+    try {
+      const response = await apiClient.githubOAuth({ code, redirect_uri: redirectUri });
+      setTokens(response.access_token, response.refresh_token);
+      const userData = await apiClient.getCurrentUser(response.access_token);
+      setUser(userData);
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : "GitHub login failed",
+      };
+    }
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
@@ -185,6 +217,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     verifyEmail,
     resendVerificationCode,
     refreshUser,
+    loginWithGoogle,
+    loginWithGitHub,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

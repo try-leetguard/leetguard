@@ -46,6 +46,22 @@ export interface UserUpdateRequest {
   display_name?: string;
 }
 
+export interface OAuthRequest {
+  code: string;
+  redirect_uri: string;
+}
+
+export interface OAuthUserInfo {
+  id: string;
+  email: string;
+  name?: string;
+  picture?: string;
+}
+
+export interface OAuthResponse extends AuthResponse {
+  user: OAuthUserInfo;
+}
+
 class ApiClient {
   private baseURL: string;
 
@@ -133,6 +149,21 @@ class ApiClient {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
+      body: JSON.stringify(data),
+    });
+  }
+
+  // OAuth endpoints
+  async googleOAuth(data: OAuthRequest): Promise<OAuthResponse> {
+    return this.request<OAuthResponse>('/auth/oauth/google', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async githubOAuth(data: OAuthRequest): Promise<OAuthResponse> {
+    return this.request<OAuthResponse>('/auth/oauth/github', {
+      method: 'POST',
       body: JSON.stringify(data),
     });
   }

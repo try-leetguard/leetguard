@@ -12,13 +12,18 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, LoginFormData } from "@/lib/validation";
 
+// OAuth configuration
+const GOOGLE_CLIENT_ID = "415007483727-r94gkeipu49it9dnkgegpne9cm06grmb.apps.googleusercontent.com";
+const GITHUB_CLIENT_ID = "Ov23liopAg5O7C7uKMdw";
+const REDIRECT_URI = typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : '';
+
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, loginWithGoogle, loginWithGitHub } = useAuth();
 
   const {
     register,
@@ -48,6 +53,16 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleGoogleLogin = () => {
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=openid%20email%20profile`;
+    window.location.href = googleAuthUrl;
+  };
+
+  const handleGitHubLogin = () => {
+    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=user:email`;
+    window.location.href = githubAuthUrl;
   };
 
   return (
@@ -204,6 +219,7 @@ export default function LoginPage() {
             <Button
               type="button"
               variant="outline"
+              onClick={handleGoogleLogin}
               className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-black h-10 rounded-none font-medium text-sm"
             >
               <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
@@ -229,6 +245,7 @@ export default function LoginPage() {
             <Button
               type="button"
               variant="outline"
+              onClick={handleGitHubLogin}
               className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-black h-10 rounded-none font-medium text-sm"
             >
               <Github className="w-4 h-4 mr-2" />

@@ -9,6 +9,11 @@ from app.crud.user import get_user_by_email, create_user, verify_password, updat
 from app.utils import jwt as jwt_utils
 from app.dependencies import get_current_user
 from app.utils.email import send_verification_email, send_welcome_email
+from app.utils.oauth import (
+    exchange_google_code, exchange_github_code,
+    get_google_user_info, get_github_user_info
+)
+from app.auth.schemas.oauth import OAuthLoginRequest, OAuthUserInfo
 from datetime import datetime, timedelta, timezone
 import random
 from app.config import settings
@@ -203,3 +208,92 @@ def resend_verification_code(data: EmailVerificationInput, db: Session = Depends
         )
     
     return {"message": "Verification code resent successfully. Please check your email."}
+
+# OAuth endpoints
+@app.post("/auth/oauth/google")
+async def google_oauth_login(oauth_data: OAuthLoginRequest, db: Session = Depends(get_db)):
+    """Handle Google OAuth login"""
+    # Exchange code for access token
+    access_token = await exchange_google_code(oauth_data.code, oauth_data.redirect_uri)
+    if not access_token:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to exchange code for token")
+    
+    # Get user info from Google
+    user_info = await get_google_user_info(access_token)
+    if not user_info:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to get user info from Google")
+    
+    email = user_info.get("email")
+    if not email:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email not provided by Google")
+    
+    # Check if user exists
+    db_user = get_user_by_email(db, email)
+    if not db_user:
+        # Create new user
+        from app.auth.schemas.user import UserCreate
+        user_create = UserCreate(email=email, password="")  # OAuth users don't need password
+        db_user = create_user(db, user_create)
+        db_user.is_verified = True  # OAuth users are pre-verified
+        db_user.display_name = user_info.get("name")
+        db.commit()
+    
+    # Generate JWT tokens
+    jwt_access_token = jwt_utils.create_access_token(data={"sub": str(db_user.id)})
+    jwt_refresh_token = jwt_utils.create_refresh_token(data={"sub": str(db_user.id)})
+    
+    return {
+        "access_token": jwt_access_token,
+        "refresh_token": jwt_refresh_token,
+        "token_type": "bearer",
+        "user": OAuthUserInfo(
+            id=str(db_user.id),
+            email=db_user.email,
+            name=db_user.display_name,
+            picture=user_info.get("picture")
+        )
+    }
+
+@app.post("/auth/oauth/github")
+async def github_oauth_login(oauth_data: OAuthLoginRequest, db: Session = Depends(get_db)):
+    """Handle GitHub OAuth login"""
+    # Exchange code for access token
+    access_token = await exchange_github_code(oauth_data.code, oauth_data.redirect_uri)
+    if not access_token:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to exchange code for token")
+    
+    # Get user info from GitHub
+    user_info = await get_github_user_info(access_token)
+    if not user_info:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to get user info from GitHub")
+    
+    email = user_info.get("email")
+    if not email:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email not provided by GitHub")
+    
+    # Check if user exists
+    db_user = get_user_by_email(db, email)
+    if not db_user:
+        # Create new user
+        from app.auth.schemas.user import UserCreate
+        user_create = UserCreate(email=email, password="")  # OAuth users don't need password
+        db_user = create_user(db, user_create)
+        db_user.is_verified = True  # OAuth users are pre-verified
+        db_user.display_name = user_info.get("name")
+        db.commit()
+    
+    # Generate JWT tokens
+    jwt_access_token = jwt_utils.create_access_token(data={"sub": str(db_user.id)})
+    jwt_refresh_token = jwt_utils.create_refresh_token(data={"sub": str(db_user.id)})
+    
+    return {
+        "access_token": jwt_access_token,
+        "refresh_token": jwt_refresh_token,
+        "token_type": "bearer",
+        "user": OAuthUserInfo(
+            id=str(db_user.id),
+            email=db_user.email,
+            name=db_user.display_name,
+            picture=user_info.get("avatar_url")
+        )
+    }
