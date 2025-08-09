@@ -23,7 +23,7 @@ interface SidebarProps {
     | "dashboard"
     | "activity"
     | "blocklist"
-    | "focus"
+    | "log"
     | "settings"
     | "settings-profile"
     | "settings-security"
@@ -83,13 +83,13 @@ export default function Sidebar({ activePage = "dashboard" }: SidebarProps) {
             <span className="font-normal text-sm">Block List</span>
           </Link>
           <Link
-            href="/focus"
+            href="/log"
             className={`flex items-center space-x-2 px-2 py-1.5 text-black transition-colors duration-200 ${
-              activePage === "focus" ? "bg-[#E5E0D5]" : "hover:bg-[#E5E0D5]"
+              activePage === "log" ? "bg-[#E5E0D5]" : "hover:bg-[#E5E0D5]"
             }`}
           >
             <Clock className="w-4 h-4" />
-            <span className="font-normal text-sm">Focus Sessions</span>
+            <span className="font-normal text-sm">Log</span>
           </Link>
 
           {/* Settings with expandable subcategories */}
@@ -183,7 +183,8 @@ export default function Sidebar({ activePage = "dashboard" }: SidebarProps) {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-black truncate">
-              {user?.display_name || (user?.email ? user.email.split("@")[0] : "User")}
+              {user?.display_name ||
+                (user?.email ? user.email.split("@")[0] : "User")}
             </p>
             <p className="text-xs text-gray-500 truncate">
               {user?.email || "user@example.com"}

@@ -181,16 +181,14 @@ export default function DashboardPage() {
                   </div>
                 </a>
 
-                {/* Focus Sessions Card */}
+                {/* Log Card */}
                 <a
-                  href="/focus"
+                  href="/log"
                   className="flex-1 bg-white border border-gray-400 shadow-md p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col items-center text-center font-dm-sans"
                 >
-                  <span className="text-2xl font-medium mb-2">
-                    Focus Sessions
-                  </span>
+                  <span className="text-2xl font-medium mb-2">Log</span>
                   <span className="text-neutral-600 mb-4">
-                    Start or review your focus sessions for deep work.
+                    View and manage your activity logs and records.
                   </span>
                 </a>
               </div>
