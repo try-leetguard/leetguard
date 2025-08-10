@@ -208,7 +208,7 @@ export default function LogPage() {
                     placeholder="Search problems or tags..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent w-64"
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-sm focus:outline-none hover:border-black focus:border-black w-64"
                   />
                 </div>
 
@@ -218,7 +218,7 @@ export default function LogPage() {
                     onClick={() =>
                       setShowDifficultyDropdown(!showDifficultyDropdown)
                     }
-                    className="pl-4 pr-2 py-2 border border-gray-300 rounded-lg focus:outline-none bg-white flex items-center justify-between w-[160px]"
+                    className="pl-4 pr-2 py-2 border border-gray-300 rounded-sm focus:outline-none bg-white flex items-center justify-between w-[160px]"
                   >
                     <span>
                       {filterDifficulty === "all"
@@ -273,7 +273,7 @@ export default function LogPage() {
                 <div className="relative" ref={statusDropdownRef}>
                   <button
                     onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                    className="pl-4 pr-2 py-2 border border-gray-300 rounded-lg focus:outline-none bg-white flex items-center justify-between w-[140px]"
+                    className="pl-4 pr-2 py-2 border border-gray-300 rounded-sm focus:outline-none bg-white flex items-center justify-between w-[140px]"
                   >
                     <span>{getStatusDisplayText(filterStatus)}</span>
                     <ChevronDown className="w-4 h-4 text-gray-500 ml-3" />

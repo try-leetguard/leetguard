@@ -115,7 +115,7 @@ export default function Sidebar({ activePage = "dashboard" }: SidebarProps) {
                 <div className="bg-gray-200 p-1 space-y-1 rounded-b-sm">
                   <Link
                     href="/settings"
-                    className={`flex items-center space-x-2 px-2 py-1.5 transition-colors duration-200 ${
+                    className={`flex items-center space-x-2 px-2 py-1.5 transition-colors duration-200 rounded-sm ${
                       activePage === "settings" ||
                       activePage === "settings-profile"
                         ? "bg-gray-100 text-black font-semibold"
@@ -129,7 +129,7 @@ export default function Sidebar({ activePage = "dashboard" }: SidebarProps) {
                   </Link>
                   <Link
                     href="/settings/security"
-                    className={`flex items-center space-x-2 px-2 py-1.5 transition-colors duration-200 ${
+                    className={`flex items-center space-x-2 px-2 py-1.5 transition-colors duration-200 rounded-sm ${
                       activePage === "settings-security"
                         ? "bg-gray-100 text-black font-semibold"
                         : "text-black hover:bg-gray-100"
@@ -142,7 +142,7 @@ export default function Sidebar({ activePage = "dashboard" }: SidebarProps) {
                   </Link>
                   <Link
                     href="/settings/data"
-                    className={`flex items-center space-x-2 px-2 py-1.5 transition-colors duration-200 ${
+                    className={`flex items-center space-x-2 px-2 py-1.5 transition-colors duration-200 rounded-sm ${
                       activePage === "settings-data"
                         ? "bg-gray-100 text-black font-semibold"
                         : "text-black hover:bg-gray-100"
@@ -153,7 +153,7 @@ export default function Sidebar({ activePage = "dashboard" }: SidebarProps) {
                   </Link>
                   <button
                     onClick={handleSignOut}
-                    className="w-full flex items-center space-x-2 px-2 py-1.5 text-black hover:bg-gray-100 transition-colors duration-200"
+                    className="w-full flex items-center space-x-2 px-2 py-1.5 text-black hover:bg-gray-100 transition-colors duration-200 rounded-sm"
                   >
                     <LogOut className="w-4 h-4" strokeWidth={2.5} />
                     <span className="font-normal text-sm">Sign Out</span>
