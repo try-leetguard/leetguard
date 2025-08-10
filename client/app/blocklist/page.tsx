@@ -25,7 +25,7 @@ export default function BlockListPage() {
           </header>
 
           {/* Content Area */}
-          <main className="flex-1 p-6 overflow-y-auto bg-[#FDFBF7]">
+          <main className="flex-1 p-6 overflow-y-auto bg-gray-50">
             <div className="flex">
               <div className="w-full font-dm-sans">
                 <BlockList />

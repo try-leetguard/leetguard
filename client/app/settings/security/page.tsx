@@ -12,7 +12,7 @@ export default function SecurityPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] text-black">
+    <div className="min-h-screen bg-gray-50 text-black">
       <div className="flex h-screen">
         <Sidebar activePage="settings-security" />
 

@@ -64,7 +64,7 @@ export default function DashboardPage() {
           </header>
 
           {/* Content Area */}
-          <main className="flex-1 p-6 overflow-y-auto bg-[#FDFBF7]">
+          <main className="flex-1 p-6 overflow-y-auto bg-gray-50">
             <div className="flex justify-center">
               <div className="flex flex-col md:flex-row gap-6 justify-center items-stretch w-full max-w-5xl">
                 {/* My Activity Card */}

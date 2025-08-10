@@ -157,7 +157,7 @@ export default function LogPage() {
           </header>
 
           {/* Content Area */}
-          <main className="flex-1 p-6 overflow-y-auto bg-[#FDFBF7]">
+          <main className="flex-1 p-6 overflow-y-auto bg-gray-50">
             {/* Controls */}
             <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               <div className="flex flex-col sm:flex-row gap-3">
@@ -198,7 +198,7 @@ export default function LogPage() {
               </div>
 
               {/* Export Button */}
-              <button className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-blue-700 transition-colors">
+              <button className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-900 transition-colors">
                 <Download className="w-4 h-4" />
                 Export to Excel
               </button>

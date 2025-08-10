@@ -16,6 +16,7 @@ import {
   LogOut,
   ChevronDown,
   ChevronRight,
+  BarChart3,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -47,7 +48,7 @@ export default function Sidebar({ activePage = "dashboard" }: SidebarProps) {
   };
 
   return (
-    <div className="w-56 bg-[#F9F6F0] border-r border-gray-200 flex flex-col">
+    <div className="w-56 bg-gray-50 border-r border-gray-200 flex flex-col">
       {/* Logo */}
       <div className="p-4">
         <Link href="/dashboard" className="flex items-center space-x-2">
@@ -66,62 +67,62 @@ export default function Sidebar({ activePage = "dashboard" }: SidebarProps) {
         <nav className="space-y-1">
           <Link
             href="/activity"
-            className={`flex items-center space-x-2 px-2 py-1.5 text-black transition-colors duration-200 ${
-              activePage === "activity" ? "bg-[#E5E0D5]" : "hover:bg-[#E5E0D5]"
+            className={`flex items-center space-x-2 px-2.5 py-2 text-black transition-colors duration-200 rounded-sm ${
+              activePage === "activity" ? "bg-gray-200" : "hover:bg-gray-200"
             }`}
           >
-            <Activity className="w-4 h-4" />
+            <Activity className="w-4 h-4" strokeWidth={2.5} />
             <span className="font-normal text-sm">My Activity</span>
           </Link>
           <Link
             href="/blocklist"
-            className={`flex items-center space-x-2 px-2 py-1.5 text-black transition-colors duration-200 ${
-              activePage === "blocklist" ? "bg-[#E5E0D5]" : "hover:bg-[#E5E0D5]"
+            className={`flex items-center space-x-2 px-2.5 py-2 text-black transition-colors duration-200 rounded-sm ${
+              activePage === "blocklist" ? "bg-gray-200" : "hover:bg-gray-200"
             }`}
           >
-            <Shield className="w-4 h-4" />
+            <Shield className="w-4 h-4" strokeWidth={2.5} />
             <span className="font-normal text-sm">Block List</span>
           </Link>
           <Link
             href="/log"
-            className={`flex items-center space-x-2 px-2 py-1.5 text-black transition-colors duration-200 ${
-              activePage === "log" ? "bg-[#E5E0D5]" : "hover:bg-[#E5E0D5]"
+            className={`flex items-center space-x-2 px-2.5 py-2 text-black transition-colors duration-200 rounded-sm ${
+              activePage === "log" ? "bg-gray-200" : "hover:bg-gray-200"
             }`}
           >
-            <Clock className="w-4 h-4" />
-            <span className="font-normal text-sm">Log</span>
+            <BarChart3 className="w-4 h-4" strokeWidth={2.5} />
+            <span className="font-normal text-sm">Progress Tracker</span>
           </Link>
 
           {/* Settings with expandable subcategories */}
           <div>
             <Link
               href="/settings"
-              className={`w-full flex items-center space-x-2 px-2 py-1.5 text-black transition-colors duration-200 ${
+              className={`w-full flex items-center space-x-2 px-2.5 py-2 text-black transition-colors duration-200 ${
                 activePage === "settings" ||
                 activePage === "settings-profile" ||
                 activePage === "settings-security" ||
                 activePage === "settings-data"
-                  ? "bg-[#E5E0D5]"
-                  : "hover:bg-[#E5E0D5]"
+                  ? "bg-gray-200 rounded-t-sm"
+                  : "hover:bg-gray-200 rounded-sm"
               }`}
             >
-              <Settings className="w-4 h-4" />
+              <Settings className="w-4 h-4" strokeWidth={2.5} />
               <span className="font-normal text-sm">Settings</span>
             </Link>
 
             {settingsExpanded && (
               <div>
-                <div className="bg-[#E5E0D5] p-1 space-y-1">
+                <div className="bg-gray-200 p-1 space-y-1 rounded-b-sm">
                   <Link
                     href="/settings"
                     className={`flex items-center space-x-2 px-2 py-1.5 transition-colors duration-200 ${
                       activePage === "settings" ||
                       activePage === "settings-profile"
-                        ? "bg-[#F3F1EB] text-black font-semibold"
-                        : "text-black hover:bg-[#F3F1EB]"
+                        ? "bg-gray-100 text-black font-semibold"
+                        : "text-black hover:bg-gray-100"
                     }`}
                   >
-                    <User className="w-3 h-3" />
+                    <User className="w-4 h-4" strokeWidth={2.5} />
                     <span className="font-normal text-sm">
                       Personal Profile
                     </span>
@@ -130,11 +131,11 @@ export default function Sidebar({ activePage = "dashboard" }: SidebarProps) {
                     href="/settings/security"
                     className={`flex items-center space-x-2 px-2 py-1.5 transition-colors duration-200 ${
                       activePage === "settings-security"
-                        ? "bg-[#F3F1EB] text-black font-semibold"
-                        : "text-black hover:bg-[#F3F1EB]"
+                        ? "bg-gray-100 text-black font-semibold"
+                        : "text-black hover:bg-gray-100"
                     }`}
                   >
-                    <Lock className="w-3 h-3" />
+                    <Lock className="w-4 h-4" strokeWidth={2.5} />
                     <span className="font-normal text-sm">
                       Security & Access
                     </span>
@@ -143,18 +144,18 @@ export default function Sidebar({ activePage = "dashboard" }: SidebarProps) {
                     href="/settings/data"
                     className={`flex items-center space-x-2 px-2 py-1.5 transition-colors duration-200 ${
                       activePage === "settings-data"
-                        ? "bg-[#F3F1EB] text-black font-semibold"
-                        : "text-black hover:bg-[#F3F1EB]"
+                        ? "bg-gray-100 text-black font-semibold"
+                        : "text-black hover:bg-gray-100"
                     }`}
                   >
-                    <Shield className="w-3 h-3" />
+                    <Shield className="w-4 h-4" strokeWidth={2.5} />
                     <span className="font-normal text-sm">Data & Privacy</span>
                   </Link>
                   <button
                     onClick={handleSignOut}
-                    className="w-full flex items-center space-x-2 px-2 py-1.5 text-black hover:bg-[#F3F1EB] transition-colors duration-200"
+                    className="w-full flex items-center space-x-2 px-2 py-1.5 text-black hover:bg-gray-100 transition-colors duration-200"
                   >
-                    <LogOut className="w-3 h-3" />
+                    <LogOut className="w-4 h-4" strokeWidth={2.5} />
                     <span className="font-normal text-sm">Sign Out</span>
                   </button>
                 </div>
@@ -168,9 +169,9 @@ export default function Sidebar({ activePage = "dashboard" }: SidebarProps) {
       <div className="p-3">
         <Link
           href="#"
-          className="flex items-center space-x-2 px-2 py-1.5 text-black hover:bg-[#E5E0D5] transition-colors duration-200"
+          className="flex items-center space-x-2 px-2.5 py-2 text-black hover:bg-gray-200 transition-colors duration-200 rounded-sm"
         >
-          <HelpCircle className="w-4 h-4" />
+          <HelpCircle className="w-4 h-4" strokeWidth={2.5} />
           <span className="font-normal text-sm">Help Center</span>
         </Link>
       </div>
@@ -179,7 +180,7 @@ export default function Sidebar({ activePage = "dashboard" }: SidebarProps) {
       <div className="p-3 border-t border-gray-200">
         <div className="flex items-center space-x-2 px-2 py-1.5">
           <div className="w-4 h-4 bg-gray-200 rounded-full flex items-center justify-center">
-            <User className="w-4 h-4 text-gray-600" />
+            <User className="w-4 h-4 text-gray-600" strokeWidth={2.5} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-black truncate">
