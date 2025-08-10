@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
 import {
   Calendar,
@@ -12,6 +12,7 @@ import {
   ExternalLink,
   CheckCircle,
   AlertCircle,
+  ChevronDown,
 } from "lucide-react";
 
 interface LeetCodeProblem {
@@ -100,11 +101,38 @@ export default function LogPage() {
   const [filterDifficulty, setFilterDifficulty] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [showDifficultyDropdown, setShowDifficultyDropdown] = useState(false);
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const difficultyDropdownRef = useRef<HTMLDivElement>(null);
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Set light mode for log page
     document.documentElement.classList.remove("dark");
     localStorage.setItem("theme", "light");
+  }, []);
+
+  // Handle click outside to close dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        difficultyDropdownRef.current &&
+        !difficultyDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDifficultyDropdown(false);
+      }
+      if (
+        statusDropdownRef.current &&
+        !statusDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowStatusDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   const getDifficultyColor = (difficulty: string) => {
@@ -128,6 +156,17 @@ export default function LogPage() {
         return <AlertCircle className="w-4 h-4 text-yellow-600" />;
       default:
         return <Activity className="w-4 h-4 text-gray-600" />;
+    }
+  };
+
+  const getStatusDisplayText = (status: string) => {
+    switch (status) {
+      case "solved":
+        return "Solved";
+      case "attempted":
+        return "Attempted";
+      default:
+        return "All Status";
     }
   };
 
@@ -169,39 +208,109 @@ export default function LogPage() {
                     placeholder="Search problems or tags..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent w-64"
                   />
                 </div>
 
                 {/* Difficulty Filter */}
-                <select
-                  value={filterDifficulty}
-                  onChange={(e) => setFilterDifficulty(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="all">All Difficulties</option>
-                  <option value="Easy">Easy</option>
-                  <option value="Medium">Medium</option>
-                  <option value="Hard">Hard</option>
-                </select>
+                <div className="relative" ref={difficultyDropdownRef}>
+                  <button
+                    onClick={() =>
+                      setShowDifficultyDropdown(!showDifficultyDropdown)
+                    }
+                    className="pl-4 pr-2 py-2 border border-gray-300 rounded-lg focus:outline-none bg-white flex items-center justify-between w-[160px]"
+                  >
+                    <span>
+                      {filterDifficulty === "all"
+                        ? "All Difficulties"
+                        : filterDifficulty}
+                    </span>
+                    <ChevronDown className="w-4 h-4 text-gray-500 ml-2" />
+                  </button>
+                  {showDifficultyDropdown && (
+                    <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-10">
+                      <div
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => {
+                          setFilterDifficulty("all");
+                          setShowDifficultyDropdown(false);
+                        }}
+                      >
+                        All Difficulties
+                      </div>
+                      <div
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => {
+                          setFilterDifficulty("Easy");
+                          setShowDifficultyDropdown(false);
+                        }}
+                      >
+                        Easy
+                      </div>
+                      <div
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => {
+                          setFilterDifficulty("Medium");
+                          setShowDifficultyDropdown(false);
+                        }}
+                      >
+                        Medium
+                      </div>
+                      <div
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => {
+                          setFilterDifficulty("Hard");
+                          setShowDifficultyDropdown(false);
+                        }}
+                      >
+                        Hard
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {/* Status Filter */}
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="all">All Status</option>
-                  <option value="solved">Solved</option>
-                  <option value="attempted">Attempted</option>
-                </select>
+                <div className="relative" ref={statusDropdownRef}>
+                  <button
+                    onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+                    className="pl-4 pr-2 py-2 border border-gray-300 rounded-lg focus:outline-none bg-white flex items-center justify-between w-[140px]"
+                  >
+                    <span>{getStatusDisplayText(filterStatus)}</span>
+                    <ChevronDown className="w-4 h-4 text-gray-500 ml-3" />
+                  </button>
+                  {showStatusDropdown && (
+                    <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-10">
+                      <div
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => {
+                          setFilterStatus("all");
+                          setShowStatusDropdown(false);
+                        }}
+                      >
+                        All Status
+                      </div>
+                      <div
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => {
+                          setFilterStatus("solved");
+                          setShowStatusDropdown(false);
+                        }}
+                      >
+                        Solved
+                      </div>
+                      <div
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => {
+                          setFilterStatus("attempted");
+                          setShowStatusDropdown(false);
+                        }}
+                      >
+                        Attempted
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-
-              {/* Export Button */}
-              <button className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-900 transition-colors">
-                <Download className="w-4 h-4" />
-                Export to Excel
-              </button>
             </div>
 
             {/* Excel-like Table */}
