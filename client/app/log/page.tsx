@@ -225,7 +225,7 @@ export default function LogPage() {
                         ? "All Difficulties"
                         : filterDifficulty}
                     </span>
-                    <ChevronDown className="w-4 h-4 text-gray-500 ml-2" />
+                    <ChevronDown className="w-4 h-4 text-black ml-3" />
                   </button>
                   {showDifficultyDropdown && (
                     <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-10">
@@ -276,7 +276,7 @@ export default function LogPage() {
                     className="pl-4 pr-2 py-2 border border-gray-300 rounded-sm focus:outline-none bg-white flex items-center justify-between w-[140px]"
                   >
                     <span>{getStatusDisplayText(filterStatus)}</span>
-                    <ChevronDown className="w-4 h-4 text-gray-500 ml-3" />
+                    <ChevronDown className="w-4 h-4 text-black ml-3" />
                   </button>
                   {showStatusDropdown && (
                     <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-10">
@@ -314,7 +314,7 @@ export default function LogPage() {
             </div>
 
             {/* Excel-like Table */}
-            <div className="bg-white rounded-lg border border-black overflow-hidden shadow-sm">
+            <div className="bg-white rounded-lg border border-gray-400 overflow-hidden shadow-sm">
               {/* Table Header */}
               <div className="bg-gray-50 border-b border-gray-200">
                 <div className="grid grid-cols-6 gap-4 px-6 py-3 text-sm font-medium text-black">
