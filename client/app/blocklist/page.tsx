@@ -72,13 +72,13 @@ function BlockList() {
   }
 
   return (
-    <div className="bg-white border border-gray-400 shadow-md p-6 w-full flex flex-col gap-6">
+    <div className="bg-white border border-gray-400 shadow-md p-6 w-full flex flex-col gap-6 rounded-lg">
       {/* Add Site */}
       <div className="flex gap-2">
         <input
           type="text"
           placeholder="Add website (e.g. facebook.com)"
-          className="flex-1 border border-gray-300 px-4 py-2 text-base outline-none font-dm-sans"
+          className="flex-1 border border-gray-300 px-4 py-2 text-base outline-none font-dm-sans rounded-sm hover:border-black focus:border-black"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
@@ -87,7 +87,7 @@ function BlockList() {
         />
         <button
           onClick={addSite}
-          className="px-4 py-2 bg-black text-white font-medium font-dm-sans hover:bg-neutral-800 transition-colors border border-black/20"
+          className="px-4 py-2 bg-black text-white font-medium font-dm-sans hover:bg-neutral-800 transition-colors border border-black/20 rounded-sm  "
         >
           Add
         </button>
