@@ -7,7 +7,7 @@ const companies = [
   { name: "Amazon", logo: "/companies/amazon.svg" },
   { name: "Google", logo: "/companies/google.svg" },
   { name: "NVIDIA", logo: "/companies/nvidia.svg" },
-  { name: "Adobe", logo: "/companies/adobe.svg" },
+  { name: "Netflix", logo: "/companies/netflix.svg" },
   { name: "Uber", logo: "/companies/uber.svg" },
   { name: "Palantir", logo: "/companies/palantir.svg" },
 ];
