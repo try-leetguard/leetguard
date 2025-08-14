@@ -17,6 +17,7 @@ import {
   ChevronDown,
   ChevronRight,
   BarChart3,
+  Database,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -148,7 +149,7 @@ export default function Sidebar({ activePage = "dashboard" }: SidebarProps) {
                         : "text-black hover:bg-gray-100"
                     }`}
                   >
-                    <Shield className="w-4 h-4" strokeWidth={2.5} />
+                    <Database className="w-4 h-4" strokeWidth={2.5} />
                     <span className="font-normal text-sm">Data & Privacy</span>
                   </Link>
                   <button

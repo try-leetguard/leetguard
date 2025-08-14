@@ -196,19 +196,19 @@ export default function LogPage() {
           </header>
 
           {/* Content Area */}
-          <main className="flex-1 p-6 overflow-y-auto bg-gray-50">
+          <main className="flex-1 p-6 overflow-y-auto bg-white">
             {/* Controls */}
             <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               <div className="flex flex-col sm:flex-row gap-3">
                 {/* Search */}
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 w-4 h-4" />
                   <input
                     type="text"
                     placeholder="Search problems or tags..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-sm focus:outline-none hover:border-black focus:border-black w-64"
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-sm focus:outline-none hover:border-black focus:border-black w-64 transition-colors duration-300"
                   />
                 </div>
 
@@ -316,7 +316,7 @@ export default function LogPage() {
             {/* Excel-like Table */}
             <div className="bg-white rounded-lg border border-gray-400 overflow-hidden shadow-sm">
               {/* Table Header */}
-              <div className="bg-gray-50 border-b border-gray-200">
+              <div className="border-b border-gray-200">
                 <div className="grid grid-cols-6 gap-4 px-6 py-3 text-sm font-medium text-black">
                   <div className="col-span-1">Date</div>
                   <div className="col-span-2">Problem Name</div>

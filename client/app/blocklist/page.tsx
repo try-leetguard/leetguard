@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, CheckCircle, XCircle } from "lucide-react";
 
 export default function BlockListPage() {
   useEffect(() => {
@@ -25,7 +25,7 @@ export default function BlockListPage() {
           </header>
 
           {/* Content Area */}
-          <main className="flex-1 p-6 overflow-y-auto bg-gray-50">
+          <main className="flex-1 p-6 overflow-y-auto">
             <div className="flex">
               <div className="w-full font-dm-sans">
                 <BlockList />
@@ -47,16 +47,56 @@ function BlockList() {
     "youtube.com",
     "x.com",
   ]);
+  const [notification, setNotification] = useState<{
+    type: "success" | "error";
+    message: string;
+    show: boolean;
+  } | null>(null);
+
+  // Auto-dismiss notification after 3 seconds
+  useEffect(() => {
+    if (notification && notification.show) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
 
   const addSite = () => {
     const trimmed = input.trim();
-    if (!trimmed || list.includes(trimmed)) return;
+    if (!trimmed) {
+      setNotification({
+        type: "error",
+        message: "Please enter a website URL",
+        show: true,
+      });
+      return;
+    }
+    if (list.includes(trimmed)) {
+      setNotification({
+        type: "error",
+        message: "Website already exists in blocklist",
+        show: true,
+      });
+      return;
+    }
     setList([trimmed, ...list]);
     setInput("");
+    setNotification({
+      type: "success",
+      message: "Website added successfully",
+      show: true,
+    });
   };
 
   const removeSite = (site: string) => {
     setList(list.filter((s) => s !== site));
+    setNotification({
+      type: "success",
+      message: `${site} removed successfully`,
+      show: true,
+    });
   };
 
   // Helper to extract domain for favicon
@@ -72,13 +112,13 @@ function BlockList() {
   }
 
   return (
-    <div className="bg-white border border-gray-400 shadow-md p-6 w-full flex flex-col gap-6 rounded-lg">
+    <div className="bg-white border border-gray-400 shadow-md p-6 w-full flex flex-col gap-6 rounded-lg relative">
       {/* Add Site */}
       <div className="flex gap-2">
         <input
           type="text"
           placeholder="Add website (e.g. facebook.com)"
-          className="flex-1 border border-gray-300 px-4 py-2 text-base outline-none font-dm-sans rounded-sm hover:border-black focus:border-black"
+          className="flex-1 border border-gray-300 px-4 py-2 text-base outline-none font-dm-sans rounded-sm hover:border-black focus:border-black transition-colors duration-300"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
@@ -102,7 +142,7 @@ function BlockList() {
           list.map((site) => (
             <li
               key={site}
-              className="flex items-center justify-between bg-gray-50 border border-gray-200 px-4 py-2 font-dm-sans"
+              className="flex items-center justify-between bg-gray-50 border border-gray-200 px-4 py-2 font-dm-sans rounded-sm"
             >
               <span className="flex items-center text-black break-all">
                 <img
@@ -126,6 +166,32 @@ function BlockList() {
           ))
         )}
       </ul>
+
+      {/* Notification Card */}
+      {notification && notification.show && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <div
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border transition-all duration-300 ${
+              notification.type === "success"
+                ? "bg-green-50 border-green-200 text-green-800"
+                : "bg-red-50 border-red-200 text-red-800"
+            }`}
+          >
+            {notification.type === "success" ? (
+              <CheckCircle className="w-5 h-5 text-green-600" />
+            ) : (
+              <XCircle className="w-5 h-5 text-red-600" />
+            )}
+            <span className="font-medium">{notification.message}</span>
+            <button
+              onClick={() => setNotification(null)}
+              className="ml-2 text-gray-400 hover:text-gray-600"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
