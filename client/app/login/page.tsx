@@ -13,9 +13,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, LoginFormData } from "@/lib/validation";
 
 // OAuth configuration
-const GOOGLE_CLIENT_ID = "415007483727-r94gkeipu49it9dnkgegpne9cm06grmb.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID =
+  "415007483727-r94gkeipu49it9dnkgegpne9cm06grmb.apps.googleusercontent.com";
 const GITHUB_CLIENT_ID = "Ov23liopAg5O7C7uKMdw";
-const REDIRECT_URI = typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : '';
+const REDIRECT_URI =
+  typeof window !== "undefined"
+    ? `${window.location.origin}/auth/callback`
+    : "";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -56,12 +60,16 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
-    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=openid%20email%20profile`;
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(
+      REDIRECT_URI
+    )}&response_type=code&scope=openid%20email%20profile`;
     window.location.href = googleAuthUrl;
   };
 
   const handleGitHubLogin = () => {
-    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=user:email`;
+    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(
+      REDIRECT_URI
+    )}&scope=user:email`;
     window.location.href = githubAuthUrl;
   };
 

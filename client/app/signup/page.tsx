@@ -186,17 +186,17 @@ export default function SignupPage() {
             </div>
 
             {/* Terms Agreement */}
-            <div className="flex items-start space-x-2">
+            <div className="flex items-center space-x-2">
               <input
                 type="checkbox"
                 id="terms"
                 checked={agreeToTerms}
                 onChange={(e) => setAgreeToTerms(e.target.checked)}
-                className="w-4 h-4 border-2 border-black rounded-none checked:bg-black checked:border-black focus:ring-0 focus:ring-offset-0 cursor-pointer mt-1"
+                className="w-4 h-4 border-2 border-black rounded-none checked:bg-black checked:border-black focus:ring-0 focus:ring-offset-0 cursor-pointer"
               />
               <label
                 htmlFor="terms"
-                className="text-sm text-gray-600 cursor-pointer leading-relaxed"
+                className="text-sm text-gray-600 cursor-pointer"
               >
                 I agree to the{" "}
                 <Link
