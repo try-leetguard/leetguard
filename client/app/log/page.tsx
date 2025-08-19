@@ -314,7 +314,7 @@ export default function LogPage() {
             </div>
 
             {/* Excel-like Table */}
-            <div className="bg-white rounded-lg border border-gray-400 overflow-hidden shadow-sm">
+            <div className="bg-white rounded-lg border border-gray-300 overflow-hidden shadow-sm">
               {/* Table Header */}
               <div className="border-b border-gray-200">
                 <div className="grid grid-cols-6 gap-4 px-6 py-3 text-sm font-medium text-black">
