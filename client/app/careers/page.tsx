@@ -64,7 +64,7 @@ export default function CareersPage() {
                     US only
                   </div>
                   <div className="text-sm text-neutral-500">
-                    Remote • Scale and build
+                    Remote • Build and scale
                   </div>
                 </motion.div>
               </div>
