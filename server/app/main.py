@@ -14,10 +14,16 @@ from app.utils.oauth import (
     get_google_user_info, get_github_user_info
 )
 from app.auth.schemas.oauth import OAuthLoginRequest, OAuthUserInfo
+from app.auth.schemas.data import BlocklistItemCreate, BlocklistResponse, ActivityCreate, ActivityUpdate, ActivityResponse, ActivitiesResponse
+from app.crud.data import (
+    create_blocklist_item, get_user_blocklist, delete_blocklist_item_by_website, check_website_blocked,
+    create_activity, get_user_activities, get_activity, update_activity, delete_activity, get_activity_stats
+)
 from datetime import datetime, timedelta, timezone
 import random
 from app.config import settings
 from typing import Union
+import json
 
 app = FastAPI()
 
@@ -274,6 +280,175 @@ async def google_oauth_login(oauth_data: OAuthLoginRequest, db: Session = Depend
             picture=user_info.get("picture")
         )
     }
+
+# Blocklist endpoints
+@app.post("/api/blocklist/add")
+def add_blocklist_item(
+    website: str = Body(...),
+    current_user: UserOut = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Add a website to user's blocklist"""
+    # Check if already exists
+    if check_website_blocked(db, current_user.id, website):
+        raise HTTPException(status_code=400, detail="Website already in blocklist")
+    
+    # Add new item
+    new_item = create_blocklist_item(db, current_user.id, website)
+    
+    return {"message": "Website added to blocklist", "website": website}
+
+@app.delete("/api/blocklist/remove")
+def remove_blocklist_item(
+    website: str = Body(...),
+    current_user: UserOut = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Remove a website from user's blocklist"""
+    success = delete_blocklist_item_by_website(db, current_user.id, website)
+    
+    if not success:
+        raise HTTPException(status_code=404, detail="Website not found in blocklist")
+    
+    return {"message": "Website removed from blocklist", "website": website}
+
+@app.get("/api/blocklist", response_model=BlocklistResponse)
+def get_blocklist(
+    current_user: UserOut = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get user's blocklist"""
+    items = get_user_blocklist(db, current_user.id)
+    return BlocklistResponse(websites=[item.website for item in items])
+
+@app.get("/api/blocklist/check/{website}")
+def check_blocklist(
+    website: str,
+    current_user: UserOut = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Check if a website is in user's blocklist"""
+    is_blocked = check_website_blocked(db, current_user.id, website)
+    return {"website": website, "is_blocked": is_blocked}
+
+# Activity endpoints
+@app.post("/api/activity")
+def add_activity(
+    activity_data: ActivityCreate,
+    current_user: UserOut = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Add a new activity (LeetCode problem)"""
+    # Check if activity already exists for this problem
+    existing = get_activity_by_problem_url(db, current_user.id, activity_data.problem_url)
+    
+    if existing:
+        # Update existing activity
+        update_data = ActivityUpdate(
+            status=activity_data.status
+        )
+        updated_activity = update_activity(db, existing.id, current_user.id, update_data)
+        return {"message": "Activity updated", "activity_id": updated_activity.id}
+    else:
+        # Create new activity
+        new_activity = create_activity(db, current_user.id, activity_data)
+        return {"message": "Activity created", "activity_id": new_activity.id}
+
+@app.get("/api/activity", response_model=ActivitiesResponse)
+def get_activities(
+    limit: int = 100,
+    offset: int = 0,
+    current_user: UserOut = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get user's activities with pagination"""
+    activities = get_user_activities(db, current_user.id, limit, offset)
+    
+    # Convert topic_tags from JSON string back to list
+    activity_responses = []
+    for activity in activities:
+        topic_tags = json.loads(activity.topic_tags) if activity.topic_tags else None
+        activity_responses.append(ActivityResponse(
+            id=activity.id,
+            problem_name=activity.problem_name,
+            problem_url=activity.problem_url,
+            difficulty=activity.difficulty,
+            topic_tags=topic_tags,
+            status=activity.status,
+            completed_at=activity.completed_at
+        ))
+    
+    return ActivitiesResponse(activities=activity_responses)
+
+@app.get("/api/activity/{activity_id}", response_model=ActivityResponse)
+def get_activity_by_id(
+    activity_id: int,
+    current_user: UserOut = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get a specific activity by ID"""
+    activity = get_activity(db, activity_id, current_user.id)
+    
+    if not activity:
+        raise HTTPException(status_code=404, detail="Activity not found")
+    
+    topic_tags = json.loads(activity.topic_tags) if activity.topic_tags else None
+    return ActivityResponse(
+        id=activity.id,
+        problem_name=activity.problem_name,
+        problem_url=activity.problem_url,
+        difficulty=activity.difficulty,
+        topic_tags=topic_tags,
+        status=activity.status,
+        completed_at=activity.completed_at
+    )
+
+@app.put("/api/activity/{activity_id}", response_model=ActivityResponse)
+def update_activity_by_id(
+    activity_id: int,
+    activity_data: ActivityUpdate,
+    current_user: UserOut = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update a specific activity"""
+    updated_activity = update_activity(db, activity_id, current_user.id, activity_data)
+    
+    if not updated_activity:
+        raise HTTPException(status_code=404, detail="Activity not found")
+    
+    topic_tags = json.loads(updated_activity.topic_tags) if updated_activity.topic_tags else None
+    return ActivityResponse(
+        id=updated_activity.id,
+        problem_name=updated_activity.problem_name,
+        problem_url=updated_activity.problem_url,
+        difficulty=updated_activity.difficulty,
+        topic_tags=topic_tags,
+        status=updated_activity.status,
+        completed_at=updated_activity.completed_at
+    )
+
+@app.delete("/api/activity/{activity_id}")
+def delete_activity_by_id(
+    activity_id: int,
+    current_user: UserOut = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete a specific activity"""
+    success = delete_activity(db, activity_id, current_user.id)
+    
+    if not success:
+        raise HTTPException(status_code=404, detail="Activity not found")
+    
+    return {"message": "Activity deleted successfully"}
+
+@app.get("/api/activity/stats")
+def get_activity_statistics(
+    current_user: UserOut = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get user's activity statistics"""
+    stats = get_activity_stats(db, current_user.id)
+    return stats
 
 @app.post("/auth/oauth/github")
 async def github_oauth_login(oauth_data: OAuthLoginRequest, db: Session = Depends(get_db)):
