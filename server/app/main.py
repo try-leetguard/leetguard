@@ -284,33 +284,33 @@ async def google_oauth_login(oauth_data: OAuthLoginRequest, db: Session = Depend
 # Blocklist endpoints
 @app.post("/api/blocklist/add")
 def add_blocklist_item(
-    website: str = Body(...),
+    blocklist_data: BlocklistItemCreate,
     current_user: UserOut = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Add a website to user's blocklist"""
     # Check if already exists
-    if check_website_blocked(db, current_user.id, website):
+    if check_website_blocked(db, current_user.id, blocklist_data.website):
         raise HTTPException(status_code=400, detail="Website already in blocklist")
     
     # Add new item
-    new_item = create_blocklist_item(db, current_user.id, website)
+    new_item = create_blocklist_item(db, current_user.id, blocklist_data.website)
     
-    return {"message": "Website added to blocklist", "website": website}
+    return {"message": "Website added to blocklist", "website": blocklist_data.website}
 
 @app.delete("/api/blocklist/remove")
 def remove_blocklist_item(
-    website: str = Body(...),
+    blocklist_data: BlocklistItemCreate,
     current_user: UserOut = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Remove a website from user's blocklist"""
-    success = delete_blocklist_item_by_website(db, current_user.id, website)
+    success = delete_blocklist_item_by_website(db, current_user.id, blocklist_data.website)
     
     if not success:
         raise HTTPException(status_code=404, detail="Website not found in blocklist")
     
-    return {"message": "Website removed from blocklist", "website": website}
+    return {"message": "Website removed from blocklist", "website": blocklist_data.website}
 
 @app.get("/api/blocklist", response_model=BlocklistResponse)
 def get_blocklist(

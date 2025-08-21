@@ -65,6 +65,13 @@ export default function LogoCarousel({
   };
   const maxWidthByName: Record<string, number> = {};
 
+  // Custom vertical positioning adjustments
+  const verticalOffsetByName: Record<string, string> = {
+    apple: "-translate-y-1", // Move Apple up a bit
+    amazon: "translate-y-1", // Move Amazon down a bit
+    coinbase: "-translate-y-1", // Move Coinbase up a bit
+  };
+
   const Track = React.useCallback(
     () => (
       <div
@@ -79,6 +86,7 @@ export default function LogoCarousel({
           const minW = minWidthByName[key] ?? minWidthPx;
           const maxW = maxWidthByName[key] ?? maxWidthPx;
           const computedWidth = Math.min(maxW, Math.max(minW, scaled));
+          const verticalOffset = verticalOffsetByName[key] ?? "";
           return (
             <div
               key={c.name}
@@ -86,7 +94,7 @@ export default function LogoCarousel({
               aria-label={c.name}
             >
               <div
-                className="relative h-12 sm:h-14 md:h-12 lg:h-12"
+                className={`relative h-12 sm:h-14 md:h-12 lg:h-12 ${verticalOffset}`}
                 style={{ width: `${computedWidth}px` }}
               >
                 <Image
