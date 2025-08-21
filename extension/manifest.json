@@ -24,14 +24,16 @@
     "declarativeNetRequest"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "<all_urls>",
+    "http://localhost:8000/*",
+    "https://leetguard.com/*"
   ],
   "declarative_net_request": {
     "rule_resources": []
   },
   "web_accessible_resources": [
     {
-      "resources": ["injected.js", "styles.css"],
+      "resources": ["injected.js", "styles.css", "auth.js", "blocklist-sync.js", "activity-logger.js"],
       "matches": ["<all_urls>"]
     }
   ],
@@ -39,6 +41,14 @@
     {
       "matches": ["https://leetcode.com/*"],
       "js": ["content.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "http://localhost:3000/*",
+        "https://leetguard.com/*"
+      ],
+      "js": ["webapp-detector.js"],
       "run_at": "document_start"
     }
   ]

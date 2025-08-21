@@ -104,3 +104,19 @@ window.addEventListener("message", (event) => {
     }
   }
 });
+
+// Handle OAuth callback from web app
+if (window.location.href.includes('extension-auth-callback')) {
+  // Extract tokens from URL parameters or postMessage
+  window.addEventListener('message', (event) => {
+    if (event.origin !== 'http://localhost:3000') return;
+    
+    if (event.data.type === 'OAUTH_SUCCESS' && event.data.tokens) {
+      // Send tokens to background script
+      chrome.runtime.sendMessage({
+        type: 'OAUTH_CALLBACK',
+        tokens: event.data.tokens
+      });
+    }
+  });
+}

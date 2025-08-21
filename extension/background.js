@@ -1,12 +1,5 @@
-// List of default distracting sites to block
-const BLOCKED_SITES = [
-  'facebook.com',
-  'reddit.com',
-  'youtube.com',
-  'instagram.com',
-  'x.com',
-  'twitter.com' // x.com is Twitter, but some users still use twitter.com
-];
+// Import sync modules
+importScripts('auth.js', 'blocklist-sync.js', 'activity-logger.js');
 
 // Timer variables
 let countdownInterval;
@@ -15,8 +8,13 @@ let isPaused = false;
 let currentTime = 25;
 
 // Generate blocking rules for each site
-function getBlockRules() {
-  return BLOCKED_SITES.map((site, idx) => ({
+async function getBlockRules() {
+  // Get current blocklist (user's if authenticated, default otherwise)
+  const blocklist = blocklistSync ? 
+    await blocklistSync.getCurrentBlocklist() : 
+    ['facebook.com', 'reddit.com', 'youtube.com', 'instagram.com', 'x.com', 'twitter.com'];
+    
+  return blocklist.map((site, idx) => ({
     id: idx + 1,
     priority: 1,
     action: { type: 'block' },
@@ -27,17 +25,19 @@ function getBlockRules() {
   }));
 }
 
-function enableBlocking() {
+async function enableBlocking() {
+  const rules = await getBlockRules();
   chrome.declarativeNetRequest.updateDynamicRules({
-    addRules: getBlockRules(),
-    removeRuleIds: BLOCKED_SITES.map((_, idx) => idx + 1)
+    addRules: rules,
+    removeRuleIds: rules.map((_, idx) => idx + 1)
   });
 }
 
-function disableBlocking() {
+async function disableBlocking() {
+  const rules = await getBlockRules();
   chrome.declarativeNetRequest.updateDynamicRules({
     addRules: [],
-    removeRuleIds: BLOCKED_SITES.map((_, idx) => idx + 1)
+    removeRuleIds: rules.map((_, idx) => idx + 1)
   });
 }
 
@@ -130,6 +130,18 @@ chrome.runtime.onMessage.addListener((message) => {
     console.log('Background: Submission accepted');
     // Turn off focus mode but keep timer running
     chrome.storage.local.set({ leetguardSolved: true, focusMode: false });
+    
+    // Log the activity
+    if (activityLogger) {
+      const problemInfo = activityLogger.extractProblemInfo(message.slug, message.url);
+      activityLogger.logActivity({
+        ...problemInfo,
+        submissionId: message.submissionId,
+        statusData: message.statusData
+      }).catch(error => {
+        console.error('Failed to log activity:', error);
+      });
+    }
   }
   
   // Timer messages
@@ -147,6 +159,51 @@ chrome.runtime.onMessage.addListener((message) => {
     console.log('Background: Resetting timer');
     resetTimer();
   }
+  
+  // OAuth callback handling
+  if (message && message.type === 'OAUTH_CALLBACK') {
+    console.log('Background: Handling OAuth callback');
+    if (extensionAuth && message.tokens) {
+      extensionAuth.handleOAuthCallback(message.tokens).then(success => {
+        if (success) {
+          console.log('OAuth callback handled successfully');
+          // Trigger sync after successful authentication
+          if (blocklistSync) blocklistSync.syncBlocklist();
+          if (activityLogger) activityLogger.syncLocalActivities();
+        }
+      });
+    }
+  }
+});
+
+// Set up periodic sync (every 10 minutes)
+setInterval(async () => {
+  if (extensionAuth && extensionAuth.isAuthenticated()) {
+    console.log('Background: Running periodic sync...');
+    
+    try {
+      // Sync blocklist
+      if (blocklistSync) {
+        await blocklistSync.syncBlocklist();
+      }
+      
+      // Sync pending activities
+      if (activityLogger) {
+        await activityLogger.syncPendingActivities();
+      }
+      
+      console.log('Background: Periodic sync completed');
+    } catch (error) {
+      console.error('Background: Periodic sync failed:', error);
+    }
+  }
+}, 10 * 60 * 1000); // 10 minutes
+
+// Initialize sync modules when background script starts
+chrome.runtime.onStartup.addListener(async () => {
+  console.log('Background: Extension startup, initializing sync...');
+  if (blocklistSync) await blocklistSync.syncBlocklist();
+  if (activityLogger) await activityLogger.syncPendingActivities();
 });
 
 // On install or browser start, check timer state for blocking

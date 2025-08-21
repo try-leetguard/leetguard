@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useState } from "react";
-import { Trash2, CheckCircle, XCircle } from "lucide-react";
+import { Trash2, CheckCircle, XCircle, Info } from "lucide-react";
 
 export default function BlockListPage() {
   useEffect(() => {
@@ -38,6 +38,95 @@ export default function BlockListPage() {
   );
 }
 
+// Extension Info Component
+function ExtensionInfo() {
+  const [showDetails, setShowDetails] = useState(false);
+  const [extensionData, setExtensionData] = useState<any>(null);
+
+  useEffect(() => {
+    // Get extension data from DOM marker or window property
+    const marker = document.getElementById("leetguard-extension-installed");
+    if (marker) {
+      setExtensionData({
+        version: marker.getAttribute("data-version"),
+        isDeveloperMode: marker.getAttribute("data-dev-mode") === "true",
+        extensionId: marker.getAttribute("data-extension-id"),
+        detectedAt: marker.getAttribute("data-detected-at"),
+      });
+    } else if (window.leetguardExtension) {
+      setExtensionData(window.leetguardExtension);
+    }
+  }, []);
+
+  // Close details on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (showDetails && !target.closest(".extension-info")) {
+        setShowDetails(false);
+      }
+    };
+
+    if (showDetails) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showDetails]);
+
+  if (!extensionData) return null;
+
+  return (
+    <div className="relative extension-info">
+      <button
+        onClick={() => setShowDetails(!showDetails)}
+        className="text-blue-600 hover:text-blue-800 p-1"
+        title="Extension Details"
+      >
+        <Info size={14} />
+      </button>
+
+      {showDetails && (
+        <div className="absolute top-6 left-0 bg-white border border-gray-300 rounded-lg shadow-lg p-3 z-10 min-w-64">
+          <div className="text-sm space-y-2">
+            <div>
+              <strong>Version:</strong> {extensionData.version}
+            </div>
+            <div>
+              <strong>Mode:</strong>{" "}
+              {extensionData.isDeveloperMode ? "Developer" : "Production"}
+            </div>
+            {extensionData.isDeveloperMode && (
+              <div className="text-orange-600 text-xs">
+                ⚠️ Running in developer mode
+              </div>
+            )}
+            <div>
+              <strong>ID:</strong>{" "}
+              <code className="text-xs bg-gray-100 px-1 rounded">
+                {extensionData.extensionId}
+              </code>
+            </div>
+            {extensionData.features && (
+              <div>
+                <strong>Features:</strong>
+                <ul className="text-xs mt-1 space-y-1">
+                  {extensionData.features.map((feature: string) => (
+                    <li key={feature} className="flex items-center gap-1">
+                      <CheckCircle size={10} className="text-green-500" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function BlockList() {
   const [input, setInput] = useState("");
   const [list, setList] = useState<string[]>([
@@ -48,10 +137,114 @@ function BlockList() {
     "x.com",
   ]);
   const [notification, setNotification] = useState<{
-    type: "success" | "error";
+    type: "success" | "error" | "info";
     message: string;
     show: boolean;
   } | null>(null);
+  const [extensionConnected, setExtensionConnected] = useState(false);
+
+  // Check for extension connection
+  useEffect(() => {
+    const checkExtension = async () => {
+      try {
+        // Method 1: Check for DOM marker (most reliable)
+        const marker = document.getElementById("leetguard-extension-installed");
+        if (marker) {
+          const version = marker.getAttribute("data-version");
+          const isDeveloperMode =
+            marker.getAttribute("data-dev-mode") === "true";
+          const extensionId = marker.getAttribute("data-extension-id");
+
+          setExtensionConnected(true);
+          setNotification({
+            type: "info",
+            message: `LeetGuard extension detected! ${
+              isDeveloperMode ? "(Developer Mode)" : ""
+            } v${version}`,
+            show: true,
+          });
+
+          console.log("Extension detected via DOM marker:", {
+            version,
+            isDeveloperMode,
+            extensionId,
+          });
+          return;
+        }
+
+        // Method 2: Check window property (backup)
+        if (window.leetguardExtension?.installed) {
+          const ext = window.leetguardExtension;
+          setExtensionConnected(true);
+          setNotification({
+            type: "info",
+            message: `LeetGuard extension detected! ${
+              ext.isDeveloperMode ? "(Developer Mode)" : ""
+            } v${ext.version}`,
+            show: true,
+          });
+
+          console.log("Extension detected via window property:", ext);
+          return;
+        }
+
+        // Method 3: Try message communication (fallback)
+        const response = await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => reject(new Error("timeout")), 1000);
+
+          window.postMessage({ type: "LEETGUARD_PING" }, "*");
+
+          const handleMessage = (event: MessageEvent) => {
+            if (event.data?.type === "LEETGUARD_PONG") {
+              clearTimeout(timeout);
+              window.removeEventListener("message", handleMessage);
+              resolve(event.data);
+            }
+          };
+
+          window.addEventListener("message", handleMessage);
+        });
+
+        if (response) {
+          setExtensionConnected(true);
+          setNotification({
+            type: "info",
+            message: `LeetGuard extension detected! ${
+              response.isDeveloperMode ? "(Developer Mode)" : ""
+            } v${response.version}`,
+            show: true,
+          });
+
+          console.log(
+            "Extension detected via message communication:",
+            response
+          );
+        }
+      } catch (error) {
+        console.log("Extension not detected:", error.message);
+        setExtensionConnected(false);
+      }
+    };
+
+    // Check immediately
+    checkExtension();
+
+    // Also listen for extension ready event (in case extension loads after page)
+    const handleExtensionReady = (event) => {
+      console.log("Extension ready event received:", event.detail);
+      checkExtension();
+    };
+
+    window.addEventListener("leetguardExtensionReady", handleExtensionReady);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener(
+        "leetguardExtensionReady",
+        handleExtensionReady
+      );
+    };
+  }, []);
 
   // Auto-dismiss notification after 3 seconds
   useEffect(() => {
@@ -113,6 +306,31 @@ function BlockList() {
 
   return (
     <div className="bg-white border border-gray-400 shadow-md p-6 w-full flex flex-col gap-6 rounded-lg relative">
+      {/* Extension Status */}
+      <div className="flex items-center justify-between pb-4 border-b border-gray-200">
+        <div className="flex items-center gap-2">
+          <div
+            className={`w-3 h-3 rounded-full ${
+              extensionConnected ? "bg-green-500" : "bg-gray-400"
+            }`}
+          ></div>
+          <span className="text-sm text-gray-600">
+            Extension: {extensionConnected ? "Connected" : "Not detected"}
+          </span>
+          {extensionConnected && <ExtensionInfo />}
+        </div>
+        {!extensionConnected && (
+          <a
+            href="https://chrome.google.com/webstore"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-blue-600 hover:text-blue-800 underline"
+          >
+            Install Extension
+          </a>
+        )}
+      </div>
+
       {/* Add Site */}
       <div className="flex gap-2">
         <input

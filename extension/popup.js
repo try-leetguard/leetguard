@@ -2,6 +2,9 @@ let currentTime = 25; // Default 25 minutes
 let remainingTime = 0;
 let isPaused = false;
 
+// Import auth functionality - these will be available globally
+// since they're loaded in the background script and shared storage
+
 function updateTimeDisplay() {
   document.getElementById('timeDisplay').textContent = currentTime;
 }
@@ -217,36 +220,100 @@ chrome.runtime.onMessage.addListener((message) => {
   }
 });
 
-document.getElementById('toggleFocus').addEventListener('click', () => {
-  chrome.storage.local.get('focusMode', (data) => {
-    const newMode = !data.focusMode;
-    chrome.storage.local.set({ focusMode: newMode });
-    // Notify background to update blocking
-    chrome.runtime.sendMessage({ type: 'FOCUS_MODE_TOGGLE', focusMode: newMode });
-    
-    // Start countdown immediately when button is clicked
-    startCountdown();
-  });
-});
+// Initialize event listeners after DOM is loaded
+function initializeEventListeners() {
+  const toggleFocusBtn = document.getElementById('toggleFocus');
+  const increaseTimeBtn = document.getElementById('increaseTime');
+  const decreaseTimeBtn = document.getElementById('decreaseTime');
+  const editListBtn = document.getElementById('editList');
 
-// Timer functionality
-document.getElementById('increaseTime').addEventListener('click', () => {
-  currentTime += 5;
-  updateTimeDisplay();
-});
-
-document.getElementById('decreaseTime').addEventListener('click', () => {
-  if (currentTime > 5) {
-    currentTime -= 5;
-    updateTimeDisplay();
+  if (toggleFocusBtn) {
+    toggleFocusBtn.addEventListener('click', () => {
+      chrome.storage.local.get('focusMode', (data) => {
+        const newMode = !data.focusMode;
+        chrome.storage.local.set({ focusMode: newMode });
+        // Notify background to update blocking
+        chrome.runtime.sendMessage({ type: 'FOCUS_MODE_TOGGLE', focusMode: newMode });
+        
+        // Start countdown immediately when button is clicked
+        startCountdown();
+      });
+    });
   }
-});
 
-// Edit List button functionality
-document.getElementById('editList').addEventListener('click', () => {
-  console.log('Edit List clicked - showing mini blocklist UI');
-  showMiniBlocklistUI();
-});
+  if (increaseTimeBtn) {
+    increaseTimeBtn.addEventListener('click', () => {
+      currentTime += 5;
+      updateTimeDisplay();
+    });
+  }
+
+  if (decreaseTimeBtn) {
+    decreaseTimeBtn.addEventListener('click', () => {
+      if (currentTime > 5) {
+        currentTime -= 5;
+        updateTimeDisplay();
+      }
+    });
+  }
+
+  if (editListBtn) {
+    editListBtn.addEventListener('click', () => {
+      console.log('Edit List clicked - showing mini blocklist UI');
+      showMiniBlocklistUI();
+    });
+  }
+}
+
+function restoreMainUI() {
+  const mainPopup = document.getElementById('leetguard-popup');
+  mainPopup.innerHTML = `
+    <div class="timer-section">
+      <h3><img src="icons/leetguard-logo-black.png" alt="LeetGuard" class="logo"> TIMER</h3>
+      <div class="time-setter">
+        <button class="time-btn" id="decreaseTime">-</button>
+        <span id="timeDisplay">${currentTime}</span>
+        <button class="time-btn" id="increaseTime">+</button>
+      </div>
+      <span class="time-unit">minutes</span>
+    </div>
+    <div class="button-group">
+      <button id="toggleFocus">Focus</button>
+      <button id="editList">Edit List</button>
+    </div>
+  `;
+  
+  // Re-add event listeners for the timer interface
+  document.getElementById('toggleFocus').addEventListener('click', () => {
+    chrome.storage.local.get('focusMode', (data) => {
+      const newMode = !data.focusMode;
+      chrome.storage.local.set({ focusMode: newMode });
+      chrome.runtime.sendMessage({ type: 'FOCUS_MODE_TOGGLE', focusMode: newMode });
+      
+      // Start countdown immediately when button is clicked
+      startCountdown();
+    });
+  });
+  
+  document.getElementById('increaseTime').addEventListener('click', () => {
+    currentTime += 5;
+    updateTimeDisplay();
+  });
+  
+  document.getElementById('decreaseTime').addEventListener('click', () => {
+    if (currentTime > 5) {
+      currentTime -= 5;
+      updateTimeDisplay();
+    }
+  });
+  
+  document.getElementById('editList').addEventListener('click', () => {
+    console.log('Edit List clicked - showing mini blocklist UI');
+    showMiniBlocklistUI();
+  });
+  
+  updateTimeDisplay();
+}
 
 function showMiniBlocklistUI() {
   const mainPopup = document.getElementById('leetguard-popup');
@@ -373,6 +440,46 @@ function restoreMainUI() {
   updateTimeDisplay();
 }
 
-// Load countdown state when popup opens
-loadCountdownState();
-updateTimeDisplay(); 
+// Initialize popup with authentication check
+async function initializePopup() {
+  // Wait for auth to be available and initialize
+  if (typeof extensionAuth !== 'undefined') {
+    await extensionAuth.init();
+  }
+  
+  // Initialize event listeners
+  initializeEventListeners();
+  
+  // Update UI based on auth state
+  updateAuthUI();
+  
+  // Load countdown state
+  loadCountdownState();
+  updateTimeDisplay();
+}
+
+// Update UI based on authentication state
+function updateAuthUI() {
+  const signInBtn = document.getElementById('signInBtn');
+  if (signInBtn) {
+    if (typeof extensionAuth !== 'undefined' && extensionAuth.isAuthenticated()) {
+      signInBtn.textContent = `Signed in as ${extensionAuth.user?.email || 'User'}`;
+      signInBtn.disabled = true;
+    } else {
+      signInBtn.textContent = 'Login to Customize';
+      signInBtn.disabled = false;
+    }
+  }
+}
+
+// Initialize popup when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    initializePopup();
+  } catch (error) {
+    console.error('Failed to initialize popup:', error);
+    // Fallback: just initialize event listeners
+    initializeEventListeners();
+    updateTimeDisplay();
+  }
+}); 
