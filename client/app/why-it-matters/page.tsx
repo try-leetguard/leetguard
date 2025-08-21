@@ -157,7 +157,7 @@ export default function WhyItMattersPage() {
                 transition={{ duration: 0.8, delay: 2.0 }}
                 className="space-y-6"
               >
-                <div className="flex items-start space-x-4"> 
+                <div className="flex items-start space-x-4">
                   <div className="w-8 h-8 rounded-full bg-[#4F8CFF] flex items-center justify-center flex-shrink-0 mt-1">
                     <span className="text-white font-semibold text-sm">1</span>
                   </div>
