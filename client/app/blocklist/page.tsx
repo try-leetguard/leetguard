@@ -3,7 +3,9 @@
 import { useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useState } from "react";
-import { Trash2, CheckCircle, XCircle, Info } from "lucide-react";
+import { Trash2, CheckCircle, XCircle, Info, Loader2 } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
+import BlocklistAPI from "@/lib/blocklist-api";
 
 export default function BlockListPage() {
   useEffect(() => {
@@ -128,14 +130,11 @@ function ExtensionInfo() {
 }
 
 function BlockList() {
+  const { user, isAuthenticated } = useAuth();
   const [input, setInput] = useState("");
-  const [list, setList] = useState<string[]>([
-    "facebook.com",
-    "netflix.com",
-    "instagram.com",
-    "youtube.com",
-    "x.com",
-  ]);
+  const [list, setList] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [notification, setNotification] = useState<{
     type: "success" | "error" | "info";
     message: string;
@@ -246,6 +245,45 @@ function BlockList() {
     };
   }, []);
 
+  // Load user's blocklist from API
+  useEffect(() => {
+    const loadUserBlocklist = async () => {
+      if (!isAuthenticated) {
+        // User not logged in, show empty list
+        setList([]);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const userBlocklist = await BlocklistAPI.getUserBlocklist();
+        setList(userBlocklist);
+
+        if (userBlocklist.length === 0) {
+          setNotification({
+            type: "info",
+            message: "Your blocklist is empty. Add websites to get started!",
+            show: true,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to load blocklist:", error);
+        setNotification({
+          type: "error",
+          message: "Failed to load your blocklist. Please try again.",
+          show: true,
+        });
+        // Fallback to empty list
+        setList([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUserBlocklist();
+  }, [isAuthenticated, user]);
+
   // Auto-dismiss notification after 3 seconds
   useEffect(() => {
     if (notification && notification.show) {
@@ -256,8 +294,17 @@ function BlockList() {
     }
   }, [notification]);
 
-  const addSite = () => {
-    const trimmed = input.trim();
+  const addSite = async () => {
+    if (!isAuthenticated) {
+      setNotification({
+        type: "error",
+        message: "Please log in to manage your blocklist",
+        show: true,
+      });
+      return;
+    }
+
+    const trimmed = input.trim().toLowerCase();
     if (!trimmed) {
       setNotification({
         type: "error",
@@ -266,6 +313,7 @@ function BlockList() {
       });
       return;
     }
+
     if (list.includes(trimmed)) {
       setNotification({
         type: "error",
@@ -274,22 +322,64 @@ function BlockList() {
       });
       return;
     }
-    setList([trimmed, ...list]);
-    setInput("");
-    setNotification({
-      type: "success",
-      message: "Website added successfully",
-      show: true,
-    });
+
+    try {
+      setSaving(true);
+      await BlocklistAPI.addWebsite(trimmed);
+
+      // Update local state optimistically
+      setList([trimmed, ...list]);
+      setInput("");
+      setNotification({
+        type: "success",
+        message: "Website added successfully",
+        show: true,
+      });
+    } catch (error) {
+      console.error("Failed to add website:", error);
+      setNotification({
+        type: "error",
+        message: "Failed to add website. Please try again.",
+        show: true,
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const removeSite = (site: string) => {
-    setList(list.filter((s) => s !== site));
-    setNotification({
-      type: "success",
-      message: `${site} removed successfully`,
-      show: true,
-    });
+  const removeSite = async (site: string) => {
+    if (!isAuthenticated) {
+      setNotification({
+        type: "error",
+        message: "Please log in to manage your blocklist",
+        show: true,
+      });
+      return;
+    }
+
+    try {
+      // Optimistically update UI
+      const originalList = [...list];
+      setList(list.filter((s) => s !== site));
+
+      // Make API call
+      await BlocklistAPI.removeWebsite(site);
+
+      setNotification({
+        type: "success",
+        message: `${site} removed successfully`,
+        show: true,
+      });
+    } catch (error) {
+      console.error("Failed to remove website:", error);
+      // Revert optimistic update
+      setList(originalList);
+      setNotification({
+        type: "error",
+        message: `Failed to remove ${site}. Please try again.`,
+        show: true,
+      });
+    }
   };
 
   // Helper to extract domain for favicon
@@ -345,45 +435,69 @@ function BlockList() {
         />
         <button
           onClick={addSite}
-          className="px-4 py-2 bg-black text-white font-medium font-dm-sans hover:bg-neutral-800 transition-colors border border-black/20 rounded-sm  "
+          disabled={saving || !isAuthenticated}
+          className="px-4 py-2 bg-black text-white font-medium font-dm-sans hover:bg-neutral-800 transition-colors border border-black/20 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
+          {saving && <Loader2 size={14} className="animate-spin" />}
           Add
         </button>
       </div>
       {/* List */}
-      <ul className="flex flex-col gap-2">
-        {list.length === 0 ? (
-          <li className="text-neutral-400 text-center py-8 select-none">
-            No websites blocked yet.
-          </li>
-        ) : (
-          list.map((site) => (
-            <li
-              key={site}
-              className="flex items-center justify-between bg-gray-50 border border-gray-200 px-4 py-2 font-dm-sans rounded-sm"
+      <div className="flex flex-col gap-2">
+        {loading ? (
+          <div className="text-center py-8 flex items-center justify-center gap-2">
+            <Loader2 size={20} className="animate-spin" />
+            <span className="text-gray-600">Loading your blocklist...</span>
+          </div>
+        ) : !isAuthenticated ? (
+          <div className="text-center py-8">
+            <p className="text-gray-600 mb-4">
+              Please log in to manage your blocklist
+            </p>
+            <a
+              href="/login"
+              className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
             >
-              <span className="flex items-center text-black break-all">
-                <img
-                  src={`https://icons.duckduckgo.com/ip3/${getDomain(
-                    site
-                  )}.ico`}
-                  alt=""
-                  className="w-5 h-5 mr-2 rounded-none"
-                  style={{ minWidth: 20 }}
-                />
-                {site}
-              </span>
-              <button
-                onClick={() => removeSite(site)}
-                className="text-red-500 hover:text-red-700 p-1"
-                aria-label={`Remove ${site}`}
+              Log In
+            </a>
+          </div>
+        ) : list.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-600 mb-2">Your blocklist is empty</p>
+            <p className="text-sm text-gray-500">
+              Add websites above to get started blocking distractions
+            </p>
+          </div>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {list.map((site) => (
+              <li
+                key={site}
+                className="flex items-center justify-between bg-gray-50 border border-gray-200 px-4 py-2 font-dm-sans rounded-sm"
               >
-                <Trash2 size={18} />
-              </button>
-            </li>
-          ))
+                <span className="flex items-center text-black break-all">
+                  <img
+                    src={`https://icons.duckduckgo.com/ip3/${getDomain(
+                      site
+                    )}.ico`}
+                    alt=""
+                    className="w-5 h-5 mr-2 rounded-none"
+                    style={{ minWidth: 20 }}
+                  />
+                  {site}
+                </span>
+                <button
+                  onClick={() => removeSite(site)}
+                  className="text-red-500 hover:text-red-700 p-1"
+                  aria-label={`Remove ${site}`}
+                >
+                  <Trash2 size={18} />
+                </button>
+              </li>
+            ))}
+          </ul>
         )}
-      </ul>
+      </div>
 
       {/* Notification Card */}
       {notification && notification.show && (

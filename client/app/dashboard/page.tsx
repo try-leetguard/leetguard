@@ -4,22 +4,43 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import Sidebar from "@/components/Sidebar";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
-import { Trash2 } from "lucide-react";
+import { Trash2, Loader2 } from "lucide-react";
+import BlocklistAPI from "@/lib/blocklist-api";
 
 export default function DashboardPage() {
-  const { user } = useAuth();
-  const [blocklist, setBlocklist] = useState<string[]>([
-    "facebook.com",
-    "netflix.com",
-    "instagram.com",
-    "youtube.com",
-  ]);
+  const { user, isAuthenticated } = useAuth();
+  const [blocklist, setBlocklist] = useState<string[]>([]);
+  const [blocklistLoading, setBlocklistLoading] = useState(true);
 
   useEffect(() => {
     // Set light mode for dashboard page
     document.documentElement.classList.remove("dark");
     localStorage.setItem("theme", "light");
   }, []);
+
+  // Load user's blocklist
+  useEffect(() => {
+    const loadBlocklist = async () => {
+      if (!isAuthenticated) {
+        setBlocklist([]);
+        setBlocklistLoading(false);
+        return;
+      }
+
+      try {
+        setBlocklistLoading(true);
+        const userBlocklist = await BlocklistAPI.getUserBlocklist();
+        setBlocklist(userBlocklist);
+      } catch (error) {
+        console.error("Failed to load blocklist for dashboard:", error);
+        setBlocklist([]);
+      } finally {
+        setBlocklistLoading(false);
+      }
+    };
+
+    loadBlocklist();
+  }, [isAuthenticated, user]);
 
   // Generate mini activity data (last 7 days)
   const generateMiniActivityData = () => {
@@ -43,8 +64,23 @@ export default function DashboardPage() {
     }
   }
 
-  const removeSite = (site: string) => {
-    setBlocklist(blocklist.filter((s) => s !== site));
+  const removeSite = async (site: string) => {
+    if (!isAuthenticated) return;
+
+    // Store original state for potential revert
+    const originalBlocklist = [...blocklist];
+
+    try {
+      // Optimistically update UI
+      setBlocklist(blocklist.filter((s) => s !== site));
+
+      // Make API call
+      await BlocklistAPI.removeWebsite(site);
+    } catch (error) {
+      console.error("Failed to remove website:", error);
+      // Revert optimistic update
+      setBlocklist(originalBlocklist);
+    }
   };
 
   return (
@@ -151,33 +187,50 @@ export default function DashboardPage() {
 
                   {/* Mini Blocklist */}
                   <div className="flex-1 flex flex-col gap-1">
-                    {blocklist.map((site) => (
-                      <div
-                        key={site}
-                        className="flex items-center justify-between bg-gray-50 border border-gray-200 px-3 py-1.5 text-sm"
-                      >
-                        <span className="flex items-center text-black truncate">
-                          <img
-                            src={`https://icons.duckduckgo.com/ip3/${getDomain(
-                              site
-                            )}.ico`}
-                            alt=""
-                            className="w-4 h-4 mr-2 rounded-none flex-shrink-0"
-                          />
-                          <span className="truncate">{site}</span>
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            removeSite(site);
-                          }}
-                          className="text-red-500 hover:text-red-700 p-1 flex-shrink-0"
-                          aria-label={`Remove ${site}`}
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                    {blocklistLoading ? (
+                      <div className="flex items-center justify-center py-4">
+                        <Loader2
+                          size={16}
+                          className="animate-spin text-gray-400"
+                        />
                       </div>
-                    ))}
+                    ) : !isAuthenticated ? (
+                      <div className="text-center py-4 text-sm text-gray-500">
+                        Login to see your blocklist
+                      </div>
+                    ) : blocklist.length === 0 ? (
+                      <div className="text-center py-4 text-sm text-gray-500">
+                        No sites blocked yet
+                      </div>
+                    ) : (
+                      blocklist.slice(0, 4).map((site) => (
+                        <div
+                          key={site}
+                          className="flex items-center justify-between bg-gray-50 border border-gray-200 px-3 py-1.5 text-sm"
+                        >
+                          <span className="flex items-center text-black truncate">
+                            <img
+                              src={`https://icons.duckduckgo.com/ip3/${getDomain(
+                                site
+                              )}.ico`}
+                              alt=""
+                              className="w-4 h-4 mr-2 rounded-none flex-shrink-0"
+                            />
+                            <span className="truncate">{site}</span>
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              removeSite(site);
+                            }}
+                            className="text-red-500 hover:text-red-700 p-1 flex-shrink-0"
+                            aria-label={`Remove ${site}`}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </a>
 
