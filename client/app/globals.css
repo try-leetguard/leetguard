@@ -243,3 +243,9 @@ html, body, * {
 html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar {
   display: none;
 }
+
+@layer utilities {
+  .animation-pause {
+    animation-play-state: paused;
+  }
+}

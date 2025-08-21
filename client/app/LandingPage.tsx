@@ -11,6 +11,23 @@ import Features from "@/components/Features";
 import Quote from "@/components/Quote";
 import Footer from "@/components/Footer";
 import LogoCarousel from "@/components/LogoCarousel";
+const companies = [
+  { name: "adobe", logo: "/companies/adobe.svg" },
+  { name: "amazon", logo: "/companies/amazon.svg" },
+  { name: "apple", logo: "/companies/apple.svg" },
+  { name: "coinbase", logo: "/companies/coinbase.svg" },
+  { name: "datadog", logo: "/companies/datadog.svg" },
+  { name: "doordash", logo: "/companies/doordash.svg" },
+  { name: "google", logo: "/companies/google.svg" },
+  { name: "lyft", logo: "/companies/lyft.svg" },
+  { name: "meta", logo: "/companies/meta.svg" },
+  { name: "netflix", logo: "/companies/netflix.svg" },
+  { name: "nvidia", logo: "/companies/nvidia.svg" },
+  { name: "palantir", logo: "/companies/palantir.svg" },
+  { name: "ramp", logo: "/companies/ramp.svg" },
+  { name: "reddit", logo: "/companies/reddit.svg" },
+  { name: "uber", logo: "/companies/uber.svg" },
+] as const;
 
 export function TextFade({
   direction,
@@ -218,14 +235,17 @@ export default function LandingPage() {
       </TextFade>
 
       {/* Logo Carousel */}
-      <LogoCarousel />
+      <LogoCarousel
+        logos={companies as unknown as { name: string; logo: string }[]}
+        speedSeconds={50}
+      />
 
       <div id="features">
         <Features />
       </div>
 
       {/* Separator Line */}
-      <div id="why-important" className="w-full flex justify-center py-8">
+      <div id="how-important" className="w-full flex justify-center py-8">
         <div className="w-24 h-px"></div>
       </div>
 

@@ -1,5 +1,5 @@
-import LandingPage from './LandingPage';
-import { MarketingPageWrapper } from '@/components/MarketingPageWrapper';
+import LandingPage from "./LandingPage";
+import { MarketingPageWrapper } from "@/components/MarketingPageWrapper";
 
 export default function Home() {
   return (
