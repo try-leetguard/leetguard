@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "LeetGuard",
+  "name": "LeetGuard - Block distractions while you LeetCode",
   "version": "0.1.0",
-  "description": "Learning to build extensions",
+  "description": "Take back control of your interview preparation with LeetGuard",
 
   "icons": {
     "16": "icons/leetguard-logo-black.png",
