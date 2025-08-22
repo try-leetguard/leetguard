@@ -3,9 +3,29 @@
 import { useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useState } from "react";
-import { Trash2, CheckCircle, XCircle, Info, Loader2 } from "lucide-react";
+import {
+  Trash2,
+  CheckCircle,
+  XCircle,
+  Info,
+  Loader2,
+  Shield,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import BlocklistAPI from "@/lib/blocklist-api";
+
+// Extend Window interface for extension properties
+declare global {
+  interface Window {
+    leetguardExtension?: {
+      installed: boolean;
+      version: string;
+      isDeveloperMode: boolean;
+      extensionId: string;
+      features?: string[];
+    };
+  }
+}
 
 export default function BlockListPage() {
   useEffect(() => {
@@ -209,8 +229,8 @@ function BlockList() {
           setNotification({
             type: "info",
             message: `LeetGuard extension detected! ${
-              response.isDeveloperMode ? "(Developer Mode)" : ""
-            } v${response.version}`,
+              (response as any)?.isDeveloperMode ? "(Developer Mode)" : ""
+            } v${(response as any)?.version || "unknown"}`,
             show: true,
           });
 
@@ -220,7 +240,10 @@ function BlockList() {
           );
         }
       } catch (error) {
-        console.log("Extension not detected:", error.message);
+        console.log(
+          "Extension not detected:",
+          error instanceof Error ? error.message : String(error)
+        );
         setExtensionConnected(false);
       }
     };
@@ -229,8 +252,11 @@ function BlockList() {
     checkExtension();
 
     // Also listen for extension ready event (in case extension loads after page)
-    const handleExtensionReady = (event) => {
-      console.log("Extension ready event received:", event.detail);
+    const handleExtensionReady = (event: Event) => {
+      console.log(
+        "Extension ready event received:",
+        (event as CustomEvent).detail
+      );
       checkExtension();
     };
 
@@ -357,9 +383,11 @@ function BlockList() {
       return;
     }
 
+    // Store original list for potential revert
+    const originalList = [...list];
+
     try {
       // Optimistically update UI
-      const originalList = [...list];
       setList(list.filter((s) => s !== site));
 
       // Make API call
@@ -372,7 +400,7 @@ function BlockList() {
       });
     } catch (error) {
       console.error("Failed to remove website:", error);
-      // Revert optimistic update
+      // Revert optimistic update - restore original list
       setList(originalList);
       setNotification({
         type: "error",
@@ -451,6 +479,7 @@ function BlockList() {
           </div>
         ) : !isAuthenticated ? (
           <div className="text-center py-8">
+            <Shield size={24} className="text-gray-400 mx-auto mb-2" />
             <p className="text-gray-600 mb-4">
               Please log in to manage your blocklist
             </p>
