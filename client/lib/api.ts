@@ -247,7 +247,7 @@ class ApiClient {
 
   async removeWebsite(token: string, website: string): Promise<{ message: string }> {
     return this.request<{ message: string }>('/api/blocklist/remove', {
-      method: 'POST',
+      method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
