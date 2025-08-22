@@ -26,13 +26,7 @@ export class BlocklistAPI {
     }
 
     try {
-      const response = await apiClient.request<BlocklistResponse>('/api/blocklist', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
+      const response = await apiClient.getBlocklist(token);
       return response.websites || [];
     } catch (error) {
       console.error('Failed to fetch user blocklist:', error);
@@ -57,14 +51,7 @@ export class BlocklistAPI {
     const cleanWebsite = website.trim().toLowerCase();
 
     try {
-      await apiClient.request('/api/blocklist/add', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ website: cleanWebsite }),
-      });
+      await apiClient.addWebsite(token, cleanWebsite);
     } catch (error) {
       console.error('Failed to add website to blocklist:', error);
       throw error;
@@ -81,14 +68,7 @@ export class BlocklistAPI {
     }
 
     try {
-      await apiClient.request('/api/blocklist/remove', {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ website }),
-      });
+      await apiClient.removeWebsite(token, website);
     } catch (error) {
       console.error('Failed to remove website from blocklist:', error);
       throw error;
@@ -105,16 +85,7 @@ export class BlocklistAPI {
     }
 
     try {
-      const response = await apiClient.request<{ website: string; is_blocked: boolean }>(
-        `/api/blocklist/check/${encodeURIComponent(website)}`,
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
-
+      const response = await apiClient.checkWebsite(token, website);
       return response.is_blocked;
     } catch (error) {
       console.error('Failed to check if website is blocked:', error);

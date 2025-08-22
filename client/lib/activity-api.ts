@@ -51,13 +51,7 @@ export class ActivityAPI {
     }
 
     try {
-      const response = await apiClient.request<ActivitiesResponse>('/api/activity', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
+      const response = await apiClient.getActivities(token, limit, offset);
       return response.activities || [];
     } catch (error) {
       console.error('Failed to fetch user activities:', error);
@@ -75,15 +69,7 @@ export class ActivityAPI {
     }
 
     try {
-      const response = await apiClient.request<{ message: string; activity_id: number }>('/api/activity', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(activityData),
-      });
-
+      const response = await apiClient.addActivity(token, activityData);
       return { activity_id: response.activity_id };
     } catch (error) {
       console.error('Failed to add activity:', error);
@@ -101,13 +87,7 @@ export class ActivityAPI {
     }
 
     try {
-      const response = await apiClient.request<Activity>(`/api/activity/${activityId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
+      const response = await apiClient.getActivity(token, activityId);
       return response;
     } catch (error) {
       console.error('Failed to fetch activity:', error);
@@ -128,15 +108,7 @@ export class ActivityAPI {
     }
 
     try {
-      const response = await apiClient.request<Activity>(`/api/activity/${activityId}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates),
-      });
-
+      const response = await apiClient.updateActivity(token, activityId, updates);
       return response;
     } catch (error) {
       console.error('Failed to update activity:', error);
@@ -147,19 +119,15 @@ export class ActivityAPI {
   /**
    * Delete an activity
    */
-  static async deleteActivity(activityId: number): Promise<void> {
+  static async deleteActivity(activityId: number): Promise<boolean> {
     const token = this.getAccessToken();
     if (!token) {
       throw new Error('User not authenticated');
     }
 
     try {
-      await apiClient.request(`/api/activity/${activityId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      await apiClient.deleteActivity(token, activityId);
+      return true;
     } catch (error) {
       console.error('Failed to delete activity:', error);
       throw error;
@@ -167,7 +135,7 @@ export class ActivityAPI {
   }
 
   /**
-   * Get user's activity statistics
+   * Get activity statistics
    */
   static async getActivityStats(): Promise<ActivityStats | null> {
     const token = this.getAccessToken();
@@ -177,13 +145,7 @@ export class ActivityAPI {
     }
 
     try {
-      const response = await apiClient.request<ActivityStats>('/api/activity/stats', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
+      const response = await apiClient.getActivityStats(token);
       return response;
     } catch (error) {
       console.error('Failed to fetch activity stats:', error);

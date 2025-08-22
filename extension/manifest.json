@@ -48,7 +48,7 @@
         "http://localhost:3000/*",
         "https://leetguard.com/*"
       ],
-      "js": ["webapp-detector.js"],
+      "js": ["webapp-detector.js", "content.js"],
       "run_at": "document_start"
     }
   ]

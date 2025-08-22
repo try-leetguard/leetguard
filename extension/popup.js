@@ -182,8 +182,19 @@ function resetTimer() {
     });
     
     document.getElementById('editList').addEventListener('click', () => {
-      console.log('Edit List clicked - showing mini blocklist UI');
-      showMiniBlocklistUI();
+      // Check if user is authenticated
+      if (typeof extensionAuth !== 'undefined' && extensionAuth.isAuthenticated()) {
+        // User is logged in, redirect to web app blocklist page
+        // Get the web app URL - use localhost for development, production URL for production
+        const webAppUrl = 'http://localhost:3000'; // TODO: Make this configurable for production
+        chrome.tabs.create({
+          url: `${webAppUrl}/blocklist`
+        });
+      } else {
+        // User is not logged in, show mini blocklist UI
+        console.log('Edit List clicked - showing mini blocklist UI');
+        showMiniBlocklistUI();
+      }
     });
     
     updateTimeDisplay();
@@ -217,6 +228,25 @@ chrome.runtime.onMessage.addListener((message) => {
     console.log('Timer completed');
     showTimerComplete();
     clearCountdownState();
+  } else if (message.type === 'AUTH_STATE_CHANGED') {
+    console.log('Auth state changed, updating UI');
+    // Re-initialize auth state and update UI
+    if (typeof extensionAuth !== 'undefined') {
+      extensionAuth.init().then(() => {
+        updateAuthUI();
+        // If we're showing the mini blocklist UI, refresh it
+        const miniBlocklist = document.querySelector('.mini-blocklist');
+        if (miniBlocklist) {
+          if (extensionAuth.isAuthenticated()) {
+            // User is now authenticated, go back to main UI
+            restoreMainUI();
+          } else {
+            // User is not authenticated, refresh the mini blocklist UI
+            showMiniBlocklistUI();
+          }
+        }
+      });
+    }
   }
 });
 
@@ -259,8 +289,19 @@ function initializeEventListeners() {
 
   if (editListBtn) {
     editListBtn.addEventListener('click', () => {
-      console.log('Edit List clicked - showing mini blocklist UI');
-      showMiniBlocklistUI();
+      // Check if user is authenticated
+      if (typeof extensionAuth !== 'undefined' && extensionAuth.isAuthenticated()) {
+        // User is logged in, redirect to web app blocklist page
+        // Get the web app URL - use localhost for development, production URL for production
+        const webAppUrl = 'http://localhost:3000'; // TODO: Make this configurable for production
+        chrome.tabs.create({
+          url: `${webAppUrl}/blocklist`
+        });
+      } else {
+        // User is not logged in, show mini blocklist UI
+        console.log('Edit List clicked - showing mini blocklist UI');
+        showMiniBlocklistUI();
+      }
     });
   }
 }
@@ -380,8 +421,10 @@ function showMiniBlocklistUI() {
   
   // Add event listeners
   document.getElementById('signInBtn').addEventListener('click', () => {
+    // Get the web app URL - use localhost for development, production URL for production
+    const webAppUrl = 'http://localhost:3000'; // TODO: Make this configurable for production
     chrome.tabs.create({
-      url: 'http://localhost:3000/login?redirect=extension'
+      url: `${webAppUrl}/login?redirect=extension`
     });
   });
   
@@ -456,6 +499,26 @@ async function initializePopup() {
   // Load countdown state
   loadCountdownState();
   updateTimeDisplay();
+  
+  // On-demand sync when popup opens (much more efficient than periodic sync)
+  if (typeof extensionAuth !== 'undefined' && extensionAuth.isAuthenticated()) {
+    try {
+      console.log('Popup: Running on-demand sync...');
+      
+      // Sync blocklist and activities only when user opens popup
+      if (typeof blocklistSync !== 'undefined') {
+        await blocklistSync.syncBlocklist();
+      }
+      
+      if (typeof activityLogger !== 'undefined') {
+        await activityLogger.syncPendingActivities();
+      }
+      
+      console.log('Popup: On-demand sync completed');
+    } catch (error) {
+      console.error('Popup: On-demand sync failed:', error);
+    }
+  }
 }
 
 // Update UI based on authentication state

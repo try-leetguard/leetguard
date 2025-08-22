@@ -29,8 +29,14 @@ interface AuthContextType {
     code: string
   ) => Promise<{ success: boolean; message: string }>;
   refreshUser: () => Promise<void>;
-  loginWithGoogle: (code: string, redirectUri: string) => Promise<{ success: boolean; message?: string }>;
-  loginWithGitHub: (code: string, redirectUri: string) => Promise<{ success: boolean; message?: string }>;
+  loginWithGoogle: (
+    code: string,
+    redirectUri: string
+  ) => Promise<{ success: boolean; message?: string }>;
+  loginWithGitHub: (
+    code: string,
+    redirectUri: string
+  ) => Promise<{ success: boolean; message?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -51,6 +57,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("refresh_token");
   };
 
+  // Send authentication tokens to extension
+  const syncAuthWithExtension = (
+    accessToken: string,
+    refreshToken: string,
+    userData: User
+  ) => {
+    try {
+      window.postMessage(
+        {
+          type: "LEETGUARD_AUTH_SYNC",
+          tokens: {
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          },
+          user: userData,
+        },
+        "*"
+      );
+      console.log("Auth tokens sent to extension");
+    } catch (error) {
+      console.error("Failed to send auth tokens to extension:", error);
+    }
+  };
+
   // Initialize auth state on mount
   useEffect(() => {
     const initializeAuth = async () => {
@@ -59,6 +89,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           const userData = await apiClient.getCurrentUser(accessToken);
           setUser(userData);
+
+          // Sync authentication with extension
+          const refreshToken = getRefreshToken();
+          if (refreshToken) {
+            syncAuthWithExtension(accessToken, refreshToken, userData);
+          }
         } catch (error) {
           // Token might be expired, try to refresh
           const refreshToken = getRefreshToken();
@@ -70,6 +106,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 newTokens.access_token
               );
               setUser(userData);
+
+              // Sync authentication with extension
+              syncAuthWithExtension(
+                newTokens.access_token,
+                newTokens.refresh_token,
+                userData
+              );
             } catch (refreshError) {
               // Refresh failed, clear tokens
               clearTokens();
@@ -97,6 +140,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           authResponse.access_token
         );
         setUser(userData);
+
+        // Sync authentication with extension
+        syncAuthWithExtension(
+          authResponse.access_token,
+          authResponse.refresh_token,
+          userData
+        );
+
         return { success: true };
       } else {
         // User needs email verification
@@ -132,6 +183,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null);
     clearTokens();
+
+    // Notify extension of logout
+    try {
+      window.postMessage(
+        {
+          type: "LEETGUARD_LOGOUT",
+        },
+        "*"
+      );
+      console.log("Logout notification sent to extension");
+    } catch (error) {
+      console.error("Failed to send logout notification to extension:", error);
+    }
 
     // Dispatch a custom event to notify other components about logout
     window.dispatchEvent(new CustomEvent("userLoggedOut"));
@@ -179,10 +243,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGoogle = async (code: string, redirectUri: string) => {
     try {
-      const response = await apiClient.googleOAuth({ code, redirect_uri: redirectUri });
+      const response = await apiClient.googleOAuth({
+        code,
+        redirect_uri: redirectUri,
+      });
       setTokens(response.access_token, response.refresh_token);
       const userData = await apiClient.getCurrentUser(response.access_token);
       setUser(userData);
+
+      // Sync authentication with extension
+      syncAuthWithExtension(
+        response.access_token,
+        response.refresh_token,
+        userData
+      );
+
       return { success: true };
     } catch (error) {
       return {
@@ -194,10 +269,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGitHub = async (code: string, redirectUri: string) => {
     try {
-      const response = await apiClient.githubOAuth({ code, redirect_uri: redirectUri });
+      const response = await apiClient.githubOAuth({
+        code,
+        redirect_uri: redirectUri,
+      });
       setTokens(response.access_token, response.refresh_token);
       const userData = await apiClient.getCurrentUser(response.access_token);
       setUser(userData);
+
+      // Sync authentication with extension
+      syncAuthWithExtension(
+        response.access_token,
+        response.refresh_token,
+        userData
+      );
+
       return { success: true };
     } catch (error) {
       return {

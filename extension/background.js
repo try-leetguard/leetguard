@@ -7,6 +7,41 @@ let remainingTime = 0;
 let isPaused = false;
 let currentTime = 25;
 
+// Listen for storage changes across tabs
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (namespace === 'local') {
+    // Check if auth tokens were removed (logout in another tab)
+    if (changes.access_token && !changes.access_token.newValue && changes.access_token.oldValue) {
+      console.log('Background: Auth token removed in another tab - user logged out');
+      if (extensionAuth) {
+        extensionAuth.clearAuth().then(() => {
+          console.log('Background: Auth state cleared due to logout in another tab');
+          // Clear any cached data
+          if (blocklistSync) blocklistSync.clearCachedBlocklist();
+          if (activityLogger) activityLogger.clearPendingActivities();
+          // Notify all extension contexts of auth state change
+          notifyAuthStateChange();
+        });
+      }
+    }
+    
+    // Check if auth tokens were added (login in another tab)
+    if (changes.access_token && changes.access_token.newValue && !changes.access_token.oldValue) {
+      console.log('Background: Auth token added in another tab - user logged in');
+      // The extension will handle this through the normal OAuth callback flow
+    }
+  }
+});
+
+// Function to notify all extension contexts of auth state changes
+function notifyAuthStateChange() {
+  chrome.runtime.sendMessage({
+    type: 'AUTH_STATE_CHANGED'
+  }).catch(err => {
+    console.log('Background: No popup open to notify');
+  });
+}
+
 // Generate blocking rules for each site
 async function getBlockRules() {
   // Get current blocklist (user's if authenticated, default otherwise)
@@ -174,30 +209,41 @@ chrome.runtime.onMessage.addListener((message) => {
       });
     }
   }
-});
-
-// Set up periodic sync (every 10 minutes)
-setInterval(async () => {
-  if (extensionAuth && extensionAuth.isAuthenticated()) {
-    console.log('Background: Running periodic sync...');
-    
-    try {
-      // Sync blocklist
-      if (blocklistSync) {
-        await blocklistSync.syncBlocklist();
-      }
-      
-      // Sync pending activities
-      if (activityLogger) {
-        await activityLogger.syncPendingActivities();
-      }
-      
-      console.log('Background: Periodic sync completed');
-    } catch (error) {
-      console.error('Background: Periodic sync failed:', error);
+  
+  // Logout handling
+  if (message && message.type === 'USER_LOGOUT') {
+    console.log('Background: Handling user logout');
+    if (extensionAuth) {
+      extensionAuth.clearAuth().then(() => {
+        console.log('User logout handled successfully');
+        // Clear any cached data
+        if (blocklistSync) blocklistSync.clearCachedBlocklist();
+        if (activityLogger) activityLogger.clearPendingActivities();
+        // Notify all extension contexts of auth state change
+        notifyAuthStateChange();
+      });
     }
   }
-}, 10 * 60 * 1000); // 10 minutes
+  
+  // Handle localStorage auth changes from content script
+  if (message && message.type === 'LOCALSTORAGE_AUTH_CHANGE') {
+    console.log('Background: Handling localStorage auth change:', message);
+    
+    if (message.action === 'remove' && (message.key === 'access_token' || message.key === 'refresh_token')) {
+      console.log('Background: Auth token removed from localStorage - user logged out');
+      if (extensionAuth) {
+        extensionAuth.clearAuth().then(() => {
+          console.log('Background: Auth state cleared due to localStorage logout');
+          // Clear any cached data
+          if (blocklistSync) blocklistSync.clearCachedBlocklist();
+          if (activityLogger) activityLogger.clearPendingActivities();
+          // Notify all extension contexts of auth state change
+          notifyAuthStateChange();
+        });
+      }
+    }
+  }
+});
 
 // Initialize sync modules when background script starts
 chrome.runtime.onStartup.addListener(async () => {

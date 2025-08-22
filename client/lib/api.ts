@@ -169,6 +169,101 @@ class ApiClient {
     });
   }
 
+  // Activity endpoints
+  async getActivities(token: string, limit: number = 100, offset: number = 0): Promise<{ activities: any[] }> {
+    return this.request<{ activities: any[] }>(`/api/activity?limit=${limit}&offset=${offset}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+  }
+
+  async addActivity(token: string, activityData: any): Promise<{ message: string; activity_id: number }> {
+    return this.request<{ message: string; activity_id: number }>('/api/activity', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(activityData),
+    });
+  }
+
+  async getActivity(token: string, activityId: number): Promise<any> {
+    return this.request<any>(`/api/activity/${activityId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+  }
+
+  async updateActivity(token: string, activityId: number, updates: any): Promise<any> {
+    return this.request<any>(`/api/activity/${activityId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updates),
+    });
+  }
+
+  async deleteActivity(token: string, activityId: number): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/api/activity/${activityId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+  }
+
+  async getActivityStats(token: string): Promise<any> {
+    return this.request<any>('/api/activity/stats', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+  }
+
+  // Blocklist endpoints
+  async getBlocklist(token: string): Promise<{ websites: string[] }> {
+    return this.request<{ websites: string[] }>('/api/blocklist', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+  }
+
+  async addWebsite(token: string, website: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/api/blocklist/add', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ website }),
+    });
+  }
+
+  async removeWebsite(token: string, website: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/api/blocklist/remove', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ website }),
+    });
+  }
+
+  async checkWebsite(token: string, website: string): Promise<{ website: string; is_blocked: boolean }> {
+    return this.request<{ website: string; is_blocked: boolean }>(`/api/blocklist/check?website=${encodeURIComponent(website)}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+  }
+
   // Health check
   async healthCheck(): Promise<{ status: string }> {
     return this.request<{ status: string }>('/health');
