@@ -15,7 +15,7 @@ type LogoCarouselProps = {
 export default function LogoCarousel({
   logos,
   speedSeconds = 22,
-  heading = "Our Clients",
+  heading = "Our Users",
   subheading = "LeetGuard users have reported receiving offer letters from",
 }: LogoCarouselProps) {
   // Intrinsic aspect ratios (width / height) derived from each SVG's width/height or viewBox
