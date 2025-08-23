@@ -45,7 +45,7 @@ export default function SoftwareEngineerPage() {
                   </div>
                 </div>
                 <div className="text-lg text-neutral-600 mb-2">
-                  Remote • Full-time • Build and scale
+                  Remote • Build and scale
                 </div>
               </div>
             </div>
@@ -146,7 +146,9 @@ export default function SoftwareEngineerPage() {
             {/* Apply Button */}
             <div className="mt-12 text-center">
               <a
-                href="mailto:careers@leetguard.com?subject=Software Engineer Application - LeetGuard"
+                href="https://docs.google.com/forms/d/e/1FAIpQLSfiacDs2M9D7rYB2TJStyIQjbM1EBZO5FuOSz9qdCgNF6g7lQ/viewform?usp=dialog"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-block bg-black text-white px-8 py-4 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200"
               >
                 Apply for Software Engineer
