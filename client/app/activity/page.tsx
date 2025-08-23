@@ -42,7 +42,7 @@ export default function ActivityPage() {
           {/* Content Area */}
           <main className="flex-1 p-6 overflow-y-auto bg-gray-50">
             <div className="flex justify-start">
-              <div className="w-[768px]">
+              <div className="w-full max-w-4xl">
                 {/* Progress Tracker Column */}
                 <div className="bg-white border border-gray-400 p-6 mb-6">
                   <div className="mb-4">
@@ -72,10 +72,6 @@ export default function ActivityPage() {
                           }}
                         ></div>
                       </div>
-                      <div className="flex justify-between items-center text-xs text-gray-600">
-                        <span>0 questions</span>
-                        <span>{goalQuestions} questions</span>
-                      </div>
                     </div>
                   </div>
                   <div className="border-t border-gray-200 pt-4 -mx-6 px-6">
@@ -94,8 +90,7 @@ export default function ActivityPage() {
                         Daily Goals
                       </h3>
                       <p className="text-black text-sm leading-relaxed mb-4">
-                        Set how many questions you need to complete to unlock
-                        websites.
+                        Set how many questions you need to complete to unblock.
                       </p>
                       <div className="flex items-center space-x-2">
                         <input
@@ -154,7 +149,8 @@ export default function ActivityPage() {
                     <div className="border-t border-gray-200 pt-4 -mx-6 px-6">
                       <p className="text-black text-xs">
                         When enabled, websites will be blocked until you
-                        complete your daily goal.
+                        complete your daily goal. To unblock, you must wait 20
+                        seconds before continuing.
                       </p>
                     </div>
                   </div>
