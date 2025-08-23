@@ -37,6 +37,13 @@ class BlocklistSync {
     return result.user_blocklist || [];
   }
 
+  // Clear cached blocklist from storage
+  async clearCachedBlocklist() {
+    this.localBlocklist = [];
+    await chrome.storage.local.remove(['user_blocklist']);
+    console.log('Cached blocklist cleared');
+  }
+
   // Get default hardcoded blocklist
   getDefaultBlocklist() {
     return [

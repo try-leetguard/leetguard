@@ -160,6 +160,13 @@ class ActivityLogger {
     await chrome.storage.local.set({ local_activities: localActivities });
   }
 
+  // Clear pending activities from storage
+  async clearPendingActivities() {
+    this.pendingActivities = [];
+    await chrome.storage.local.remove(['pending_activities', 'local_activities']);
+    console.log('Pending activities cleared');
+  }
+
   // Get user's activity statistics
   async getActivityStats() {
     if (!this.auth.isAuthenticated()) {
