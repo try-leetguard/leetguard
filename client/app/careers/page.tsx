@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import NavbarLight from "@/components/NavbarLight";
 import Footer from "@/components/Footer";
 import Image from "next/image";
+import Link from "next/link";
 import { MarketingPageWrapper } from "@/components/MarketingPageWrapper";
 
 export default function CareersPage() {
@@ -44,54 +45,60 @@ export default function CareersPage() {
               {/* Engineering Section */}
               <div>
                 <h2 className="text-2xl font-semibold mb-6">Engineering</h2>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.4 }}
-                  className="bg-white border border-gray-200 p-8 transition-all duration-300 shadow-sm hover:shadow-lg hover:scale-[1.025] cursor-pointer"
-                >
-                  <div className="mb-2 text-lg font-medium">
-                    Software Engineer
-                  </div>
-                  <div className="flex items-center text-neutral-500 mb-2">
-                    <Image
-                      src="/usflag.svg"
-                      alt="US Flag"
-                      width={20}
-                      height={20}
-                      className="mr-2 inline-block align-middle"
-                    />
-                    US only
-                  </div>
-                  <div className="text-sm text-neutral-500">
-                    Remote • Build and scale
-                  </div>
-                </motion.div>
+                <Link href="/careers/software-engineer">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.4 }}
+                    className="bg-white border border-gray-200 p-8 transition-all duration-300 shadow-sm hover:shadow-lg hover:scale-[1.025] cursor-pointer"
+                  >
+                    <div className="mb-2 text-lg font-medium">
+                      Software Engineer
+                    </div>
+                    <div className="flex items-center text-neutral-500 mb-2">
+                      <Image
+                        src="/usflag.svg"
+                        alt="US Flag"
+                        width={20}
+                        height={20}
+                        className="mr-2 inline-block align-middle"
+                      />
+                      US only
+                    </div>
+                    <div className="text-sm text-neutral-500">
+                      Remote • Build and scale
+                    </div>
+                  </motion.div>
+                </Link>
               </div>
               {/* Other Section */}
               <div>
                 <h2 className="text-2xl font-semibold mb-6">Other</h2>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.4 }}
-                  className="bg-white border border-gray-200 p-8 transition-all duration-300 shadow-sm hover:shadow-lg hover:scale-[1.025] cursor-pointer"
-                >
-                  <div className="mb-2 text-lg font-medium">Anything else</div>
-                  <div className="flex items-center text-neutral-500 mb-2">
-                    <Image
-                      src="/usflag.svg"
-                      alt="US Flag"
-                      width={20}
-                      height={20}
-                      className="mr-2 inline-block align-middle"
-                    />
-                    US only
-                  </div>
-                  <div className="text-sm text-neutral-500">
-                    Remote • Contribute your ideas
-                  </div>
-                </motion.div>
+                <Link href="/careers/anything-else">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.4 }}
+                    className="bg-white border border-gray-200 p-8 transition-all duration-300 shadow-sm hover:shadow-lg hover:scale-[1.025] cursor-pointer"
+                  >
+                    <div className="mb-2 text-lg font-medium">
+                      Anything else
+                    </div>
+                    <div className="flex items-center text-neutral-500 mb-2">
+                      <Image
+                        src="/usflag.svg"
+                        alt="US Flag"
+                        width={20}
+                        height={20}
+                        className="mr-2 inline-block align-middle"
+                      />
+                      US only
+                    </div>
+                    <div className="text-sm text-neutral-500">
+                      Remote • Contribute your ideas
+                    </div>
+                  </motion.div>
+                </Link>
               </div>
             </div>
           </div>
