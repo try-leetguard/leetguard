@@ -279,7 +279,7 @@ export default function ActivityPage() {
             <Button
               variant="outline"
               onClick={handleCancelUnblock}
-              className="border-gray-300 text-black hover:bg-gray-50"
+              className="border-gray-300 text-black hover:bg-gray-100 hover:text-black"
             >
               Go Back
             </Button>
