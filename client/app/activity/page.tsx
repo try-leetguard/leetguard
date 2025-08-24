@@ -7,10 +7,30 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function ActivityPage() {
   const [goalQuestions, setGoalQuestions] = useState(5);
   const [extensionEnabled, setExtensionEnabled] = useState(true);
+  const [showUnblockDialog, setShowUnblockDialog] = useState(false);
+  const [countdown, setCountdown] = useState(20);
+  const [isCountdownActive, setIsCountdownActive] = useState(false);
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+  const [isMessageVisible, setIsMessageVisible] = useState(true);
+
+  const motivationalMessages = [
+    "Please wait before proceeding...",
+    "Stay focused - your future self will thank you.",
+    "Don't let a website steal your momentum.",
+    "Small habits today create big wins tomorrow.",
+  ];
 
   useEffect(() => {
     // Set light mode for activity page
@@ -24,8 +44,66 @@ export default function ActivityPage() {
   };
 
   const handleExtensionToggle = (enabled: boolean) => {
-    setExtensionEnabled(enabled);
+    if (!enabled && extensionEnabled) {
+      // User is trying to turn OFF the extension
+      setShowUnblockDialog(true);
+      setCountdown(20);
+      setIsCountdownActive(true);
+      setCurrentMessageIndex(0);
+      setIsMessageVisible(true);
+    } else {
+      setExtensionEnabled(enabled);
+    }
   };
+
+  const handleProceedUnblock = () => {
+    setExtensionEnabled(false);
+    setShowUnblockDialog(false);
+    setIsCountdownActive(false);
+  };
+
+  const handleCancelUnblock = () => {
+    setShowUnblockDialog(false);
+    setIsCountdownActive(false);
+  };
+
+  // Countdown effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isCountdownActive && countdown > 0) {
+      interval = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    } else if (countdown === 0) {
+      setIsCountdownActive(false);
+    }
+    return () => clearInterval(interval);
+  }, [isCountdownActive, countdown]);
+
+  // Message rotation effect
+  useEffect(() => {
+    let messageInterval: NodeJS.Timeout;
+
+    if (showUnblockDialog && isCountdownActive) {
+      messageInterval = setInterval(() => {
+        setIsMessageVisible(false);
+        setTimeout(() => {
+          setCurrentMessageIndex(
+            (prevIndex) => (prevIndex + 1) % motivationalMessages.length
+          );
+          setIsMessageVisible(true);
+        }, 700); // Half of the fade transition time
+      }, 2500); // 2.5 seconds per message (so each message shows twice in 20 seconds)
+    } else if (countdown === 0) {
+      setCurrentMessageIndex(0);
+      setIsMessageVisible(true);
+    }
+    return () => {
+      if (messageInterval) {
+        clearInterval(messageInterval);
+      }
+    };
+  }, [showUnblockDialog, isCountdownActive, motivationalMessages.length]);
 
   return (
     <div className="min-h-screen text-black bg-white">
@@ -160,6 +238,65 @@ export default function ActivityPage() {
           </main>
         </div>
       </div>
+
+      {/* Unblock Confirmation Dialog */}
+      <Dialog open={showUnblockDialog} onOpenChange={setShowUnblockDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-medium text-black">
+              Unblock Websites
+            </DialogTitle>
+            <DialogDescription className="text-black text-sm leading-relaxed">
+              You must wait 20 seconds before unblocking websites. This helps
+              maintain your focus and productivity.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-black mb-2">
+                {countdown}s
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                <div
+                  className="bg-black h-2 rounded-full transition-all duration-1000"
+                  style={{ width: `${((20 - countdown) / 20) * 100}%` }}
+                ></div>
+              </div>
+              <p
+                className={`text-black text-sm transition-opacity duration-1000 ease-in-out ${
+                  isMessageVisible ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                {isCountdownActive
+                  ? motivationalMessages[currentMessageIndex]
+                  : "You can now proceed to unblock websites"}
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleCancelUnblock}
+              className="border-gray-300 text-black hover:bg-gray-50"
+            >
+              Go Back
+            </Button>
+            <Button
+              onClick={handleProceedUnblock}
+              disabled={isCountdownActive}
+              className={`${
+                isCountdownActive
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-black text-white hover:bg-gray-800"
+              }`}
+            >
+              Proceed to Unblock
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

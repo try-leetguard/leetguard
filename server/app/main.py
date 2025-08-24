@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
 from app.auth.schemas.user import UserCreate, UserOut, UserUpdate, EmailVerificationInput, SignupResponse, LoginVerificationResponse
-from app.auth.schemas.token import Token
+from app.auth.schemas.token import Token, RefreshTokenRequest
 from app.crud.user import get_user_by_email, create_user, verify_password, update_user_profile
 from app.utils import jwt as jwt_utils
 from app.dependencies import get_current_user
@@ -140,8 +140,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
 # Token refresh endpoint. Allows users to get new access and refresh tokens using a valid refresh token.
 @app.post("/auth/refresh", response_model = Token)
-def refresh_token(refresh_token: str = Body(...)):
-    payload = jwt_utils.decode_refresh_token(refresh_token)
+def refresh_token(request: RefreshTokenRequest):
+    payload = jwt_utils.decode_refresh_token(request.refresh_token)
     if payload is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
     
