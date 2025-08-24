@@ -18,6 +18,8 @@ import {
 
 export default function ActivityPage() {
   const [goalQuestions, setGoalQuestions] = useState(5);
+  const [goalInputValue, setGoalInputValue] = useState("5");
+  const [isGoalSaved, setIsGoalSaved] = useState(true);
   const [extensionEnabled, setExtensionEnabled] = useState(true);
   const [showUnblockDialog, setShowUnblockDialog] = useState(false);
   const [countdown, setCountdown] = useState(20);
@@ -39,8 +41,56 @@ export default function ActivityPage() {
   }, []);
 
   const handleGoalChange = (value: string) => {
-    const numValue = parseInt(value) || 0;
-    setGoalQuestions(Math.max(0, numValue));
+    // Update the input value (allow empty string for typing)
+    setGoalInputValue(value);
+
+    // Mark as unsaved when user types
+    setIsGoalSaved(false);
+  };
+
+  const handleGoalBlur = () => {
+    // When user exits the input box, ensure it shows 1 if blank or 0
+    if (goalInputValue === "" || goalInputValue === "0") {
+      setGoalInputValue("1");
+    }
+    // Save the goal when user exits the input box
+    saveGoal();
+  };
+
+  const handleSaveGoal = () => {
+    // When user presses save, ensure input shows 1 if blank or 0
+    if (goalInputValue === "" || goalInputValue === "0") {
+      setGoalInputValue("1");
+    }
+    saveGoal();
+  };
+
+  const handleGoalKeyPress = (e: React.KeyboardEvent) => {
+    // Save goal when user presses Enter
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (goalInputValue === "" || goalInputValue === "0") {
+        setGoalInputValue("1");
+      }
+      saveGoal();
+      // Exit the input box
+      (e.target as HTMLInputElement).blur();
+    }
+  };
+
+  const saveGoal = () => {
+    // Validate and save the goal
+    let finalValue = parseInt(goalInputValue);
+
+    if (isNaN(finalValue) || finalValue === 0) {
+      finalValue = 1;
+      setGoalInputValue("1");
+    }
+
+    finalValue = Math.max(1, finalValue);
+    setGoalQuestions(finalValue);
+    setIsGoalSaved(true);
+    console.log("Goal saved:", finalValue);
   };
 
   const handleExtensionToggle = (enabled: boolean) => {
@@ -173,20 +223,26 @@ export default function ActivityPage() {
                       <div className="flex items-center space-x-2">
                         <input
                           type="number"
-                          min="0"
-                          value={goalQuestions}
+                          min="1"
+                          value={goalInputValue}
                           onChange={(e) => handleGoalChange(e.target.value)}
+                          onBlur={handleGoalBlur}
+                          onKeyPress={handleGoalKeyPress}
                           className="w-20 border border-gray-300 px-4 py-2 text-black focus:outline-none focus:border-gray-400"
                         />
                         <span className="text-black text-sm">questions</span>
                       </div>
                     </div>
-                    <div className="border-t border-gray-200 pt-4 flex justify-end -mx-6 px-6">
+                    <div className="border-t border-gray-200 pt-4 flex justify-between items-center -mx-6 px-6">
+                      <p className="text-black text-xs">Minimum: 1 question</p>
                       <button
-                        onClick={() =>
-                          console.log("Goal saved:", goalQuestions)
-                        }
-                        className="px-4 py-2 text-sm font-medium bg-black text-white hover:bg-gray-800 transition-colors duration-200 rounded-sm"
+                        onClick={handleSaveGoal}
+                        disabled={isGoalSaved}
+                        className={`px-4 py-2 text-sm font-medium transition-colors duration-200 rounded-sm ${
+                          isGoalSaved
+                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            : "bg-black text-white hover:bg-gray-800"
+                        }`}
                       >
                         Save Goal
                       </button>
