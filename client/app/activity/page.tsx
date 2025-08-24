@@ -122,7 +122,7 @@ export default function ActivityPage() {
             <div className="flex justify-start">
               <div className="w-full max-w-4xl">
                 {/* Progress Tracker Column */}
-                <div className="bg-white border border-gray-400 p-6 mb-6">
+                <div className="bg-white border border-gray-400 p-6 mb-6 rounded-lg">
                   <div className="mb-4">
                     <h3 className="text-xl font-medium text-black mb-2">
                       Today's Progress
@@ -162,7 +162,7 @@ export default function ActivityPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Goals Column */}
-                  <div className="bg-white border border-gray-400 p-6">
+                  <div className="bg-white border border-gray-400 p-6 rounded-lg">
                     <div className="mb-4">
                       <h3 className="text-xl font-medium text-black mb-2">
                         Daily Goals
@@ -194,7 +194,7 @@ export default function ActivityPage() {
                   </div>
 
                   {/* Extension Toggle Column */}
-                  <div className="bg-white border border-gray-400 p-6">
+                  <div className="bg-white border border-gray-400 p-6 rounded-lg">
                     <div className="mb-4">
                       <h3 className="text-xl font-medium text-black mb-2">
                         Extension Control
