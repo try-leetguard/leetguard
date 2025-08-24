@@ -8,12 +8,90 @@ class ExtensionAuth {
     this.user = null;
   }
 
-  // Initialize authentication state from storage
+  // Check localStorage for authentication state (source of truth)
+  async checkLocalStorageAuth() {
+    try {
+      // Get localStorage tokens from the current tab
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tabs.length === 0) return { accessToken: null, refreshToken: null };
+      
+      const currentTab = tabs[0];
+      
+      // Only check if we're on the web app domain
+      if (!currentTab.url.includes('localhost:3000') && !currentTab.url.includes('leetguard.com')) {
+        return { accessToken: null, refreshToken: null };
+      }
+      
+      // Execute script to check localStorage
+      const results = await chrome.scripting.executeScript({
+        target: { tabId: currentTab.id },
+        func: () => {
+          return {
+            accessToken: localStorage.getItem('access_token'),
+            refreshToken: localStorage.getItem('refresh_token')
+          };
+        }
+      });
+      
+      if (results && results[0] && results[0].result) {
+        const { accessToken, refreshToken } = results[0].result;
+        return { accessToken, refreshToken };
+      }
+      
+      return { accessToken: null, refreshToken: null };
+    } catch (error) {
+      console.error('Failed to check localStorage:', error);
+      return { accessToken: null, refreshToken: null };
+    }
+  }
+
+  // Clear stale tokens when localStorage is empty
+  async clearStaleTokens() {
+    console.log('Clearing stale tokens from extension storage');
+    await this.clearAuth();
+  }
+
+  // Initialize authentication state from storage with localStorage check
   async init() {
+    // First check localStorage (source of truth)
+    const localStorageAuth = await this.checkLocalStorageAuth();
+    
+    if (!localStorageAuth.accessToken) {
+      // localStorage is empty, user is logged out
+      console.log('localStorage empty - user is logged out, clearing extension tokens');
+      await this.clearStaleTokens();
+      return;
+    }
+    
+    // localStorage has tokens, check if they match extension storage
     const result = await chrome.storage.local.get(['access_token', 'refresh_token', 'user']);
-    this.accessToken = result.access_token;
-    this.refreshToken = result.refresh_token;
-    this.user = result.user;
+    
+    if (result.access_token !== localStorageAuth.accessToken) {
+      // Tokens don't match, localStorage is the source of truth
+      console.log('Token mismatch detected, syncing with localStorage');
+      this.accessToken = localStorageAuth.accessToken;
+      this.refreshToken = localStorageAuth.refreshToken;
+      
+      // Update extension storage to match localStorage
+      await chrome.storage.local.set({
+        access_token: localStorageAuth.accessToken,
+        refresh_token: localStorageAuth.refreshToken
+      });
+      
+      // Try to get user info with the new token
+      try {
+        await this.getCurrentUser();
+      } catch (error) {
+        console.error('Failed to get user info with localStorage token:', error);
+        // If getting user info fails, the token might be invalid
+        await this.clearStaleTokens();
+      }
+    } else {
+      // Tokens match, use extension storage
+      this.accessToken = result.access_token;
+      this.refreshToken = result.refresh_token;
+      this.user = result.user;
+    }
   }
 
   // Check if user is authenticated

@@ -288,7 +288,12 @@ function initializeEventListeners() {
   }
 
   if (editListBtn) {
-    editListBtn.addEventListener('click', () => {
+    editListBtn.addEventListener('click', async () => {
+      // Re-check authentication state before making decision
+      if (typeof extensionAuth !== 'undefined') {
+        await extensionAuth.init(); // This will check localStorage and clear stale tokens
+      }
+      
       // Check if user is authenticated
       if (typeof extensionAuth !== 'undefined' && extensionAuth.isAuthenticated()) {
         // User is logged in, redirect to web app blocklist page
@@ -517,6 +522,13 @@ async function initializePopup() {
       console.log('Popup: On-demand sync completed');
     } catch (error) {
       console.error('Popup: On-demand sync failed:', error);
+      
+      // If sync fails due to authentication error, clear auth and update UI
+      if (error.message === 'Authentication expired') {
+        console.log('Popup: Authentication expired during sync, clearing auth state');
+        await extensionAuth.clearAuth();
+        updateAuthUI();
+      }
     }
   }
 }

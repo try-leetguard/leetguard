@@ -186,7 +186,7 @@ export default function ActivityPage() {
                         onClick={() =>
                           console.log("Goal saved:", goalQuestions)
                         }
-                        className="px-4 py-2 text-sm font-medium bg-black text-white hover:bg-gray-800 transition-colors duration-200"
+                        className="px-4 py-2 text-sm font-medium bg-black text-white hover:bg-gray-800 transition-colors duration-200 rounded-sm"
                       >
                         Save Goal
                       </button>
