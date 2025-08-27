@@ -212,7 +212,7 @@ export default function ActivityPage() {
           </header>
 
           {/* Content Area */}
-          <main className="flex-1 p-6 overflow-y-auto bg-gray-50">
+          <main className="flex-1 p-6 overflow-y-auto bg-white">
             <div className="flex justify-start">
               <div className="w-full max-w-4xl">
                 {/* Progress Tracker Column */}
