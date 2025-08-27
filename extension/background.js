@@ -164,7 +164,30 @@ chrome.runtime.onMessage.addListener((message) => {
     resetTimer();
   }
   
-  // Note: OAuth callback handling removed - extension now checks localStorage on-demand
+  // OAuth callback handling - webapp sends tokens to extension
+  if (message && message.type === 'OAUTH_CALLBACK') {
+    console.log('Background: Handling OAuth callback:', {
+      hasExtensionAuth: !!extensionAuth,
+      hasTokens: !!message.tokens,
+      hasUser: !!message.user
+    });
+    if (extensionAuth && message.tokens) {
+      extensionAuth.handleOAuthCallback(message.tokens).then(success => {
+        if (success) {
+          console.log('OAuth callback handled successfully');
+          // Trigger sync after successful authentication
+          if (blocklistSync) blocklistSync.syncBlocklist();
+          if (activityLogger) activityLogger.syncLocalActivities();
+        } else {
+          console.error('OAuth callback handling failed');
+        }
+      }).catch(error => {
+        console.error('OAuth callback handling error:', error);
+      });
+    } else {
+      console.error('Missing extensionAuth or tokens in OAuth callback');
+    }
+  }
   
   // Logout handling
   if (message && message.type === 'USER_LOGOUT') {

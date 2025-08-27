@@ -270,7 +270,7 @@ function initializeEventListeners() {
 
   if (editListBtn) {
     editListBtn.addEventListener('click', async () => {
-      // Always check localStorage for current auth state when button is clicked
+      // Always check extension storage for current auth state when button is clicked
       if (typeof extensionAuth !== 'undefined') {
         await extensionAuth.init();
       }
@@ -335,7 +335,7 @@ function restoreMainUI() {
   });
   
   document.getElementById('editList').addEventListener('click', async () => {
-    // Always check localStorage for current auth state when button is clicked
+    // Always check extension storage for current auth state when button is clicked
     if (typeof extensionAuth !== 'undefined') {
       await extensionAuth.init();
     }
@@ -436,7 +436,7 @@ function showMiniBlocklistUI() {
 
 // Initialize popup with authentication check
 async function initializePopup() {
-  // Always check localStorage for current auth state when popup opens
+  // Always check extension storage for current auth state when popup opens
   if (typeof extensionAuth !== 'undefined') {
     await extensionAuth.init();
   }
@@ -481,7 +481,7 @@ async function initializePopup() {
 
 // Update UI based on authentication state
 async function updateAuthUI() {
-  // Always check localStorage for current auth state
+  // Always check extension storage for current auth state
   if (typeof extensionAuth !== 'undefined') {
     await extensionAuth.init();
   }

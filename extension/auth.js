@@ -8,95 +8,41 @@ class ExtensionAuth {
     this.user = null;
   }
 
-  // Check localStorage for authentication state (source of truth)
-  async checkLocalStorageAuth() {
-    try {
-      // Get localStorage tokens from the current tab
-      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (tabs.length === 0) return { accessToken: null, refreshToken: null };
-      
-      const currentTab = tabs[0];
-      
-      // Only check if we're on the web app domain
-      if (!currentTab.url.includes('localhost:3000') && !currentTab.url.includes('leetguard.com')) {
-        return { accessToken: null, refreshToken: null };
-      }
-      
-      // Execute script to check localStorage
-      const results = await chrome.scripting.executeScript({
-        target: { tabId: currentTab.id },
-        func: () => {
-          return {
-            accessToken: localStorage.getItem('access_token'),
-            refreshToken: localStorage.getItem('refresh_token')
-          };
-        }
-      });
-      
-      if (results && results[0] && results[0].result) {
-        const { accessToken, refreshToken } = results[0].result;
-        return { accessToken, refreshToken };
-      }
-      
-      return { accessToken: null, refreshToken: null };
-    } catch (error) {
-      console.error('Failed to check localStorage:', error);
-      return { accessToken: null, refreshToken: null };
-    }
-  }
+  // Note: localStorage checking removed - extension now uses chrome.storage.local as source of truth
 
-  // Clear stale tokens when localStorage is empty
-  async clearStaleTokens() {
-    console.log('Clearing stale tokens from extension storage');
-    await this.clearAuth();
-  }
-
-  // Initialize authentication state from storage with localStorage check
+  // Initialize authentication state from extension storage
   async init() {
-    // First check localStorage (source of truth)
-    const localStorageAuth = await this.checkLocalStorageAuth();
-    
-    if (!localStorageAuth.accessToken) {
-      // localStorage is empty, user is logged out
-      console.log('localStorage empty - user is logged out, clearing extension tokens');
-      await this.clearStaleTokens();
-      return;
-    }
-    
-    // localStorage has tokens, check if they match extension storage
+    // Check extension storage (works from any tab)
     const result = await chrome.storage.local.get(['access_token', 'refresh_token', 'user']);
     
-    if (result.access_token !== localStorageAuth.accessToken) {
-      // Tokens don't match, localStorage is the source of truth
-      console.log('Token mismatch detected, syncing with localStorage');
-      this.accessToken = localStorageAuth.accessToken;
-      this.refreshToken = localStorageAuth.refreshToken;
-      
-      // Update extension storage to match localStorage
-      await chrome.storage.local.set({
-        access_token: localStorageAuth.accessToken,
-        refresh_token: localStorageAuth.refreshToken
-      });
-      
-      // Try to get user info with the new token
-      try {
-        await this.getCurrentUser();
-      } catch (error) {
-        console.error('Failed to get user info with localStorage token:', error);
-        // If getting user info fails, the token might be invalid
-        await this.clearStaleTokens();
-      }
-    } else {
-      // Tokens match, use extension storage
+    console.log('Auth init - checking extension storage:', {
+      hasAccessToken: !!result.access_token,
+      hasRefreshToken: !!result.refresh_token,
+      hasUser: !!result.user,
+      user: result.user
+    });
+    
+    if (result.access_token && result.user) {
       this.accessToken = result.access_token;
       this.refreshToken = result.refresh_token;
       this.user = result.user;
+      console.log('Auth state loaded from extension storage');
+    } else {
+      // No tokens in extension storage, user is not authenticated
+      console.log('No auth tokens found in extension storage');
+      await this.clearAuth();
     }
   }
 
   // Check if user is authenticated
   isAuthenticated() {
-    return !!this.accessToken && !!this.user;
+    const authenticated = !!this.accessToken && !!this.user;
+    console.log('isAuthenticated check:', {
+      hasAccessToken: !!this.accessToken,
+      hasUser: !!this.user,
+      authenticated: authenticated
+    });
+    return authenticated;
   }
 
   // Store tokens and user info
@@ -225,13 +171,19 @@ class ExtensionAuth {
   // Handle OAuth callback from web app
   async handleOAuthCallback(tokens) {
     try {
+      console.log('Handling OAuth callback with tokens:', tokens);
+      
+      // Set tokens first
       this.accessToken = tokens.access_token;
       this.refreshToken = tokens.refresh_token;
       
-      // Get user info
+      // Get user info using the new token
       const user = await this.getCurrentUser();
       
+      // Store everything in extension storage
       await this.setAuth(this.accessToken, this.refreshToken, user);
+      
+      console.log('OAuth callback handled successfully, user:', user);
       return true;
     } catch (error) {
       console.error('OAuth callback handling failed:', error);
