@@ -102,10 +102,10 @@ function ExtensionInfo() {
     <div className="relative extension-info">
       <button
         onClick={() => setShowDetails(!showDetails)}
-        className="text-blue-600 hover:text-blue-800 p-1"
+        className="inline-flex items-center justify-center w-3 h-3 text-blue-600 hover:text-blue-800"
         title="Extension Details"
       >
-        <Info size={14} />
+        <Info size={12} />
       </button>
 
       {showDetails && (
