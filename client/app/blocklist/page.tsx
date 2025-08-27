@@ -425,7 +425,7 @@ function BlockList() {
   return (
     <div className="bg-white border border-gray-400 shadow-md p-6 w-full flex flex-col gap-6 rounded-lg relative">
       {/* Extension Status */}
-      <div className="flex items-center justify-between pb-4 border-b border-gray-200">
+      <div className="flex items-center justify-between border-gray-400 ">
         <div className="flex items-center gap-2">
           <div
             className={`w-3 h-3 rounded-full ${
@@ -464,7 +464,7 @@ function BlockList() {
         <button
           onClick={addSite}
           disabled={saving || !isAuthenticated}
-          className="px-4 py-2 bg-black text-white font-medium font-dm-sans hover:bg-neutral-800 transition-colors border border-black/20 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="px-4 py-2 bg-black text-white font-medium font-dm-sans hover:bg-neutral-800 disabled:hover:bg-black transition-colors border border-black/20 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {saving && <Loader2 size={14} className="animate-spin" />}
           Add
