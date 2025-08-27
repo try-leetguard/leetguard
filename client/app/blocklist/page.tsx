@@ -109,8 +109,8 @@ function ExtensionInfo() {
       </button>
 
       {showDetails && (
-        <div className="absolute top-6 left-0 bg-white border border-gray-300 rounded-lg shadow-lg p-3 z-10 min-w-64">
-          <div className="text-sm space-y-2">
+        <div className="absolute top-6 left-0 bg-white border border-gray-400 rounded-lg shadow-lg p-3 z-10 min-w-64">
+          <div className="text-xs space-y-2 font-mono">
             <div>
               <strong>Version:</strong> {extensionData.version}
             </div>
@@ -432,7 +432,7 @@ function BlockList() {
               extensionConnected ? "bg-green-500" : "bg-gray-400"
             }`}
           ></div>
-          <span className="text-sm text-gray-600">
+          <span className="text-xs text-black font-mono">
             Extension: {extensionConnected ? "Connected" : "Not detected"}
           </span>
           {extensionConnected && <ExtensionInfo />}
