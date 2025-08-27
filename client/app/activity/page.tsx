@@ -27,6 +27,10 @@ export default function ActivityPage() {
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [isMessageVisible, setIsMessageVisible] = useState(true);
 
+  // Frontend-only daily progress and UTC countdown display
+  const [completedToday, setCompletedToday] = useState(2);
+  const [countdownText, setCountdownText] = useState("24:00:00");
+
   const motivationalMessages = [
     "Please wait before proceeding...",
     "Stay focused - your future self will thank you.",
@@ -38,6 +42,46 @@ export default function ActivityPage() {
     // Set light mode for activity page
     document.documentElement.classList.remove("dark");
     localStorage.setItem("theme", "light");
+  }, []);
+
+  // Universal UTC countdown that resets at 00:00:00 UTC
+  useEffect(() => {
+    const nextUtcMidnight = () => {
+      const now = new Date();
+      const y = now.getUTCFullYear();
+      const m = now.getUTCMonth();
+      const d = now.getUTCDate();
+      return new Date(Date.UTC(y, m, d + 1, 0, 0, 0, 0));
+    };
+
+    const formatHMS = (ms: number) => {
+      if (ms <= 0) return "00:00:00";
+      const totalSec = Math.floor(ms / 1000);
+      const h = String(Math.floor(totalSec / 3600)).padStart(2, "0");
+      const m = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
+      const s = String(totalSec % 60).padStart(2, "0");
+      return `${h}:${m}:${s}`;
+    };
+
+    let deadline = nextUtcMidnight();
+
+    const tick = () => {
+      const now = new Date();
+      const remaining = deadline.getTime() - now.getTime();
+      if (remaining <= 0) {
+        // Hit UTC midnight: reset local progress and roll the clock forward
+        setCompletedToday(0);
+        deadline = nextUtcMidnight();
+        setCountdownText("24:00:00");
+        return;
+      }
+      setCountdownText(formatHMS(remaining));
+    };
+
+    // Prime immediately, then tick every second
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
   }, []);
 
   const handleGoalChange = (value: string) => {
@@ -174,9 +218,14 @@ export default function ActivityPage() {
                 {/* Progress Tracker Column */}
                 <div className="bg-white border border-gray-400 p-6 mb-6 rounded-lg">
                   <div className="mb-4">
-                    <h3 className="text-xl font-medium text-black mb-2">
-                      Today's Progress
-                    </h3>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-xl font-medium text-black">
+                        Today's Progress
+                      </h3>
+                      <span className="text-xs text-black font-mono">
+                        UTC resets in {countdownText}
+                      </span>
+                    </div>
                     <p className="text-black text-sm leading-relaxed mb-4">
                       Track your daily question completion progress.
                     </p>
@@ -186,7 +235,7 @@ export default function ActivityPage() {
                           Questions Completed
                         </span>
                         <span className="text-black text-sm">
-                          2 / {goalQuestions}
+                          {completedToday} / {goalQuestions}
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-3">
@@ -194,7 +243,7 @@ export default function ActivityPage() {
                           className="bg-green-600 h-3 rounded-full transition-all duration-300"
                           style={{
                             width: `${Math.min(
-                              (2 / goalQuestions) * 100,
+                              (completedToday / goalQuestions) * 100,
                               100
                             )}%`,
                           }}
@@ -203,9 +252,13 @@ export default function ActivityPage() {
                     </div>
                   </div>
                   <div className="border-t border-gray-200 pt-4 -mx-6 px-6">
-                    <p className="text-black text-xs">
-                      Complete {goalQuestions - 2} more questions to unlock
-                      websites.
+                    <p className="text-black text-xs font-mono">
+                      {completedToday >= goalQuestions
+                        ? "🎉 Daily goal completed! Enjoy your scroll."
+                        : `Complete ${Math.max(
+                            goalQuestions - completedToday,
+                            0
+                          )} more questions to unlock websites.`}
                     </p>
                   </div>
                 </div>
