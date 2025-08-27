@@ -3,9 +3,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
-from app.auth.schemas.user import UserCreate, UserOut, UserUpdate, EmailVerificationInput, SignupResponse, LoginVerificationResponse
+from app.auth.schemas.user import UserCreate, UserOut, UserUpdate, EmailVerificationInput, SignupResponse, LoginVerificationResponse, GoalResponse, GoalUpdate, ProgressIncrement
 from app.auth.schemas.token import Token, RefreshTokenRequest
-from app.crud.user import get_user_by_email, create_user, verify_password, update_user_profile
+from app.crud.user import get_user_by_email, create_user, verify_password, update_user_profile, get_user_goal, update_user_goal, increment_progress
 from app.utils import jwt as jwt_utils
 from app.dependencies import get_current_user
 from app.utils.email import send_verification_email, send_welcome_email
@@ -22,7 +22,7 @@ from app.crud.data import (
 from datetime import datetime, timedelta, timezone
 import random
 from app.config import settings
-from typing import Union
+from typing import Union, List
 import json
 
 app = FastAPI()
@@ -449,6 +449,42 @@ def get_activity_statistics(
     """Get user's activity statistics"""
     stats = get_activity_stats(db, current_user.id)
     return stats
+
+# Goal-related endpoints
+@app.get("/api/me/goal", response_model=GoalResponse)
+def get_user_goal_endpoint(
+    current_user: UserOut = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get user's daily goal info with lazy reset"""
+    goal_data = get_user_goal(db, current_user.id)
+    if not goal_data:
+        raise HTTPException(status_code=404, detail="User not found")
+    return goal_data
+
+@app.patch("/api/me/goal", response_model=GoalResponse)
+def update_user_goal_endpoint(
+    goal_update: GoalUpdate,
+    current_user: UserOut = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update user's daily goal target"""
+    goal_data = update_user_goal(db, current_user.id, goal_update.target_daily)
+    if not goal_data:
+        raise HTTPException(status_code=404, detail="User not found")
+    return goal_data
+
+@app.post("/api/me/goal/progress", response_model=GoalResponse)
+def increment_progress_endpoint(
+    progress_data: ProgressIncrement,
+    current_user: UserOut = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Increment user's daily progress with lazy reset"""
+    goal_data = increment_progress(db, current_user.id, progress_data.delta)
+    if not goal_data:
+        raise HTTPException(status_code=404, detail="User not found")
+    return goal_data
 
 @app.post("/auth/oauth/github")
 async def github_oauth_login(oauth_data: OAuthLoginRequest, db: Session = Depends(get_db)):

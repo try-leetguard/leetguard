@@ -62,6 +62,21 @@ export interface OAuthResponse extends AuthResponse {
   user: OAuthUserInfo;
 }
 
+// Goal-related interfaces
+export interface GoalResponse {
+  target_daily: number;
+  progress_today: number;
+  progress_date: string;
+}
+
+export interface GoalUpdateRequest {
+  target_daily: number;
+}
+
+export interface ProgressIncrementRequest {
+  delta: number;
+}
+
 class ApiClient {
   private baseURL: string;
 
@@ -261,6 +276,37 @@ class ApiClient {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
+    });
+  }
+
+  // Goal endpoints
+  async getGoal(token: string): Promise<GoalResponse> {
+    return this.request<GoalResponse>('/api/me/goal', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+  }
+
+  async updateGoal(token: string, goalData: GoalUpdateRequest): Promise<GoalResponse> {
+    return this.request<GoalResponse>('/api/me/goal', {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(goalData),
+    });
+  }
+
+  async incrementProgress(token: string, progressData: ProgressIncrementRequest): Promise<GoalResponse> {
+    return this.request<GoalResponse>('/api/me/goal/progress', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(progressData),
     });
   }
 

@@ -1,40 +1,57 @@
 from pydantic import BaseModel, EmailStr
-from typing import Union
+from typing import Optional, Union
+from datetime import date
 
-# Schema for user registration input. Used when a new user signs up.
-class UserCreate(BaseModel):
+class UserBase(BaseModel):
     email: EmailStr
+
+class UserCreate(UserBase):
     password: str
 
-# Schema for user output. Used to return user information in API responses.
-class UserOut(BaseModel):
+class UserUpdate(BaseModel):
+    display_name: Optional[str] = None
+
+class User(UserBase):
     id: int
-    email: EmailStr
-    display_name: Union[str, None] = None
+    display_name: Optional[str] = None
+    is_verified: bool
+    created_at: str
 
     class Config:
         from_attributes = True
 
-# Schema for updating user profile
-class UserUpdate(BaseModel):
-    display_name: Union[str, None] = None
+class UserOut(BaseModel):
+    id: int
+    email: EmailStr
+    display_name: Optional[str] = None
 
-# Schema for signup response that includes email status
+    class Config:
+        from_attributes = True
+
+class UserInDB(User):
+    hashed_password: str
+
+class EmailVerificationInput(BaseModel):
+    email: EmailStr
+    code: str
+
 class SignupResponse(BaseModel):
     user: UserOut
     email_sent: bool
     message: str
 
-    class Config:
-        from_attributes = True
-
-# Schema for login response when email verification is needed
 class LoginVerificationResponse(BaseModel):
     message: str
     email_sent: bool
     verification_url: str
 
-# Schema for email verification input. Used when a user submits their code.
-class EmailVerificationInput(BaseModel):
-    email: EmailStr
-    code: str 
+class GoalResponse(BaseModel):
+    target_daily: int
+    progress_today: int
+    progress_date: date
+
+class GoalUpdate(BaseModel):
+    target_daily: int
+
+class ProgressIncrement(BaseModel):
+    delta: int = 1 

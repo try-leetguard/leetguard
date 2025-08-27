@@ -15,8 +15,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { apiClient, GoalResponse } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 
 export default function ActivityPage() {
+  const { user, isAuthenticated } = useAuth();
   const [goalQuestions, setGoalQuestions] = useState(5);
   const [goalInputValue, setGoalInputValue] = useState("5");
   const [isGoalSaved, setIsGoalSaved] = useState(true);
@@ -27,9 +30,10 @@ export default function ActivityPage() {
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [isMessageVisible, setIsMessageVisible] = useState(true);
 
-  // Frontend-only daily progress and UTC countdown display
-  const [completedToday, setCompletedToday] = useState(2);
+  // Backend-connected daily progress and UTC countdown display
+  const [completedToday, setCompletedToday] = useState(0);
   const [countdownText, setCountdownText] = useState("24:00:00");
+  const [isLoading, setIsLoading] = useState(true);
 
   const motivationalMessages = [
     "Please wait before proceeding...",
@@ -43,6 +47,40 @@ export default function ActivityPage() {
     document.documentElement.classList.remove("dark");
     localStorage.setItem("theme", "light");
   }, []);
+
+  // Load goal data from backend
+  useEffect(() => {
+    const loadGoalData = async () => {
+      if (!isAuthenticated) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+          setIsLoading(false);
+          return;
+        }
+
+        const goalData = await apiClient.getGoal(token);
+        setGoalQuestions(goalData.target_daily);
+        setGoalInputValue(goalData.target_daily.toString());
+        setCompletedToday(goalData.progress_today);
+        setIsGoalSaved(true);
+      } catch (error) {
+        console.error("Failed to load goal data:", error);
+        // Fallback to defaults
+        setGoalQuestions(5);
+        setGoalInputValue("5");
+        setCompletedToday(0);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadGoalData();
+  }, [isAuthenticated]);
 
   // Universal UTC countdown that resets at 00:00:00 UTC
   useEffect(() => {
@@ -122,19 +160,57 @@ export default function ActivityPage() {
     }
   };
 
-  const saveGoal = () => {
-    // Validate and save the goal
-    let finalValue = parseInt(goalInputValue);
-
-    if (isNaN(finalValue) || finalValue === 0) {
-      finalValue = 1;
-      setGoalInputValue("1");
+  const saveGoal = async () => {
+    if (!isAuthenticated) {
+      // Fallback to frontend-only for unauthenticated users
+      let finalValue = parseInt(goalInputValue);
+      if (isNaN(finalValue) || finalValue === 0) {
+        finalValue = 1;
+        setGoalInputValue("1");
+      }
+      finalValue = Math.max(1, finalValue);
+      setGoalQuestions(finalValue);
+      setIsGoalSaved(true);
+      console.log("Goal saved (frontend-only):", finalValue);
+      return;
     }
 
-    finalValue = Math.max(1, finalValue);
-    setGoalQuestions(finalValue);
-    setIsGoalSaved(true);
-    console.log("Goal saved:", finalValue);
+    try {
+      // Validate and save the goal
+      let finalValue = parseInt(goalInputValue);
+
+      if (isNaN(finalValue) || finalValue === 0) {
+        finalValue = 1;
+        setGoalInputValue("1");
+      }
+
+      finalValue = Math.max(1, finalValue);
+
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        throw new Error("No access token");
+      }
+
+      const goalData = await apiClient.updateGoal(token, {
+        target_daily: finalValue,
+      });
+      setGoalQuestions(goalData.target_daily);
+      setGoalInputValue(goalData.target_daily.toString());
+      setCompletedToday(goalData.progress_today);
+      setIsGoalSaved(true);
+      console.log("Goal saved to backend:", finalValue);
+    } catch (error) {
+      console.error("Failed to save goal:", error);
+      // Fallback to frontend-only
+      let finalValue = parseInt(goalInputValue);
+      if (isNaN(finalValue) || finalValue === 0) {
+        finalValue = 1;
+        setGoalInputValue("1");
+      }
+      finalValue = Math.max(1, finalValue);
+      setGoalQuestions(finalValue);
+      setIsGoalSaved(true);
+    }
   };
 
   const handleExtensionToggle = (enabled: boolean) => {
@@ -229,31 +305,47 @@ export default function ActivityPage() {
                     <p className="text-black text-sm leading-relaxed mb-4">
                       Track your daily question completion progress.
                     </p>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-black text-sm font-medium">
-                          Questions Completed
-                        </span>
-                        <span className="text-black text-sm">
-                          {completedToday} / {goalQuestions}
-                        </span>
+                    {isLoading ? (
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-black text-sm font-medium">
+                            Questions Completed
+                          </span>
+                          <span className="text-black text-sm">Loading...</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div className="bg-gray-300 h-3 rounded-full animate-pulse"></div>
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div
-                          className="bg-green-600 h-3 rounded-full transition-all duration-300"
-                          style={{
-                            width: `${Math.min(
-                              (completedToday / goalQuestions) * 100,
-                              100
-                            )}%`,
-                          }}
-                        ></div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-black text-sm font-medium">
+                            Questions Completed
+                          </span>
+                          <span className="text-black text-sm">
+                            {completedToday} / {goalQuestions}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div
+                            className="bg-green-600 h-3 rounded-full transition-all duration-300"
+                            style={{
+                              width: `${Math.min(
+                                (completedToday / goalQuestions) * 100,
+                                100
+                              )}%`,
+                            }}
+                          ></div>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                   <div className="border-t border-gray-200 pt-4 -mx-6 px-6">
                     <p className="text-black text-xs font-mono">
-                      {completedToday >= goalQuestions
+                      {isLoading
+                        ? "Loading..."
+                        : completedToday >= goalQuestions
                         ? "🎉 Daily goal completed! Enjoy your scroll."
                         : `Complete ${Math.max(
                             goalQuestions - completedToday,
@@ -273,32 +365,49 @@ export default function ActivityPage() {
                       <p className="text-black text-sm leading-relaxed mb-4">
                         Set how many questions you need to complete to unblock.
                       </p>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="number"
-                          min="1"
-                          value={goalInputValue}
-                          onChange={(e) => handleGoalChange(e.target.value)}
-                          onBlur={handleGoalBlur}
-                          onKeyPress={handleGoalKeyPress}
-                          className="w-20 border border-gray-300 px-4 py-2 text-black focus:outline-none focus:border-gray-400"
-                        />
-                        <span className="text-black text-sm">questions</span>
-                      </div>
+                      {!isAuthenticated ? (
+                        <div className="text-center py-4">
+                          <p className="text-gray-600 mb-2">
+                            Please log in to manage your goals
+                          </p>
+                          <a
+                            href="/login"
+                            className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors text-sm"
+                          >
+                            Log In
+                          </a>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="number"
+                            min="1"
+                            value={goalInputValue}
+                            onChange={(e) => handleGoalChange(e.target.value)}
+                            onBlur={handleGoalBlur}
+                            onKeyPress={handleGoalKeyPress}
+                            disabled={isLoading}
+                            className="w-20 border border-gray-300 px-4 py-2 text-black focus:outline-none focus:border-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          />
+                          <span className="text-black text-sm">questions</span>
+                        </div>
+                      )}
                     </div>
                     <div className="border-t border-gray-200 pt-4 flex justify-between items-center -mx-6 px-6">
                       <p className="text-black text-xs">Minimum: 1 question</p>
-                      <button
-                        onClick={handleSaveGoal}
-                        disabled={isGoalSaved}
-                        className={`px-4 py-2 text-sm font-medium transition-colors duration-200 rounded-sm ${
-                          isGoalSaved
-                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                            : "bg-black text-white hover:bg-gray-800"
-                        }`}
-                      >
-                        Save Goal
-                      </button>
+                      {isAuthenticated && (
+                        <button
+                          onClick={handleSaveGoal}
+                          disabled={isGoalSaved || isLoading}
+                          className={`px-4 py-2 text-sm font-medium transition-colors duration-200 rounded-sm ${
+                            isGoalSaved || isLoading
+                              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                              : "bg-black text-white hover:bg-gray-800"
+                          }`}
+                        >
+                          {isLoading ? "Loading..." : "Save Goal"}
+                        </button>
+                      )}
                     </div>
                   </div>
 

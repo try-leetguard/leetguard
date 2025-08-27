@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Text, Date
 from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -19,6 +19,11 @@ class User(Base):
     resend_cooldown_seconds = Column(Integer, default=30)  # Cooldown in seconds for resending code
     last_code_sent_at = Column(DateTime(timezone=True), nullable=True)  # Last time a code was sent
     display_name = Column(String, nullable=True)  # User's display name
+    
+    # Daily goal fields
+    target_daily = Column(Integer, default=5)  # Daily goal target
+    progress_today = Column(Integer, default=0)  # Current day's progress
+    progress_date = Column(Date, server_default=func.current_date())  # UTC date this progress applies to
 
     # Relationships
     blocklist_items = relationship("BlocklistItem", back_populates="user", cascade="all, delete-orphan")

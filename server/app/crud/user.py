@@ -1,9 +1,11 @@
 from sqlalchemy.orm import Session
-from app.auth.models.user import User
-from app.auth.schemas.user import UserCreate, UserUpdate
+from sqlalchemy import func
+from datetime import date
 from passlib.context import CryptContext
 import random
 from datetime import datetime, timedelta, timezone
+from app.auth.models.user import User
+from app.auth.schemas.user import UserCreate, UserUpdate
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -90,3 +92,60 @@ def update_user_password(db: Session, user_id: int, password: str):
     db.commit()
     db.refresh(db_user)
     return db_user
+
+def ensure_progress_for_today(db: Session, user_id: int):
+    """Lazy reset: ensure progress is for today's UTC date"""
+    today_utc = date.today()
+    
+    # Update progress if it's not for today
+    result = db.query(User).filter(
+        User.id == user_id,
+        User.progress_date != today_utc
+    ).update({
+        User.progress_today: 0,
+        User.progress_date: today_utc
+    })
+    
+    return result > 0  # True if reset happened
+
+def get_user_goal(db: Session, user_id: int):
+    """Get user's goal info with lazy reset"""
+    ensure_progress_for_today(db, user_id)
+    user = db.query(User).filter(User.id == user_id).first()
+    if user:
+        return {
+            "target_daily": user.target_daily,
+            "progress_today": user.progress_today,
+            "progress_date": user.progress_date
+        }
+    return None
+
+def update_user_goal(db: Session, user_id: int, target_daily: int):
+    """Update user's daily goal target"""
+    ensure_progress_for_today(db, user_id)
+    user = db.query(User).filter(User.id == user_id).first()
+    if user:
+        user.target_daily = target_daily
+        db.commit()
+        db.refresh(user)
+        return {
+            "target_daily": user.target_daily,
+            "progress_today": user.progress_today,
+            "progress_date": user.progress_date
+        }
+    return None
+
+def increment_progress(db: Session, user_id: int, delta: int = 1):
+    """Increment user's daily progress with lazy reset"""
+    ensure_progress_for_today(db, user_id)
+    user = db.query(User).filter(User.id == user_id).first()
+    if user:
+        user.progress_today += delta
+        db.commit()
+        db.refresh(user)
+        return {
+            "target_daily": user.target_daily,
+            "progress_today": user.progress_today,
+            "progress_date": user.progress_date
+        }
+    return None
