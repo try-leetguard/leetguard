@@ -442,7 +442,7 @@ function BlockList() {
             href="https://chrome.google.com/webstore"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-blue-600 hover:text-blue-800 underline"
+            className="text-xs text-blue-600 hover:text-blue-800 underline font-mono"
           >
             Install Extension
           </a>
