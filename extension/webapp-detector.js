@@ -97,44 +97,7 @@ const setupMessageListener = () => {
   console.log('🔌 LeetGuard Extension: Message listener setup complete');
 };
 
-// Setup authentication sync listener
-const setupAuthSync = () => {
-  window.addEventListener('message', (event) => {
-    if (event.origin !== window.location.origin) {
-      return;
-    }
-    
-    // Handle authentication tokens from web app
-    if ((event.data?.type === 'LEETGUARD_AUTH_SYNC' || event.data?.type === 'OAUTH_SUCCESS') && event.data.tokens) {
-      console.log('🔌 LeetGuard Extension: Received auth tokens from web app');
-      
-      // Forward to background script
-      chrome.runtime.sendMessage({
-        type: 'OAUTH_CALLBACK',
-        tokens: event.data.tokens,
-        user: event.data.user
-      }).then(() => {
-        console.log('🔌 LeetGuard Extension: Auth tokens forwarded to background');
-      }).catch(error => {
-        console.error('🔌 LeetGuard Extension: Failed to forward auth tokens:', error);
-      });
-    }
-    
-    // Handle logout notification from web app
-    if (event.data?.type === 'LEETGUARD_LOGOUT') {
-      console.log('🔌 LeetGuard Extension: Received logout notification from web app');
-      
-      // Forward to background script
-      chrome.runtime.sendMessage({
-        type: 'USER_LOGOUT'
-      }).then(() => {
-        console.log('🔌 LeetGuard Extension: Logout notification forwarded to background');
-      }).catch(error => {
-        console.error('🔌 LeetGuard Extension: Failed to forward logout notification:', error);
-      });
-    }
-  });
-};
+// Note: Auth sync listener removed - extension now checks localStorage on-demand
 
 // Initialize detection when DOM is ready
 const initialize = () => {
@@ -142,7 +105,6 @@ const initialize = () => {
     injectDetectionMarker();
     injectWindowProperty();
     setupMessageListener();
-    setupAuthSync();
     
     // Notify web app that extension is ready
     window.dispatchEvent(new CustomEvent('leetguardExtensionReady', {

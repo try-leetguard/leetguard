@@ -44,8 +44,8 @@ export default function LoginPage() {
     try {
       const result = await login(data.email, data.password);
       if (result.success) {
-        // Redirect to dashboard on successful login
-        router.push("/dashboard");
+        // Redirect to activity on successful login
+        router.push("/activity");
       } else if (result.needsVerification) {
         // Redirect to email verification page
         router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);

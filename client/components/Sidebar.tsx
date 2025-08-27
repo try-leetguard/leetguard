@@ -22,7 +22,6 @@ import {
 
 interface SidebarProps {
   activePage?:
-    | "dashboard"
     | "activity"
     | "blocklist"
     | "log"
@@ -32,7 +31,7 @@ interface SidebarProps {
     | "settings-data";
 }
 
-export default function Sidebar({ activePage = "dashboard" }: SidebarProps) {
+export default function Sidebar({ activePage = "activity" }: SidebarProps) {
   const { logout, user } = useAuth();
   const router = useRouter();
 
@@ -52,7 +51,7 @@ export default function Sidebar({ activePage = "dashboard" }: SidebarProps) {
     <div className="w-56 bg-gray-50 border-r border-gray-200 flex flex-col">
       {/* Logo */}
       <div className="p-4">
-        <Link href="/dashboard" className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2">
           <Image
             src="/leetguard-logo-black.svg"
             alt="LeetGuard Logo"
@@ -60,7 +59,7 @@ export default function Sidebar({ activePage = "dashboard" }: SidebarProps) {
             height={28}
           />
           <span className="text-xl font-normal text-black">LeetGuard</span>
-        </Link>
+        </div>
       </div>
 
       {/* Navigation */}

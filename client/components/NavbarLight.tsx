@@ -104,12 +104,12 @@ export default function NavbarLight() {
                   <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50">
                     <button
                       onClick={() => {
-                        router.push("/dashboard");
+                        router.push("/activity");
                         setShowUserMenu(false);
                       }}
                       className="w-full text-left px-4 py-2 text-sm text-black hover:bg-gray-50 transition-colors duration-200"
                     >
-                      Dashboard
+                      Activity
                     </button>
                     <button
                       onClick={handleLogout}

@@ -1,42 +1,7 @@
 // LeetGuard Content Script for LeetCode pages
 console.log('🎯 LeetGuard Content Script loaded');
 
-// Monitor localStorage changes for auth state
-const originalSetItem = localStorage.setItem;
-const originalRemoveItem = localStorage.removeItem;
-
-// Override setItem to detect token changes
-localStorage.setItem = function(key, value) {
-  originalSetItem.apply(this, arguments);
-  
-  // Check if auth tokens are being set
-  if (key === 'access_token' || key === 'refresh_token') {
-    console.log('🎯 Auth token set in localStorage:', key);
-    // Notify extension of auth state change
-    chrome.runtime.sendMessage({
-      type: 'LOCALSTORAGE_AUTH_CHANGE',
-      action: 'set',
-      key: key,
-      value: value
-    });
-  }
-};
-
-// Override removeItem to detect token removal (logout)
-localStorage.removeItem = function(key) {
-  originalRemoveItem.apply(this, arguments);
-  
-  // Check if auth tokens are being removed
-  if (key === 'access_token' || key === 'refresh_token') {
-    console.log('🎯 Auth token removed from localStorage:', key);
-    // Notify extension of auth state change
-    chrome.runtime.sendMessage({
-      type: 'LOCALSTORAGE_AUTH_CHANGE',
-      action: 'remove',
-      key: key
-    });
-  }
-};
+// Note: localStorage monitoring removed - extension now checks localStorage on-demand
 
 // Inject script file into page context
 const script = document.createElement('script');

@@ -228,25 +228,6 @@ chrome.runtime.onMessage.addListener((message) => {
     console.log('Timer completed');
     showTimerComplete();
     clearCountdownState();
-  } else if (message.type === 'AUTH_STATE_CHANGED') {
-    console.log('Auth state changed, updating UI');
-    // Re-initialize auth state and update UI
-    if (typeof extensionAuth !== 'undefined') {
-      extensionAuth.init().then(() => {
-        updateAuthUI();
-        // If we're showing the mini blocklist UI, refresh it
-        const miniBlocklist = document.querySelector('.mini-blocklist');
-        if (miniBlocklist) {
-          if (extensionAuth.isAuthenticated()) {
-            // User is now authenticated, go back to main UI
-            restoreMainUI();
-          } else {
-            // User is not authenticated, refresh the mini blocklist UI
-            showMiniBlocklistUI();
-          }
-        }
-      });
-    }
   }
 });
 
@@ -289,9 +270,9 @@ function initializeEventListeners() {
 
   if (editListBtn) {
     editListBtn.addEventListener('click', async () => {
-      // Re-check authentication state before making decision
+      // Always check localStorage for current auth state when button is clicked
       if (typeof extensionAuth !== 'undefined') {
-        await extensionAuth.init(); // This will check localStorage and clear stale tokens
+        await extensionAuth.init();
       }
       
       // Check if user is authenticated
@@ -353,9 +334,24 @@ function restoreMainUI() {
     }
   });
   
-  document.getElementById('editList').addEventListener('click', () => {
-    console.log('Edit List clicked - showing mini blocklist UI');
-    showMiniBlocklistUI();
+  document.getElementById('editList').addEventListener('click', async () => {
+    // Always check localStorage for current auth state when button is clicked
+    if (typeof extensionAuth !== 'undefined') {
+      await extensionAuth.init();
+    }
+    
+    // Check if user is authenticated
+    if (typeof extensionAuth !== 'undefined' && extensionAuth.isAuthenticated()) {
+      // User is logged in, redirect to web app blocklist page
+      const webAppUrl = 'http://localhost:3000'; // TODO: Make this configurable for production
+      chrome.tabs.create({
+        url: `${webAppUrl}/blocklist`
+      });
+    } else {
+      // User is not logged in, show mini blocklist UI
+      console.log('Edit List clicked - showing mini blocklist UI');
+      showMiniBlocklistUI();
+    }
   });
   
   updateTimeDisplay();
@@ -438,59 +434,9 @@ function showMiniBlocklistUI() {
   });
 }
 
-function restoreMainUI() {
-  const mainPopup = document.getElementById('leetguard-popup');
-  mainPopup.innerHTML = `
-    <div class="timer-section">
-      <h3><img src="icons/leetguard-logo-black.png" alt="LeetGuard" class="logo"> TIMER</h3>
-      <div class="time-setter">
-        <button class="time-btn" id="decreaseTime">-</button>
-        <span id="timeDisplay">${currentTime}</span>
-        <button class="time-btn" id="increaseTime">+</button>
-      </div>
-      <span class="time-unit">minutes</span>
-    </div>
-    <div class="button-group">
-      <button id="toggleFocus">Focus</button>
-      <button id="editList">Edit List</button>
-    </div>
-  `;
-  
-  // Re-add event listeners for the timer interface
-  document.getElementById('toggleFocus').addEventListener('click', () => {
-    chrome.storage.local.get('focusMode', (data) => {
-      const newMode = !data.focusMode;
-      chrome.storage.local.set({ focusMode: newMode });
-      chrome.runtime.sendMessage({ type: 'FOCUS_MODE_TOGGLE', focusMode: newMode });
-      
-      // Start countdown immediately when button is clicked
-      startCountdown();
-    });
-  });
-  
-  document.getElementById('increaseTime').addEventListener('click', () => {
-    currentTime += 5;
-    updateTimeDisplay();
-  });
-  
-  document.getElementById('decreaseTime').addEventListener('click', () => {
-    if (currentTime > 5) {
-      currentTime -= 5;
-      updateTimeDisplay();
-    }
-  });
-  
-  document.getElementById('editList').addEventListener('click', () => {
-    console.log('Edit List clicked - showing mini blocklist UI');
-    showMiniBlocklistUI();
-  });
-  
-  updateTimeDisplay();
-}
-
 // Initialize popup with authentication check
 async function initializePopup() {
-  // Wait for auth to be available and initialize
+  // Always check localStorage for current auth state when popup opens
   if (typeof extensionAuth !== 'undefined') {
     await extensionAuth.init();
   }
@@ -498,19 +444,19 @@ async function initializePopup() {
   // Initialize event listeners
   initializeEventListeners();
   
-  // Update UI based on auth state
-  updateAuthUI();
+  // Update UI based on current auth state
+  await updateAuthUI();
   
   // Load countdown state
   loadCountdownState();
   updateTimeDisplay();
   
-  // On-demand sync when popup opens (much more efficient than periodic sync)
+  // Sync data if user is authenticated
   if (typeof extensionAuth !== 'undefined' && extensionAuth.isAuthenticated()) {
     try {
       console.log('Popup: Running on-demand sync...');
       
-      // Sync blocklist and activities only when user opens popup
+      // Sync blocklist and activities
       if (typeof blocklistSync !== 'undefined') {
         await blocklistSync.syncBlocklist();
       }
@@ -534,7 +480,12 @@ async function initializePopup() {
 }
 
 // Update UI based on authentication state
-function updateAuthUI() {
+async function updateAuthUI() {
+  // Always check localStorage for current auth state
+  if (typeof extensionAuth !== 'undefined') {
+    await extensionAuth.init();
+  }
+  
   const signInBtn = document.getElementById('signInBtn');
   if (signInBtn) {
     if (typeof extensionAuth !== 'undefined' && extensionAuth.isAuthenticated()) {
@@ -543,6 +494,15 @@ function updateAuthUI() {
     } else {
       signInBtn.textContent = 'Login to Customize';
       signInBtn.disabled = false;
+    }
+  }
+  
+  // If user is authenticated and we're showing the mini blocklist UI, switch to main UI
+  if (typeof extensionAuth !== 'undefined' && extensionAuth.isAuthenticated()) {
+    const miniBlocklist = document.querySelector('.mini-blocklist');
+    if (miniBlocklist) {
+      console.log('User authenticated, switching from mini blocklist to main UI');
+      restoreMainUI();
     }
   }
 }

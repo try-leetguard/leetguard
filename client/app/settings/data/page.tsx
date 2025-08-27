@@ -66,7 +66,7 @@ export default function DataPage() {
                     </p>
                     <div className="border-t border-gray-200 pt-4 flex justify-end -mx-6 px-6">
                       <Link
-                        href="/dashboard/privacy"
+                        href="/privacy"
                         className="inline-flex items-center text-sm font-medium text-black hover:text-gray-700 transition-colors duration-200 border border-gray-300 px-4 py-2 hover:border-gray-400 hover:shadow-md"
                       >
                         Privacy
@@ -100,7 +100,7 @@ export default function DataPage() {
                     </p>
                     <div className="border-t border-gray-200 pt-4 flex justify-end -mx-6 px-6">
                       <Link
-                        href="/dashboard/terms"
+                        href="/terms"
                         className="inline-flex items-center text-sm font-medium text-black hover:text-gray-700 transition-colors duration-200 border border-gray-300 px-4 py-2 hover:border-gray-400 hover:shadow-md"
                       >
                         Terms

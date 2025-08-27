@@ -49,7 +49,7 @@ export default function AuthCallbackPage() {
             setStatus("success");
             setMessage("Authentication successful! Redirecting...");
             setTimeout(() => {
-              router.push("/dashboard");
+              router.push("/activity");
             }, 1000);
             return;
           }
@@ -64,7 +64,7 @@ export default function AuthCallbackPage() {
             setStatus("success");
             setMessage("Authentication successful! Redirecting...");
             setTimeout(() => {
-              router.push("/dashboard");
+              router.push("/activity");
             }, 1000);
             return;
           }

@@ -7,40 +7,9 @@ let remainingTime = 0;
 let isPaused = false;
 let currentTime = 25;
 
-// Listen for storage changes across tabs
-chrome.storage.onChanged.addListener((changes, namespace) => {
-  if (namespace === 'local') {
-    // Check if auth tokens were removed (logout in another tab)
-    if (changes.access_token && !changes.access_token.newValue && changes.access_token.oldValue) {
-      console.log('Background: Auth token removed in another tab - user logged out');
-      if (extensionAuth) {
-        extensionAuth.clearAuth().then(() => {
-          console.log('Background: Auth state cleared due to logout in another tab');
-          // Clear any cached data
-          if (blocklistSync) blocklistSync.clearCachedBlocklist();
-          if (activityLogger) activityLogger.clearPendingActivities();
-          // Notify all extension contexts of auth state change
-          notifyAuthStateChange();
-        });
-      }
-    }
-    
-    // Check if auth tokens were added (login in another tab)
-    if (changes.access_token && changes.access_token.newValue && !changes.access_token.oldValue) {
-      console.log('Background: Auth token added in another tab - user logged in');
-      // The extension will handle this through the normal OAuth callback flow
-    }
-  }
-});
+// Note: Cross-tab auth detection removed - extension now checks localStorage on-demand
 
-// Function to notify all extension contexts of auth state changes
-function notifyAuthStateChange() {
-  chrome.runtime.sendMessage({
-    type: 'AUTH_STATE_CHANGED'
-  }).catch(err => {
-    console.log('Background: No popup open to notify');
-  });
-}
+// Note: notifyAuthStateChange function removed - no longer needed with on-demand auth checking
 
 // Generate blocking rules for each site
 async function getBlockRules() {
@@ -195,20 +164,7 @@ chrome.runtime.onMessage.addListener((message) => {
     resetTimer();
   }
   
-  // OAuth callback handling
-  if (message && message.type === 'OAUTH_CALLBACK') {
-    console.log('Background: Handling OAuth callback');
-    if (extensionAuth && message.tokens) {
-      extensionAuth.handleOAuthCallback(message.tokens).then(success => {
-        if (success) {
-          console.log('OAuth callback handled successfully');
-          // Trigger sync after successful authentication
-          if (blocklistSync) blocklistSync.syncBlocklist();
-          if (activityLogger) activityLogger.syncLocalActivities();
-        }
-      });
-    }
-  }
+  // Note: OAuth callback handling removed - extension now checks localStorage on-demand
   
   // Logout handling
   if (message && message.type === 'USER_LOGOUT') {
@@ -219,30 +175,11 @@ chrome.runtime.onMessage.addListener((message) => {
         // Clear any cached data
         if (blocklistSync) blocklistSync.clearCachedBlocklist();
         if (activityLogger) activityLogger.clearPendingActivities();
-        // Notify all extension contexts of auth state change
-        notifyAuthStateChange();
       });
     }
   }
   
-  // Handle localStorage auth changes from content script
-  if (message && message.type === 'LOCALSTORAGE_AUTH_CHANGE') {
-    console.log('Background: Handling localStorage auth change:', message);
-    
-    if (message.action === 'remove' && (message.key === 'access_token' || message.key === 'refresh_token')) {
-      console.log('Background: Auth token removed from localStorage - user logged out');
-      if (extensionAuth) {
-        extensionAuth.clearAuth().then(() => {
-          console.log('Background: Auth state cleared due to localStorage logout');
-          // Clear any cached data
-          if (blocklistSync) blocklistSync.clearCachedBlocklist();
-          if (activityLogger) activityLogger.clearPendingActivities();
-          // Notify all extension contexts of auth state change
-          notifyAuthStateChange();
-        });
-      }
-    }
-  }
+  // Note: localStorage auth change detection removed - extension now checks localStorage on-demand
 });
 
 // Initialize sync modules when background script starts
