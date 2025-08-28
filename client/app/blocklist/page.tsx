@@ -162,6 +162,15 @@ function BlockList() {
   } | null>(null);
   const [extensionConnected, setExtensionConnected] = useState(false);
 
+  // Default blocklist for unauthenticated users
+  const defaultBlocklist = [
+    "facebook.com",
+    "reddit.com",
+    "youtube.com",
+    "instagram.com",
+    "x.com",
+  ];
+
   // Check for extension connection
   useEffect(() => {
     const checkExtension = async () => {
@@ -478,17 +487,46 @@ function BlockList() {
             <span className="text-gray-600">Loading your blocklist...</span>
           </div>
         ) : !isAuthenticated ? (
-          <div className="text-center py-8">
-            <Shield size={24} className="text-gray-400 mx-auto mb-2" />
-            <p className="text-gray-600 mb-4">
-              Please log in to manage your blocklist
-            </p>
-            <a
-              href="/login"
-              className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
-            >
-              Log In
-            </a>
+          <div className="space-y-6">
+            {/* Default Blocklist Section */}
+            <div>
+              <ul className="flex flex-col gap-2">
+                {defaultBlocklist.map((site) => (
+                  <li
+                    key={site}
+                    className="flex items-center justify-between bg-gray-50 border border-gray-200 px-4 py-2 font-dm-sans rounded-sm opacity-75"
+                  >
+                    <span className="flex items-center text-black break-all font-mono text-xs">
+                      <img
+                        src={`https://icons.duckduckgo.com/ip3/${getDomain(
+                          site
+                        )}.ico`}
+                        alt=""
+                        className="w-5 h-5 mr-2 rounded-none"
+                        style={{ minWidth: 20 }}
+                      />
+                      {site}
+                    </span>
+                    <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">
+                      Default
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Sign In Section */}
+            <div className="text-center py-2">
+              <p className="text-gray-600 mb-4">
+                Please log in to manage your own blocklist
+              </p>
+              <a
+                href="/login"
+                className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
+              >
+                Log In
+              </a>
+            </div>
           </div>
         ) : list.length === 0 ? (
           <div className="text-center py-8">
@@ -504,7 +542,7 @@ function BlockList() {
                 key={site}
                 className="flex items-center justify-between bg-gray-50 border border-gray-200 px-4 py-2 font-dm-sans rounded-sm"
               >
-                <span className="flex items-center text-black break-all">
+                <span className="flex items-center text-black break-all font-mono text-xs">
                   <img
                     src={`https://icons.duckduckgo.com/ip3/${getDomain(
                       site
@@ -547,7 +585,7 @@ function BlockList() {
             ) : (
               <XCircle className="w-5 h-5 text-red-600" />
             )}
-            <span className="font-medium">{notification.message}</span>
+            <span className="font-mono text-xs">{notification.message}</span>
             <button
               onClick={() => setNotification(null)}
               className="ml-2 text-gray-400 hover:text-gray-600"
