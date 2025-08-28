@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { RefreshCw } from "lucide-react";
 import { apiClient, GoalResponse } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
@@ -34,6 +35,7 @@ export default function ActivityPage() {
   const [completedToday, setCompletedToday] = useState(0);
   const [countdownText, setCountdownText] = useState("24:00:00");
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const motivationalMessages = [
     "Please wait before proceeding...",
@@ -275,6 +277,29 @@ export default function ActivityPage() {
     };
   }, [showUnblockDialog, isCountdownActive, motivationalMessages.length]);
 
+  // Manual refresh function
+  const handleManualRefresh = async () => {
+    if (!isAuthenticated || isLoading) return;
+
+    try {
+      setIsRefreshing(true);
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        throw new Error("No access token");
+      }
+
+      const goalData = await apiClient.getGoal(token);
+      setGoalQuestions(goalData.target_daily);
+      setGoalInputValue(goalData.target_daily.toString());
+      setCompletedToday(goalData.progress_today);
+      console.log("Progress refreshed:", goalData.progress_today);
+    } catch (error) {
+      console.error("Failed to refresh progress:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   return (
     <div className="min-h-screen text-black bg-white">
       <div className="flex h-screen bg-white">
@@ -342,16 +367,30 @@ export default function ActivityPage() {
                     )}
                   </div>
                   <div className="border-t border-gray-200 pt-4 -mx-6 px-6">
-                    <p className="text-black text-xs font-mono">
-                      {isLoading
-                        ? "Loading..."
-                        : completedToday >= goalQuestions
-                        ? "🎉 Daily goal completed! Enjoy your scroll."
-                        : `Complete ${Math.max(
-                            goalQuestions - completedToday,
-                            0
-                          )} more questions to unlock websites.`}
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-black text-xs font-mono">
+                        {isLoading
+                          ? "Loading..."
+                          : completedToday >= goalQuestions
+                          ? "🎉 Daily goal completed! Enjoy your scroll."
+                          : `Complete ${Math.max(
+                              goalQuestions - completedToday,
+                              0
+                            )} more questions to unlock websites.`}
+                      </p>
+                      {isAuthenticated && !isLoading && (
+                        <button
+                          onClick={handleManualRefresh}
+                          disabled={isRefreshing}
+                          className="p-1 text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white hover:bg-gray-50 rounded"
+                        >
+                          <RefreshCw
+                            size={14}
+                            className={isRefreshing ? "animate-spin" : ""}
+                          />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
