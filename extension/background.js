@@ -1,11 +1,8 @@
 // Import sync modules
 importScripts('auth.js', 'blocklist-sync.js', 'activity-logger.js');
 
-// Timer variables
-let countdownInterval;
-let remainingTime = 0;
-let isPaused = false;
-let currentTime = 25;
+// Goal-based blocking variables
+let isBlockingEnabled = false;
 
 // Note: Cross-tab auth detection removed - extension now checks localStorage on-demand
 
@@ -45,78 +42,65 @@ async function disableBlocking() {
   });
 }
 
-// Timer functions
-function startCountdownTimer(initialTime, timeSetting) {
-  console.log('Background: Starting countdown timer', initialTime, timeSetting);
-  remainingTime = initialTime;
-  currentTime = timeSetting;
-  isPaused = false;
+// Goal-based blocking functions
+async function checkGoalAndUpdateBlocking() {
+  console.log('Background: Checking goal completion state...');
   
-  // Enable blocking when timer starts
-  enableBlocking();
+  // Check if user is authenticated
+  if (typeof extensionAuth !== 'undefined') {
+    await extensionAuth.init();
+  }
   
-  if (countdownInterval) clearInterval(countdownInterval);
-  
-  countdownInterval = setInterval(() => {
-    if (!isPaused) {
-      remainingTime--;
-      console.log('Background: Timer tick, remaining:', remainingTime);
+  if (typeof extensionAuth !== 'undefined' && extensionAuth.isAuthenticated()) {
+    // Authenticated user - check goal via API
+    try {
+      const goalData = await extensionAuth.apiRequest('/api/me/goal');
+      const shouldBlock = goalData.progress_today < goalData.target_daily;
       
-      // Save state to storage
-      chrome.storage.local.set({
-        countdownActive: true,
-        remainingTime: remainingTime,
-        isPaused: isPaused,
-        currentTime: currentTime
+      console.log('Background: Authenticated user goal state:', {
+        progress: goalData.progress_today,
+        target: goalData.target_daily,
+        shouldBlock: shouldBlock
       });
       
-      // Notify popup if it's open
-      chrome.runtime.sendMessage({
-        type: 'TIMER_UPDATE',
-        remainingTime: remainingTime
-      }).catch(err => {
-        console.log('Background: Popup not open, message not sent');
+      if (shouldBlock && !isBlockingEnabled) {
+        await enableBlocking();
+        isBlockingEnabled = true;
+      } else if (!shouldBlock && isBlockingEnabled) {
+        await disableBlocking();
+        isBlockingEnabled = false;
+      }
+    } catch (error) {
+      console.error('Background: Failed to check authenticated user goal:', error);
+    }
+  } else {
+    // Guest user - check guest progress
+    const result = await chrome.storage.local.get(['guest_progress']);
+    if (result.guest_progress) {
+      const guestProgress = result.guest_progress;
+      const shouldBlock = guestProgress.progress_today < guestProgress.target_daily;
+      
+      console.log('Background: Guest user goal state:', {
+        progress: guestProgress.progress_today,
+        target: guestProgress.target_daily,
+        shouldBlock: shouldBlock
       });
       
-      if (remainingTime <= 0) {
-        console.log('Background: Timer complete');
-        clearInterval(countdownInterval);
-        chrome.storage.local.remove(['countdownActive', 'remainingTime', 'isPaused']);
-        chrome.runtime.sendMessage({ type: 'TIMER_COMPLETE' }).catch(err => {
-          console.log('Background: Popup not open for completion message');
-        });
-        
-        // Disable blocking when timer completes
-        disableBlocking();
+      if (shouldBlock && !isBlockingEnabled) {
+        await enableBlocking();
+        isBlockingEnabled = true;
+      } else if (!shouldBlock && isBlockingEnabled) {
+        await disableBlocking();
+        isBlockingEnabled = false;
+      }
+    } else {
+      // No guest progress found, enable blocking by default
+      if (!isBlockingEnabled) {
+        await enableBlocking();
+        isBlockingEnabled = true;
       }
     }
-  }, 1000);
-}
-
-function togglePauseTimer(pauseState) {
-  isPaused = pauseState;
-  chrome.storage.local.set({
-    countdownActive: true,
-    remainingTime: remainingTime,
-    isPaused: isPaused,
-    currentTime: currentTime
-  });
-  
-  // Keep blocking active even when paused - timer is still active
-  console.log('Background: Timer paused, keeping sites blocked');
-}
-
-function resetTimer() {
-  if (countdownInterval) {
-    clearInterval(countdownInterval);
   }
-  isPaused = false;
-  remainingTime = 0;
-  chrome.storage.local.remove(['countdownActive', 'remainingTime', 'isPaused']);
-  
-  // Disable blocking when timer is reset
-  disableBlocking();
-  console.log('Background: Timer reset, sites unblocked');
 }
 
 // Listen for messages from popup and content scripts
@@ -158,20 +142,10 @@ chrome.runtime.onMessage.addListener((message) => {
     }
   }
   
-  // Timer messages
-  if (message && message.type === 'START_COUNTDOWN') {
-    console.log('Background: Starting countdown with', message.remainingTime, message.currentTime);
-    startCountdownTimer(message.remainingTime, message.currentTime);
-  }
-  
-  if (message && message.type === 'TOGGLE_PAUSE') {
-    console.log('Background: Toggling pause to', message.isPaused);
-    togglePauseTimer(message.isPaused);
-  }
-  
-  if (message && message.type === 'RESET_TIMER') {
-    console.log('Background: Resetting timer');
-    resetTimer();
+  // Goal-based blocking messages
+  if (message && message.type === 'CHECK_GOAL_AND_UPDATE') {
+    console.log('Background: Received goal check request');
+    checkGoalAndUpdateBlocking();
   }
   
   // OAuth callback handling - webapp sends tokens to extension
@@ -222,48 +196,15 @@ chrome.runtime.onStartup.addListener(async () => {
   if (activityLogger) await activityLogger.syncPendingActivities();
 });
 
-// On install or browser start, check timer state for blocking
+// On install or browser start, check goal state for blocking
 function checkAndBlock() {
-  chrome.storage.local.get(['countdownActive', 'remainingTime'], (data) => {
-    if (data.countdownActive && data.remainingTime > 0) {
-      enableBlocking();
-      console.log('Background: Active timer found, sites blocked');
-    } else {
-      disableBlocking();
-      console.log('Background: No active timer, sites unblocked');
-    }
-  });
-}
-
-// Restore timer state on startup
-function restoreTimerState() {
-  chrome.storage.local.get(['countdownActive', 'remainingTime', 'isPaused', 'currentTime'], (data) => {
-    if (data.countdownActive && data.remainingTime > 0) {
-      console.log('Background: Restoring timer state', data);
-      remainingTime = data.remainingTime;
-      isPaused = data.isPaused;
-      if (data.currentTime) currentTime = data.currentTime;
-      
-      // Enable blocking if timer is active (even if paused)
-      enableBlocking();
-      console.log('Background: Timer restored, sites blocked');
-      
-      if (!isPaused) {
-        startCountdownTimer(remainingTime, currentTime);
-      }
-    } else {
-      // No active timer, ensure sites are unblocked
-      disableBlocking();
-      console.log('Background: No active timer, sites unblocked');
-    }
-  });
+  console.log('Background: Checking goal state on startup...');
+  checkGoalAndUpdateBlocking();
 }
 
 chrome.runtime.onStartup.addListener(() => {
   checkAndBlock();
-  restoreTimerState();
 });
 chrome.runtime.onInstalled.addListener(() => {
   checkAndBlock();
-  restoreTimerState();
 });
