@@ -24,15 +24,15 @@ export default function AnythingElsePage() {
           <div className="container mx-auto px-4 max-w-4xl">
             <Link
               href="/careers"
-              className="inline-flex items-center text-neutral-600 hover:text-black mb-8 transition-colors"
+              className="inline-flex items-center text-neutral-600 hover:text-black mb-8 transition-colors font-mono text-sm"
             >
               ← Back to Careers
             </Link>
 
             <div className="mb-2">
               <div className="flex items-center justify-between mb-6">
-                <h1 className="text-4xl font-semibold">Anything else</h1>
-                <div className="flex items-center text-neutral-500">
+                <h1 className="text-3xl font-normal text-black font-mono">Anything else</h1>
+                <div className="flex items-center text-neutral-500 font-mono text-sm">
                   <Image
                     src="/usflag.svg"
                     alt="US Flag"
@@ -43,7 +43,7 @@ export default function AnythingElsePage() {
                   US only
                 </div>
               </div>
-              <div className="text-lg text-neutral-600 mb-2">
+              <div className="text-sm text-neutral-600 mb-2 font-mono">
                 Remote • Contribute your ideas
               </div>
             </div>
@@ -54,78 +54,57 @@ export default function AnythingElsePage() {
         <div className="relative pb-32 px-6">
           <div className="container mx-auto px-4 max-w-4xl">
             <div className="prose prose-lg max-w-none">
-              <h2 className="text-2xl font-semibold mb-6">About This Role</h2>
-              <p className="text-neutral-700 mb-6 leading-relaxed">
+              <h2 className="text-xl font-normal mb-6 font-mono">About This Role</h2>
+              <p className="text-neutral-700 mb-6 leading-relaxed font-mono text-sm">
                 We believe that great ideas can come from anywhere, and we're
-                always looking for passionate individuals who can bring unique
+                always looking for passionate students who can bring unique
                 perspectives and skills to our team. If you don't see a specific
                 role that fits your background, but you're excited about what
-                we're building at LeetGuard, we'd love to hear from you!
+                we're building at LeetGuard, we'd love to hear from you regardless!
               </p>
 
-              <h3 className="text-xl font-semibold mb-4 mt-8">
+              <h3 className="text-lg font-normal mb-4 mt-8 font-mono">
                 What We're Looking For
               </h3>
-              <p className="text-neutral-700 mb-6 leading-relaxed">
+              <p className="text-neutral-700 mb-6 leading-relaxed font-mono text-sm">
                 We're open to various roles and skill sets that could help us
-                grow and improve LeetGuard. This might include:
+                grow and improve LeetGuard. This includes:
               </p>
-              <ul className="list-disc pl-6 mb-6 space-y-2 text-neutral-700">
+              <ul className="list-disc pl-6 mb-6 space-y-2 text-neutral-700 font-mono text-sm">
                 <li>Product management and user experience design</li>
                 <li>Marketing, growth, and community building</li>
-                <li>Data analysis and user research</li>
                 <li>Content creation and technical writing</li>
-                <li>DevOps and infrastructure expertise</li>
-                <li>Quality assurance and testing</li>
-                <li>Customer support and success</li>
-                <li>Business development and partnerships</li>
-                <li>
-                  Or something completely different that you think would be
-                  valuable!
-                </li>
               </ul>
 
-              <h3 className="text-xl font-semibold mb-4 mt-8">
+              <h3 className="text-lg font-normal mb-4 mt-8 font-mono">
                 What You'll Bring
               </h3>
-              <ul className="list-disc pl-6 mb-6 space-y-2 text-neutral-700">
+              <ul className="list-disc pl-6 mb-6 space-y-2 text-neutral-700 font-mono text-sm">
                 <li>Passion for developer tools and productivity</li>
-                <li>Strong communication and collaboration skills</li>
                 <li>Ability to work independently in a remote environment</li>
-                <li>Creative problem-solving approach</li>
+                <li>Out of the box thinking and creativity</li>
                 <li>Willingness to learn and adapt</li>
-                <li>
-                  Understanding of the developer community and their needs
-                </li>
               </ul>
 
-              <h3 className="text-xl font-semibold mb-4 mt-8">What We Offer</h3>
-              <ul className="list-disc pl-6 mb-6 space-y-2 text-neutral-700">
-                <li>Flexible remote work environment</li>
-                <li>
-                  Opportunity to shape your role and contribute to our growth
-                </li>
-                <li>Direct impact on a product used by developers worldwide</li>
-                <li>Learning and professional development opportunities</li>
-                <li>Collaborative team environment</li>
-                <li>Competitive compensation</li>
+              <h3 className="text-lg font-normal mb-4 mt-8 font-mono">What We Offer</h3>
+              <ul className="list-disc pl-6 mb-6 space-y-2 text-neutral-700 font-mono text-sm">
+                <li>Remote-first work environment with flexible hours</li>
+                <li>Small team where your contributions have real impact</li>
+                <li>Learning and growth opportunities</li>
               </ul>
 
-              <div className="bg-gray-50 p-6 rounded-lg mt-8">
-                <h3 className="text-xl font-semibold mb-4">How to Apply</h3>
-                <p className="text-neutral-700 mb-4">
+              <div className="bg-gray-50 p-6 rounded-lg mt-8 border border-gray-400">
+                <h3 className="text-lg font-normal mb-4 font-mono">How to Apply</h3>
+                <p className="text-neutral-700 mb-4 font-mono text-sm">
                   We're a small team of students passionate about building
-                  innovative solutions. If you have a unique skill set or
-                  perspective that you think could help us improve LeetGuard,
-                  we'd love to hear from you!
+                  innovative solutions. If you're excited about this role and
+                  think you'd be a great fit, we'd love to hear from you!
                 </p>
-                <p className="text-neutral-700 mb-4">
-                  Please tell us about yourself, your background, and how you
-                  think you could contribute to our team. Include your resume
-                  and any relevant projects or experience that showcase your
-                  skills.
+                <p className="text-neutral-700 mb-4 font-mono text-sm">
+                  Please include your name, resume, and any relevant projects or experience that you
+                  think would make you a great addition to our team.
                 </p>
-                <p className="text-neutral-700">
+                <p className="text-neutral-700 font-mono text-sm">
                   Don't worry if your background doesn't fit a traditional role
                   - we're more interested in finding the right person who's
                   excited about what we're building!
@@ -139,7 +118,7 @@ export default function AnythingElsePage() {
                 href="https://docs.google.com/forms/d/e/1FAIpQLSfg0yXSpA9LvbdPWxy26_41pVep2-vDRHxf3vMvryE2RSsfFQ/viewform?usp=dialog"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block bg-black text-white px-8 py-4 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200"
+                className="inline-block bg-black text-white px-8 py-4 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200 font-mono text-sm"
               >
                 Apply for General Position
               </a>

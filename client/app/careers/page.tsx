@@ -53,7 +53,7 @@ export default function CareersPage() {
                     className="bg-white border border-gray-200 p-8 transition-all duration-300 shadow-sm hover:shadow-lg hover:scale-[1.025] cursor-pointer"
                   >
                     <div className="mb-2 text-lg font-medium">
-                      Software Engineer
+                      Full-Stack Engineer
                     </div>
                     <div className="flex items-center text-neutral-500 mb-2">
                       <Image

@@ -433,7 +433,7 @@ export default function ActivityPage() {
                       )}
                     </div>
                     <div className="border-t border-gray-200 pt-4 flex justify-between items-center -mx-6 px-6">
-                      <p className="text-black text-xs">Minimum: 1 question</p>
+                      <p className="text-black text-xs font-mono">Minimum: 1 question</p>
                       {isAuthenticated && (
                         <button
                           onClick={handleSaveGoal}
