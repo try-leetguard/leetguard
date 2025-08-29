@@ -123,6 +123,16 @@ function resetTimer() {
 chrome.runtime.onMessage.addListener((message) => {
   console.log('Background received message:', message);
   
+  // Extension toggle control
+  if (message && message.type === 'EXTENSION_TOGGLE') {
+    console.log('Background: Extension toggle to', message.enabled);
+    if (message.enabled) {
+      enableBlocking();
+    } else {
+      disableBlocking();
+    }
+  }
+  
   // Focus mode toggle (now just for tracking, blocking is controlled by timer)
   if (message && message.type === 'FOCUS_MODE_TOGGLE') {
     console.log('Background: Focus mode toggled to', message.focusMode);
