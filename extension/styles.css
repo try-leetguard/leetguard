@@ -1,37 +1,252 @@
 #leetguard-popup {
   font-family: 'DM Sans', sans-serif;
   font-weight: 500;
-  width: 280px;
-  min-height: 200px;
+  width: 350px;
+  min-height: 220px;
   background: white;
   color: rgb(0, 0, 0);
-  padding: 32px 36px 24px 36px;
+  padding: 14px;
   border-radius: 0;
   box-shadow: 0 4px 24px rgba(0,0,0,0.18);
-  font-size: 22px;
+  font-size: 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
 }
-#leetguard-popup .timer-section {
+
+/* Activity Section Styles */
+#leetguard-popup .activity-section {
   width: 100%;
-  text-align: center;
-  margin-bottom: 24px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+  padding: 8px;
+  background: white;
 }
-#leetguard-popup .timer-section h3 {
-  margin: 0 0 16px 0;
-  font-size: 18px;
-  font-weight: 500;
-  color: #000;
+
+#leetguard-popup .activity-header {
+  text-align: center;
+  margin-bottom: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  position: relative;
 }
+
+#leetguard-popup .activity-header .header-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+#leetguard-popup .activity-header .logo {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 10px;
+}
+
+#leetguard-popup .activity-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+#leetguard-popup .progress-section {
+  margin-bottom: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 12px;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+#leetguard-popup .progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+#leetguard-popup .progress-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #000;
+  margin: 0;
+}
+
+#leetguard-popup .countdown-text {
+  font-size: 12px;
+  color: #666;
+  font-family: monospace;
+}
+
+#leetguard-popup .progress-display {
+  text-align: left;
+}
+
+#leetguard-popup .progress-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+#leetguard-popup .progress-label {
+  font-size: 14px;
+  color: #000;
+  font-weight: 500;
+}
+
+#leetguard-popup .progress-text {
+  font-size: 14px;
+  color: #000;
+  font-weight: 500;
+}
+
+#leetguard-popup .progress-bar-container {
+  width: 100%;
+  height: 12px;
+  background: #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+#leetguard-popup .progress-bar-fill {
+  height: 100%;
+  background: #22c55e;
+  border-radius: 6px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+#leetguard-popup .progress-message {
+  font-size: 10px;
+  color: #000;
+  font-family: monospace;
+  text-align: left;
+}
+
+#leetguard-popup .countdown-section {
+  text-align: center;
+  border: 1px solid #9ca3af;
+  border-radius: 8px;
+  padding: 12px;
+  background: white;
+}
+
+#leetguard-popup .countdown-display {
+  font-size: 14px;
+  color: #333;
+  font-family: monospace;
+}
+
+/* Controls Section Styles */
+#leetguard-popup .controls-section {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+#leetguard-popup .control-left,
+#leetguard-popup .control-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 12px;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+#leetguard-popup .control-label {
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  color: #000;
+}
+
+#leetguard-popup .control-button {
+  width: 100%;
+  padding: 8px 12px;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+#leetguard-popup #editBlocklist {
+  background: white;
+  color: #333;
+  border: 1px solid #d1d5db;
+  transition: all 0.2s ease;
+}
+
+#leetguard-popup .control-button:hover {
+  background: #333;
+}
+
+#leetguard-popup #editBlocklist:hover {
+  background: #f8f9fa;
+  border-color: #9ca3af;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  color: #374151;
+}
+
+
+
+/* Toggle Switch Styles */
+#leetguard-popup .toggle-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#leetguard-popup .toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: #ccc;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  appearance: none;
+  -webkit-appearance: none;
+  outline: none;
+}
+
+#leetguard-popup .toggle-switch:checked {
+  background: #22c55e;
+}
+
+#leetguard-popup .toggle-switch::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+#leetguard-popup .toggle-switch:checked::before {
+  transform: translateX(20px);
+}
+
+#leetguard-popup .toggle-label {
+  display: none;
+}
+
 #leetguard-popup .logo {
   width: 20px;
   height: 20px;
@@ -262,10 +477,10 @@
 /* Mini Blocklist UI styles */
 .mini-blocklist {
   font-family: 'DM Sans', sans-serif;
-  padding: 2px 16px 2px 16px;
+  padding: 4px 14px 4px 14px;
   text-align: center;
-  min-width: 320px;
-  max-width: 380px;
+  min-width: 350px;
+  max-width: 450px;
 }
 
 .mini-header {
@@ -307,6 +522,7 @@
 }
 
 .current-sites h4 {
+  font-family: 'DM Sans', sans-serif;
   margin: 0 0 12px 0;
   font-size: 14px;
   color: #000;
@@ -321,11 +537,12 @@
 }
 
 .site-item {
+  font-family: 'monospace', monospace;
   background: #f9fafb;
   color: #000;
   padding: 6px 12px;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 400;
   border: 1px solid #e5e7eb;
   display: flex;
@@ -370,8 +587,8 @@
 .mini-actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 16px;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .mini-actions .primary-btn,

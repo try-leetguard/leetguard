@@ -13,18 +13,50 @@
   </head>
   <body>
     <div id="leetguard-popup">
-      <div class="timer-section">
-        <h3><img src="icons/leetguard-logo-black.png" alt="LeetGuard" class="logo"> TIMER</h3>
-        <div class="time-setter">
-          <button class="time-btn" id="decreaseTime">-</button>
-          <span id="timeDisplay">25</span>
-          <button class="time-btn" id="increaseTime">+</button>
+      <!-- Top Section - Full Width -->
+      <div class="activity-section">
+        <div class="activity-header">
+          <div class="header-content">
+            <img src="icons/leetguard-logo-black.png" alt="LeetGuard" class="logo">
+            <h3>MY ACTIVITY</h3>
+          </div>
         </div>
-        <span class="time-unit">minutes</span>
-      </div>
-      <div class="button-group">
-        <button id="toggleFocus">Focus</button>
-        <button id="editList">Edit List</button>
+        
+        <div class="progress-section">
+          <div class="progress-header">
+            <h3 class="progress-title">Today's Progress</h3>
+            <span class="countdown-text" id="countdownDisplay">23:45:12</span>
+          </div>
+          <div class="progress-display">
+            <div class="progress-stats">
+              <span class="progress-label">Questions Completed</span>
+              <span class="progress-text" id="progressText">0 / 5</span>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar-fill" id="progressBarFill"></div>
+            </div>
+            <div class="progress-message" id="progressMessage">
+              Complete 2 more questions to unlock.
+            </div>
+          </div>
+        </div>
+        
+        <div class="controls-section">
+          <!-- Left Half -->
+          <div class="control-left">
+            <div class="control-label">Edit Blocklist</div>
+            <button id="editBlocklist" class="control-button">Edit</button>
+          </div>
+          
+          <!-- Right Half -->
+          <div class="control-right">
+            <div class="control-label">Extension Control</div>
+            <div class="toggle-container">
+              <input type="checkbox" id="extensionToggle" class="toggle-switch">
+              <label for="extensionToggle" class="toggle-label"></label>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <script src="auth.js"></script>
