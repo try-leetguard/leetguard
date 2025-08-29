@@ -3,6 +3,15 @@ let completedToday = 3; // Placeholder
 let goalQuestions = 5; // Placeholder
 let countdownInterval;
 
+// Guest mode variables
+let isGuestMode = false;
+let guestProgress = {
+  target_daily: 1,
+  progress_today: 0,
+  progress_date: null,
+  last_reset: null
+};
+
 // Import auth functionality - these will be available globally
 // since they're loaded in the background script and shared storage
 
@@ -229,6 +238,16 @@ chrome.runtime.onMessage.addListener((message) => {
     console.log('Timer completed');
     showTimerComplete();
     clearCountdownState();
+  } else if (message.type === 'PROBLEM_COMPLETED') {
+    console.log('Problem completed:', message);
+    
+    // Handle problem completion for both guest and authenticated modes
+    if (isGuestMode) {
+      incrementGuestProgress();
+    } else {
+      // For authenticated users, this will be handled by the activity logger
+      console.log('Problem completion handled by activity logger for authenticated user');
+    }
   }
 });
 
@@ -239,20 +258,24 @@ async function initializePopup() {
     await extensionAuth.init();
   }
   
-  // Initialize event listeners
-  initializeEventListeners();
-  
-  // Update UI based on current auth state
-  await updateAuthUI();
-  
-  // Initialize progress display (placeholder for now)
-  updateProgressDisplay();
-  
-  // Initialize countdown
-  initializeCountdown();
-  
-  // Sync data if user is authenticated
+  // Check if user is authenticated or in guest mode
   if (typeof extensionAuth !== 'undefined' && extensionAuth.isAuthenticated()) {
+    console.log('User is authenticated, initializing authenticated mode');
+    isGuestMode = false;
+    
+    // Initialize event listeners
+    initializeEventListeners();
+    
+    // Update UI based on current auth state
+    await updateAuthUI();
+    
+    // Initialize progress display (placeholder for now)
+    updateProgressDisplay();
+    
+    // Initialize countdown
+    initializeCountdown();
+    
+    // Sync data if user is authenticated
     try {
       console.log('Popup: Running on-demand sync...');
       
@@ -276,6 +299,19 @@ async function initializePopup() {
         updateAuthUI();
       }
     }
+  } else {
+    console.log('User is not authenticated, initializing guest mode');
+    // Initialize guest mode
+    await initializeGuestMode();
+    
+    // Initialize event listeners
+    initializeEventListeners();
+    
+    // Initialize progress display
+    updateProgressDisplay();
+    
+    // Initialize countdown
+    initializeCountdown();
   }
 }
 
@@ -349,6 +385,14 @@ function updateProgressDisplay() {
       progressMessage.textContent = `Complete ${remaining} more questions to unlock.`;
     }
   }
+  
+  // Log current state for debugging
+  console.log('Progress display updated:', {
+    completedToday,
+    goalQuestions,
+    percentage,
+    isGuestMode
+  });
 }
 
 // Initialize countdown display
@@ -486,6 +530,10 @@ function showMiniBlocklistUI() {
 function restoreMainUI() {
   const mainPopup = document.getElementById('leetguard-popup');
   if (mainPopup) {
+    // Determine button text and label based on guest mode
+    const buttonText = isGuestMode ? 'Login' : 'Edit';
+    const controlLabel = isGuestMode ? 'Customize Blocklist' : 'Edit Blocklist';
+    
     mainPopup.innerHTML = `
       <!-- Top Section - Full Width -->
       <div class="activity-section">
@@ -518,9 +566,9 @@ function restoreMainUI() {
         <div class="controls-section">
           <!-- Left Half -->
           <div class="control-left">
-            <div class="control-label">Edit Blocklist</div>
+            <div class="control-label">${controlLabel}</div>
             <button id="editBlocklist" class="control-button">
-              Edit
+              ${buttonText}
             </button>
           </div>
           
@@ -564,3 +612,69 @@ window.addEventListener('beforeunload', () => {
     clearInterval(countdownInterval);
   }
 }); 
+
+// Guest mode functions
+async function initializeGuestMode() {
+  console.log('Initializing guest mode...');
+  
+  // Load guest progress from storage
+  const result = await chrome.storage.local.get(['guest_progress']);
+  if (result.guest_progress) {
+    guestProgress = result.guest_progress;
+    console.log('Loaded guest progress:', guestProgress);
+  } else {
+    // Initialize new guest progress
+    guestProgress = {
+      target_daily: 1,
+      progress_today: 0,
+      progress_date: new Date().toISOString().split('T')[0], // UTC date string
+      last_reset: Date.now()
+    };
+    await chrome.storage.local.set({ guest_progress: guestProgress });
+    console.log('Initialized new guest progress:', guestProgress);
+  }
+  
+  // Check if we need to reset progress for new day
+  await checkAndResetGuestProgress();
+  
+  // Update UI variables
+  completedToday = guestProgress.progress_today;
+  goalQuestions = guestProgress.target_daily;
+  isGuestMode = true;
+}
+
+async function checkAndResetGuestProgress() {
+  const today = new Date().toISOString().split('T')[0]; // UTC date string
+  
+  if (guestProgress.progress_date !== today) {
+    console.log('New day detected, resetting guest progress');
+    guestProgress.progress_today = 0;
+    guestProgress.progress_date = today;
+    guestProgress.last_reset = Date.now();
+    
+    await chrome.storage.local.set({ guest_progress: guestProgress });
+    
+    // Update UI variables
+    completedToday = 0;
+  }
+}
+
+async function incrementGuestProgress() {
+  await checkAndResetGuestProgress();
+  
+  guestProgress.progress_today += 1;
+  completedToday = guestProgress.progress_today;
+  
+  await chrome.storage.local.set({ guest_progress: guestProgress });
+  
+  // Update UI
+  updateProgressDisplay();
+  
+  console.log('Guest progress incremented:', guestProgress.progress_today);
+  
+  // Check if goal is completed
+  if (guestProgress.progress_today >= guestProgress.target_daily) {
+    console.log('Guest daily goal completed!');
+    // TODO: Disable blocking when goal is completed
+  }
+} 
