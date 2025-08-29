@@ -12,6 +12,21 @@ let guestProgress = {
   last_reset: null
 };
 
+// 20-second countdown dialog variables
+let isUnblockDialogVisible = false;
+let countdown = 20;
+let isCountdownActive = false;
+let currentMessageIndex = 0;
+let isMessageVisible = true;
+let countdownInterval2;
+
+const motivationalMessages = [
+  "Please wait before proceeding...",
+  "Stay focused - your future self will thank you.",
+  "Don't let a website steal your momentum.",
+  "Small habits today create big wins tomorrow.",
+];
+
 // Import auth functionality - these will be available globally
 // since they're loaded in the background script and shared storage
 
@@ -351,7 +366,17 @@ function initializeEventListeners() {
       
       console.log('Extension toggle changed:', enabled);
       
-      // Send message to background script to control blocking
+      // If trying to turn OFF the extension, show countdown dialog
+      if (!enabled) {
+        // Revert toggle state immediately (will be set to false after countdown)
+        e.target.checked = true;
+        
+        // Show the 20-second countdown dialog
+        showUnblockDialog();
+        return;
+      }
+      
+      // If turning ON, proceed normally
       chrome.runtime.sendMessage({
         type: 'EXTENSION_TOGGLE',
         enabled: enabled
@@ -440,6 +465,188 @@ async function syncExtensionBlockingState() {
     console.log('Extension blocking state synced successfully');
   } catch (error) {
     console.error('Failed to sync extension blocking state:', error);
+  }
+}
+
+// 20-second countdown dialog functions
+function showUnblockDialog() {
+  isUnblockDialogVisible = true;
+  countdown = 20;
+  isCountdownActive = true;
+  currentMessageIndex = 0;
+  isMessageVisible = true;
+  
+  // Create and show the dialog overlay
+  createUnblockDialog();
+  
+  // Start countdown
+  startCountdownTimer();
+  
+  // Start message rotation
+  startMessageRotation();
+}
+
+function createUnblockDialog() {
+  // Remove existing dialog if present
+  const existingDialog = document.getElementById('unblock-dialog-overlay');
+  if (existingDialog) {
+    existingDialog.remove();
+  }
+  
+  // Create overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'unblock-dialog-overlay';
+  overlay.className = 'unblock-dialog-overlay';
+  
+  // Create dialog content
+  overlay.innerHTML = `
+    <div class="unblock-dialog">
+      <div class="unblock-dialog-header">
+        <h3 class="unblock-dialog-title">Unblock Websites</h3>
+        <p class="unblock-dialog-description">
+          You must wait 20 seconds before unblocking websites. This helps maintain your focus and productivity.
+        </p>
+      </div>
+      
+      <div class="unblock-dialog-content">
+        <div class="countdown-display">
+          <div class="countdown-number">${countdown}s</div>
+          <div class="countdown-progress-bar">
+            <div class="countdown-progress-fill" style="width: ${((20 - countdown) / 20) * 100}%"></div>
+          </div>
+          <p class="countdown-message ${isMessageVisible ? 'visible' : 'hidden'}">
+            ${isCountdownActive ? motivationalMessages[currentMessageIndex] : "You can now proceed to unblock websites"}
+          </p>
+        </div>
+      </div>
+      
+      <div class="unblock-dialog-footer">
+        <button id="cancelUnblockBtn" class="cancel-btn">Go Back</button>
+        <button id="proceedUnblockBtn" class="proceed-btn ${isCountdownActive ? 'disabled' : ''}" ${isCountdownActive ? 'disabled' : ''}>
+          Proceed to Unblock
+        </button>
+      </div>
+    </div>
+  `;
+  
+  // Add event listeners
+  overlay.querySelector('#cancelUnblockBtn').addEventListener('click', handleCancelUnblock);
+  overlay.querySelector('#proceedUnblockBtn').addEventListener('click', handleProceedUnblock);
+  
+  // Add to popup
+  document.body.appendChild(overlay);
+}
+
+function startCountdownTimer() {
+  if (countdownInterval2) {
+    clearInterval(countdownInterval2);
+  }
+  
+  countdownInterval2 = setInterval(() => {
+    if (countdown > 0) {
+      countdown--;
+      
+      // Update countdown display
+      const countdownNumber = document.querySelector('.countdown-number');
+      const progressFill = document.querySelector('.countdown-progress-fill');
+      
+      if (countdownNumber) {
+        countdownNumber.textContent = `${countdown}s`;
+      }
+      
+      if (progressFill) {
+        // Calculate progress percentage (same as web app)
+        const progressPercentage = ((20 - countdown) / 20) * 100;
+        progressFill.style.width = `${progressPercentage}%`;
+      }
+      
+      if (countdown === 0) {
+        isCountdownActive = false;
+        clearInterval(countdownInterval2);
+        
+        // Update proceed button
+        const proceedBtn = document.getElementById('proceedUnblockBtn');
+        if (proceedBtn) {
+          proceedBtn.classList.remove('disabled');
+          proceedBtn.disabled = false;
+        }
+        
+        // Update message
+        const message = document.querySelector('.countdown-message');
+        if (message) {
+          message.textContent = "You can now proceed to unblock websites";
+          message.classList.remove('hidden');
+          message.classList.add('visible');
+        }
+      }
+    }
+  }, 1000);
+}
+
+function startMessageRotation() {
+  const messageInterval = setInterval(() => {
+    if (isUnblockDialogVisible && isCountdownActive) {
+      const message = document.querySelector('.countdown-message');
+      if (message) {
+        message.classList.remove('visible');
+        message.classList.add('hidden');
+        
+        setTimeout(() => {
+          currentMessageIndex = (currentMessageIndex + 1) % motivationalMessages.length;
+          message.textContent = motivationalMessages[currentMessageIndex];
+          message.classList.remove('hidden');
+          message.classList.add('visible');
+        }, 700);
+      }
+    } else {
+      clearInterval(messageInterval);
+    }
+  }, 2500);
+}
+
+function handleProceedUnblock() {
+  if (!isCountdownActive) {
+    // Actually disable the extension
+    const extensionToggle = document.getElementById('extensionToggle');
+    if (extensionToggle) {
+      extensionToggle.checked = false;
+    }
+    
+    // Send message to background script
+    chrome.runtime.sendMessage({
+      type: 'EXTENSION_TOGGLE',
+      enabled: false
+    });
+    
+    // Close dialog
+    hideUnblockDialog();
+  }
+}
+
+function handleCancelUnblock() {
+  // Revert toggle state
+  const extensionToggle = document.getElementById('extensionToggle');
+  if (extensionToggle) {
+    extensionToggle.checked = true;
+  }
+  
+  // Close dialog
+  hideUnblockDialog();
+}
+
+function hideUnblockDialog() {
+  isUnblockDialogVisible = false;
+  isCountdownActive = false;
+  
+  // Clear intervals
+  if (countdownInterval2) {
+    clearInterval(countdownInterval2);
+  }
+  
+  // Remove dialog overlay
+  const overlay = document.getElementById('unblock-dialog-overlay');
+  if (overlay) {
+    overlay.remove();
   }
 }
 
