@@ -1,5 +1,53 @@
 {
+  "name": "leetguard",
+  "version": "1.0.0",
+  "description": "Your coding companion that rewards deep work and eliminates distractions",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
+    "dev:client": "cd client && npm run dev",
+    "dev:server": "cd server && npm run dev",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "cd client && npm run build",
+    "build:server": "cd server && npm run build",
+    "start": "concurrently \"npm run start:client\" \"npm run start:server\"",
+    "start:client": "cd client && npm run start",
+    "start:server": "cd server && npm run start",
+    "lint": "npm run lint:client && npm run lint:server",
+    "lint:client": "cd client && npm run lint",
+    "lint:server": "cd server && npm run lint",
+    "test": "npm run test:client && npm run test:server",
+    "test:client": "cd client && npm run test",
+    "test:server": "cd server && npm run test",
+    "clean": "npm run clean:client && npm run clean:server",
+    "clean:client": "cd client && rm -rf .next out dist",
+    "clean:server": "cd server && rm -rf __pycache__ .pytest_cache",
+    "install:all": "npm install && cd client && npm install && cd ../server && npm install",
+    "setup": "npm run install:all && npm run build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3"
+  },
   "dependencies": {
     "framer-motion": "^12.23.12"
-  }
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "keywords": [
+    "productivity",
+    "coding",
+    "leetcode",
+    "distraction-blocking",
+    "focus",
+    "browser-extension"
+  ],
+  "author": "LeetGuard Team",
+  "license": "MIT"
 }

@@ -1,0 +1,23 @@
+{
+  "name": "leetguard-server",
+  "version": "1.0.0",
+  "description": "LeetGuard FastAPI backend server",
+  "private": true,
+  "scripts": {
+    "dev": "uvicorn app.main:app --reload --host 0.0.0.0 --port 8000",
+    "start": "uvicorn app.main:app --host 0.0.0.0 --port 8000",
+    "build": "echo 'Python backend - no build step required'",
+    "test": "pytest",
+    "test:coverage": "pytest --cov=app --cov-report=html",
+    "lint": "flake8 app/ --max-line-length=88 --extend-ignore=E203,W503",
+    "format": "black app/ --line-length=88",
+    "migrate": "alembic upgrade head",
+    "migrate:create": "alembic revision --autogenerate -m",
+    "db:reset": "python -c \"from app.db.session import engine; from app.auth.models.user import Base; Base.metadata.drop_all(engine); Base.metadata.create_all(engine)\""
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
+
