@@ -6,7 +6,7 @@ This document provides a comprehensive overview of the LeetGuard system architec
 
 LeetGuard is a **multi-platform productivity application** designed to help developers focus on coding by eliminating distractions and tracking productive activities. The system consists of three main components that work together to provide a seamless user experience.
 
-## 🏛️ High-Level Architecture
+## 🏛️ High-Level Architect
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
