@@ -4,6 +4,16 @@ importScripts('auth.js', 'blocklist-sync.js', 'activity-logger.js');
 // Extension blocking state - now managed via storage
 // No longer need isBlockingEnabled variable
 
+// Default blocklist for guest users and fallback scenarios
+const DEFAULT_BLOCKLIST = [
+  'facebook.com',
+  'reddit.com', 
+  'youtube.com',
+  'instagram.com',
+  'x.com',
+  'twitter.com'
+];
+
 // Note: Cross-tab auth detection removed - extension now checks localStorage on-demand
 
 // Note: notifyAuthStateChange function removed - no longer needed with on-demand auth checking
@@ -11,16 +21,23 @@ importScripts('auth.js', 'blocklist-sync.js', 'activity-logger.js');
 // Generate blocking rules for each site
 async function getBlockRules() {
   // Get current blocklist (user's if authenticated, default otherwise)
-  const blocklist = blocklistSync ? 
-    await blocklistSync.getCurrentBlocklist() : 
-    ['facebook.com', 'reddit.com', 'youtube.com', 'instagram.com', 'x.com', 'twitter.com'];
+  let blocklist = DEFAULT_BLOCKLIST;
+  
+  if (blocklistSync) {
+    try {
+      blocklist = await blocklistSync.getCurrentBlocklist();
+    } catch (error) {
+      console.log('Using default blocklist (user not authenticated or sync failed):', error.message);
+      blocklist = DEFAULT_BLOCKLIST;
+    }
+  }
     
   return blocklist.map((site, idx) => ({
     id: idx + 1,
     priority: 1,
     action: { type: 'block' },
     condition: {
-      urlFilter: site,
+      urlFilter: `||${site}/*`,
       resourceTypes: ['main_frame']
     }
   }));

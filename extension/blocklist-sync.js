@@ -108,9 +108,33 @@ class BlocklistSync {
   async isWebsiteBlocked(website) {
     const blocklist = await this.getCurrentBlocklist();
     return blocklist.some(blockedSite => {
-      // Simple domain matching
-      return website.includes(blockedSite) || blockedSite.includes(website);
+      // Proper domain matching - check for exact match or subdomain
+      const websiteDomain = this.extractDomain(website);
+      const blockedDomain = this.extractDomain(blockedSite);
+      
+      // Exact domain match
+      if (websiteDomain === blockedDomain) {
+        return true;
+      }
+      
+      // Subdomain match (e.g., www.example.com matches example.com)
+      return websiteDomain.endsWith('.' + blockedDomain);
     });
+  }
+
+  // Extract domain from URL
+  extractDomain(url) {
+    try {
+      // Remove protocol if present
+      let domain = url.replace(/^https?:\/\//, '');
+      // Remove www. prefix
+      domain = domain.replace(/^www\./, '');
+      // Remove path and query parameters
+      domain = domain.split('/')[0].split('?')[0].split('#')[0];
+      return domain.toLowerCase();
+    } catch (error) {
+      return url.toLowerCase();
+    }
   }
 
   // Get current effective blocklist (user's if authenticated, default otherwise)
