@@ -67,7 +67,7 @@ async function initializePopup() {
     await updateAuthUI();
     
     // Initialize progress display (placeholder for now)
-    updateProgressDisplay();
+    await updateProgressDisplay();
     
     // Initialize countdown
     initializeCountdown();
@@ -105,13 +105,13 @@ async function initializePopup() {
     initializeEventListeners();
     
     // Initialize progress display
-    updateProgressDisplay();
+    await updateProgressDisplay();
     
     // Initialize countdown
     initializeCountdown();
   }
   
-  // Ensure extension blocking state matches goal completion
+  // Ensure extension blocking state matches storage
   await syncExtensionBlockingState();
 }
 
@@ -150,7 +150,7 @@ function initializeEventListeners() {
       
       // If trying to turn OFF the extension, show countdown dialog
       if (!enabled) {
-        // Revert toggle state immediately (will be set to false after countdown)
+        // Revert toggle state immediately (will be set to true after countdown)
         e.target.checked = true;
         
         // Show the 20-second countdown dialog
@@ -158,23 +158,14 @@ function initializeEventListeners() {
         return;
       }
       
-      // If turning ON, proceed normally
-      chrome.runtime.sendMessage({
-        type: 'EXTENSION_TOGGLE',
-        enabled: enabled
-      }).then(() => {
-        console.log('Extension toggle message sent successfully');
-      }).catch(err => {
-        console.error('Failed to send extension toggle message:', err);
-        // Revert toggle state if message failed
-        e.target.checked = !enabled;
-      });
+      // If turning ON, update storage and notify background
+      updateToggleStorage(enabled);
     });
   }
 }
 
 // Update progress display (placeholder for now)
-function updateProgressDisplay() {
+async function updateProgressDisplay() {
   const percentage = Math.round((completedToday / goalQuestions) * 100);
   
   const progressText = document.getElementById('progressText');
@@ -199,8 +190,8 @@ function updateProgressDisplay() {
     }
   }
   
-  // Update extension toggle state based on goal completion
-  updateExtensionToggleState();
+  // Initialize toggle state from storage
+  await initializeToggleFromStorage();
   
   // Log current state for debugging
   console.log('Progress display updated:', {
@@ -211,35 +202,61 @@ function updateProgressDisplay() {
   });
 }
 
-// Update extension toggle state based on goal completion
-function updateExtensionToggleState() {
+// Initialize toggle state from storage
+async function initializeToggleFromStorage() {
+  const result = await chrome.storage.local.get(['extension_blocking_enabled', 'extension_last_reset_date']);
+  
+  // Check if we need to reset for new day
+  const today = new Date().toISOString().split('T')[0];
+  if (result.extension_last_reset_date !== today) {
+    // New day - reset to enabled
+    await chrome.storage.local.set({
+      extension_blocking_enabled: true,
+      extension_last_reset_date: today
+    });
+    console.log('New day detected, resetting extension to enabled');
+  }
+  
+  // Set toggle state from storage
   const extensionToggle = document.getElementById('extensionToggle');
   if (extensionToggle) {
-    // Toggle should be ON when goal is NOT completed, OFF when goal IS completed
-    const shouldBeOn = completedToday < goalQuestions;
-    extensionToggle.checked = shouldBeOn;
+    const isEnabled = result.extension_blocking_enabled !== false; // Default to true
+    extensionToggle.checked = isEnabled;
     
-    console.log('Extension toggle updated:', {
-      completedToday,
-      goalQuestions,
-      shouldBeOn,
-      currentState: extensionToggle.checked
+    console.log('Toggle initialized from storage:', {
+      isEnabled,
+      lastResetDate: result.extension_last_reset_date
     });
   }
 }
 
-// Sync extension blocking state with goal completion
-async function syncExtensionBlockingState() {
-  console.log('Syncing extension blocking state with goal completion...');
+// Update toggle state in storage and notify background
+async function updateToggleStorage(enabled) {
+  await chrome.storage.local.set({ extension_blocking_enabled: enabled });
   
-  // Send message to background script to check goal and update blocking
+  // Send message to background script
+  chrome.runtime.sendMessage({
+    type: 'EXTENSION_TOGGLE',
+    enabled: enabled
+  }).then(() => {
+    console.log('Toggle state updated in storage and background notified');
+  }).catch(err => {
+    console.error('Failed to update toggle state:', err);
+  });
+}
+
+// Sync extension blocking state from storage
+async function syncExtensionBlockingState() {
+  console.log('Syncing extension blocking state from storage...');
+  
+  // Send message to background script to read storage and update blocking
   try {
     await chrome.runtime.sendMessage({
-      type: 'CHECK_GOAL_AND_UPDATE'
+      type: 'SYNC_FROM_STORAGE'
     });
-    console.log('Goal check request sent successfully');
+    console.log('Storage sync request sent successfully');
   } catch (error) {
-    console.error('Failed to send goal check request:', error);
+    console.error('Failed to send storage sync request:', error);
   }
 }
 
@@ -387,11 +404,8 @@ function handleProceedUnblock() {
       extensionToggle.checked = false;
     }
     
-    // Send message to background script
-    chrome.runtime.sendMessage({
-      type: 'EXTENSION_TOGGLE',
-      enabled: false
-    });
+    // Update storage and notify background
+    updateToggleStorage(false);
     
     // Close dialog
     hideUnblockDialog();
@@ -404,6 +418,9 @@ function handleCancelUnblock() {
   if (extensionToggle) {
     extensionToggle.checked = true;
   }
+  
+  // Update storage to reflect the reverted state
+  updateToggleStorage(true);
   
   // Close dialog
   hideUnblockDialog();
@@ -557,7 +574,7 @@ function showMiniBlocklistUI() {
 }
 
 // Restore main UI (keep existing logic)
-function restoreMainUI() {
+async function restoreMainUI() {
   const mainPopup = document.getElementById('leetguard-popup');
   if (mainPopup) {
     // Determine button text and label based on guest mode
@@ -618,20 +635,20 @@ function restoreMainUI() {
     initializeEventListeners();
     
     // Re-initialize displays
-    updateProgressDisplay();
+    await updateProgressDisplay();
     initializeCountdown();
   }
 }
 
 // Initialize popup when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   try {
-    initializePopup();
+    await initializePopup();
   } catch (error) {
     console.error('Failed to initialize popup:', error);
     // Fallback: just initialize event listeners
     initializeEventListeners();
-    updateProgressDisplay();
+    await updateProgressDisplay();
     initializeCountdown();
   }
 });
@@ -698,17 +715,10 @@ async function incrementGuestProgress() {
   await chrome.storage.local.set({ guest_progress: guestProgress });
   
   // Update UI
-  updateProgressDisplay();
+  await updateProgressDisplay();
   
   console.log('Guest progress incremented:', guestProgress.progress_today);
   
-  // Check if goal is completed and sync blocking state
-  if (guestProgress.progress_today >= guestProgress.target_daily) {
-    console.log('Guest daily goal completed!');
-    // Sync blocking state to disable blocking
-    await syncExtensionBlockingState();
-  } else {
-    // Goal not completed, ensure blocking is enabled
-    await syncExtensionBlockingState();
-  }
+  // Note: Blocking state is now managed independently of goal completion
+  // The toggle state is controlled by user choice and daily resets only
 } 

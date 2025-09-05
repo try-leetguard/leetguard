@@ -1,8 +1,8 @@
 // Import sync modules
 importScripts('auth.js', 'blocklist-sync.js', 'activity-logger.js');
 
-// Goal-based blocking variables
-let isBlockingEnabled = false;
+// Extension blocking state - now managed via storage
+// No longer need isBlockingEnabled variable
 
 // Note: Cross-tab auth detection removed - extension now checks localStorage on-demand
 
@@ -42,79 +42,55 @@ async function disableBlocking() {
   });
 }
 
-// Goal-based blocking functions
-async function checkGoalAndUpdateBlocking() {
-  console.log('Background: Checking goal completion state...');
+// Initialize blocking state from storage
+async function initializeBlockingFromStorage() {
+  console.log('Background: Initializing blocking state from storage...');
   
-  // Check if user is authenticated
-  if (typeof extensionAuth !== 'undefined') {
-    await extensionAuth.init();
+  const result = await chrome.storage.local.get(['extension_blocking_enabled', 'extension_last_reset_date']);
+  
+  // Check if we need to reset for new day
+  const today = new Date().toISOString().split('T')[0];
+  if (result.extension_last_reset_date !== today) {
+    // New day - reset to enabled
+    await chrome.storage.local.set({
+      extension_blocking_enabled: true,
+      extension_last_reset_date: today
+    });
+    console.log('Background: New day detected, resetting extension to enabled');
   }
   
-  if (typeof extensionAuth !== 'undefined' && extensionAuth.isAuthenticated()) {
-    // Authenticated user - check goal via API
-    try {
-      const goalData = await extensionAuth.apiRequest('/api/me/goal');
-      const shouldBlock = goalData.progress_today < goalData.target_daily;
-      
-      console.log('Background: Authenticated user goal state:', {
-        progress: goalData.progress_today,
-        target: goalData.target_daily,
-        shouldBlock: shouldBlock
-      });
-      
-      if (shouldBlock && !isBlockingEnabled) {
-        await enableBlocking();
-        isBlockingEnabled = true;
-      } else if (!shouldBlock && isBlockingEnabled) {
-        await disableBlocking();
-        isBlockingEnabled = false;
-      }
-    } catch (error) {
-      console.error('Background: Failed to check authenticated user goal:', error);
-    }
+  // Apply blocking based on storage state
+  const isEnabled = result.extension_blocking_enabled !== false; // Default to true
+  if (isEnabled) {
+    await enableBlocking();
   } else {
-    // Guest user - check guest progress
-    const result = await chrome.storage.local.get(['guest_progress']);
-    if (result.guest_progress) {
-      const guestProgress = result.guest_progress;
-      const shouldBlock = guestProgress.progress_today < guestProgress.target_daily;
-      
-      console.log('Background: Guest user goal state:', {
-        progress: guestProgress.progress_today,
-        target: guestProgress.target_daily,
-        shouldBlock: shouldBlock
-      });
-      
-      if (shouldBlock && !isBlockingEnabled) {
-        await enableBlocking();
-        isBlockingEnabled = true;
-      } else if (!shouldBlock && isBlockingEnabled) {
-        await disableBlocking();
-        isBlockingEnabled = false;
-      }
-    } else {
-      // No guest progress found, enable blocking by default
-      if (!isBlockingEnabled) {
-        await enableBlocking();
-        isBlockingEnabled = true;
-      }
-    }
+    await disableBlocking();
   }
+  
+  console.log('Background: Blocking state initialized:', { isEnabled });
+}
+
+// Update blocking state in storage and apply changes
+async function updateBlockingStorage(enabled) {
+  await chrome.storage.local.set({ extension_blocking_enabled: enabled });
+  
+  if (enabled) {
+    await enableBlocking();
+  } else {
+    await disableBlocking();
+  }
+  
+  console.log('Background: Blocking state updated:', { enabled });
 }
 
 // Listen for messages from popup and content scripts
-chrome.runtime.onMessage.addListener((message) => {
+chrome.runtime.onMessage.addListener(async (message) => {
   console.log('Background received message:', message);
   
   // Extension toggle control
   if (message && message.type === 'EXTENSION_TOGGLE') {
     console.log('Background: Extension toggle to', message.enabled);
-    if (message.enabled) {
-      enableBlocking();
-    } else {
-      disableBlocking();
-    }
+    await updateBlockingStorage(message.enabled);
   }
   
   // Focus mode toggle (now just for tracking, blocking is controlled by timer)
@@ -142,10 +118,10 @@ chrome.runtime.onMessage.addListener((message) => {
     }
   }
   
-  // Goal-based blocking messages
-  if (message && message.type === 'CHECK_GOAL_AND_UPDATE') {
-    console.log('Background: Received goal check request');
-    checkGoalAndUpdateBlocking();
+  // Storage sync messages
+  if (message && message.type === 'SYNC_FROM_STORAGE') {
+    console.log('Background: Received storage sync request');
+    await initializeBlockingFromStorage();
   }
   
   // OAuth callback handling - webapp sends tokens to extension
@@ -196,15 +172,13 @@ chrome.runtime.onStartup.addListener(async () => {
   if (activityLogger) await activityLogger.syncPendingActivities();
 });
 
-// On install or browser start, check goal state for blocking
-function checkAndBlock() {
-  console.log('Background: Checking goal state on startup...');
-  checkGoalAndUpdateBlocking();
-}
-
+// On install or browser start, initialize blocking from storage
 chrome.runtime.onStartup.addListener(() => {
-  checkAndBlock();
+  console.log('Background: Extension startup, initializing blocking from storage...');
+  initializeBlockingFromStorage();
 });
+
 chrome.runtime.onInstalled.addListener(() => {
-  checkAndBlock();
-});
+  console.log('Background: Extension installed, initializing blocking from storage...');
+  initializeBlockingFromStorage();
+}); 
