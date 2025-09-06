@@ -56,12 +56,9 @@ cp client/.env.example client/.env
 
 3. **Start Development**
 ```bash
-# Start both frontend and backend
-npm run dev
-
-# Or start individually
-npm run dev:client    # Frontend on http://localhost:3000
-npm run dev:server    # Backend on http://localhost:8000
+# install both frontend and backend packages
+npm install 
+pip install -r requirements.txt
 ```
 
 4. **Load Extension**
@@ -114,11 +111,7 @@ npm run lint             # ESLint + TypeScript check
 ### Backend (Server)
 ```bash
 cd server
-npm run dev              # Start FastAPI with auto-reload
-npm run test             # Run pytest suite
-npm run lint             # Flake8 linting
-npm run format           # Black code formatting
-npm run migrate          # Run database migrations
+uvicorn app.main:app --reload
 ```
 
 ## 🔐 Authentication Flow
@@ -264,7 +257,6 @@ DEBUG=* npm run dev
 # Check database migrations
 cd server && npm run migrate:create "description"
 ```
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
