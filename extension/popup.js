@@ -46,6 +46,7 @@ chrome.runtime.onMessage.addListener((message) => {
       console.log('Problem completion handled by activity logger for authenticated user');
     }
   }
+  
 });
 
 // Initialize popup with new activity-focused logic
@@ -76,9 +77,13 @@ async function initializePopup() {
     try {
       console.log('Popup: Running on-demand sync...');
       
-      // Sync blocklist and activities
+      // Sync blocklist, goals, and activities
       if (typeof blocklistSync !== 'undefined') {
         await blocklistSync.syncBlocklist();
+      }
+      
+      if (typeof goalSync !== 'undefined') {
+        await goalSync.syncGoal();
       }
       
       if (typeof activityLogger !== 'undefined') {
@@ -96,6 +101,9 @@ async function initializePopup() {
         updateAuthUI();
       }
     }
+    
+    // Load user goal data if available
+    await loadUserGoalData();
   } else {
     console.log('User is not authenticated, initializing guest mode');
     // Initialize guest mode
@@ -659,6 +667,32 @@ window.addEventListener('beforeunload', () => {
     clearInterval(countdownInterval);
   }
 }); 
+
+// Load user goal data from sync
+async function loadUserGoalData() {
+  try {
+    const result = await chrome.storage.local.get(['user_goal']);
+    if (result.user_goal) {
+      const userGoal = result.user_goal;
+      goalQuestions = userGoal.target_daily;
+      completedToday = userGoal.progress_today;
+      console.log('Loaded user goal data:', userGoal);
+      
+      // Update progress display with user goal
+      await updateProgressDisplay();
+    } else {
+      console.log('No user goal data found, using defaults');
+      // Fall back to default values
+      goalQuestions = 5;
+      completedToday = 0;
+    }
+  } catch (error) {
+    console.error('Failed to load user goal data:', error);
+    // Fall back to default values
+    goalQuestions = 5;
+    completedToday = 0;
+  }
+}
 
 // Guest mode functions
 async function initializeGuestMode() {

@@ -140,6 +140,11 @@ window.addEventListener('message', (event) => {
     chrome.runtime.sendMessage({ type: 'BLOCKLIST_UPDATED' });
   }
 
+  // Goal updated notification
+  if (event.data.type === 'GOAL_UPDATED') {
+    chrome.runtime.sendMessage({ type: 'GOAL_UPDATED' });
+  }
+
   // Login/auth sync from web app
   if (event.data.type === 'LEETGUARD_AUTH_SYNC' && event.data.tokens) {
     chrome.runtime.sendMessage({

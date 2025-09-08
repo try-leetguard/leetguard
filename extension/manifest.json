@@ -34,7 +34,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["injected.js", "styles.css", "auth.js", "blocklist-sync.js", "activity-logger.js"],
+      "resources": ["injected.js", "styles.css", "auth.js", "blocklist-sync.js", "activity-logger.js", "goal-sync.js"],
       "matches": ["<all_urls>"]
     }
   ],

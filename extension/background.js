@@ -1,5 +1,5 @@
 // Import sync modules
-importScripts('auth.js', 'blocklist-sync.js', 'activity-logger.js');
+importScripts('auth.js', 'blocklist-sync.js', 'activity-logger.js', 'goal-sync.js');
 
 // Extension blocking state - now managed via storage
 // No longer need isBlockingEnabled variable
@@ -205,6 +205,7 @@ chrome.runtime.onMessage.addListener(async (message) => {
           console.log('OAuth callback handled successfully');
           // Trigger sync after successful authentication
           if (blocklistSync) await blocklistSync.syncBlocklist();
+          if (goalSync) await goalSync.syncGoal();
           // Immediately refresh rules to apply latest blocklist
           await enableBlocking();
           if (activityLogger) activityLogger.syncLocalActivities();
@@ -229,6 +230,16 @@ chrome.runtime.onMessage.addListener(async (message) => {
       console.error('Failed to sync/refresh after blocklist update:', e);
     }
   }
+
+  // Goal updated from web app - trigger immediate sync
+  if (message && message.type === 'GOAL_UPDATED') {
+    console.log('Background: GOAL_UPDATED received, syncing goal');
+    try {
+      if (goalSync) await goalSync.syncGoal();
+    } catch (e) {
+      console.error('Failed to sync after goal update:', e);
+    }
+  }
   
   // Logout handling
   if (message && message.type === 'USER_LOGOUT') {
@@ -238,6 +249,7 @@ chrome.runtime.onMessage.addListener(async (message) => {
         console.log('User logout handled successfully');
         // Clear any cached data
         if (blocklistSync) blocklistSync.clearCachedBlocklist();
+        if (goalSync) goalSync.clearCachedGoal();
         if (activityLogger) activityLogger.clearPendingActivities();
         // Apply default blocklist immediately by refreshing rules
         try {
@@ -310,6 +322,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 chrome.runtime.onStartup.addListener(async () => {
   console.log('Background: Extension startup, initializing sync...');
   if (blocklistSync) await blocklistSync.syncBlocklist();
+  if (goalSync) await goalSync.syncGoal();
   if (activityLogger) await activityLogger.syncPendingActivities();
 });
 
