@@ -172,11 +172,6 @@ async function initializeBlocklistSync() {
   
   // Initial sync
   await blocklistSync.syncBlocklist();
-  
-  // Set up periodic sync (every 5 minutes)
-  setInterval(() => {
-    blocklistSync.syncBlocklist();
-  }, 5 * 60 * 1000);
 }
 
 // Initialize when script loads

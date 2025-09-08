@@ -52,6 +52,10 @@ export class BlocklistAPI {
 
     try {
       await apiClient.addWebsite(token, cleanWebsite);
+      // Notify extension to sync immediately
+      if (typeof window !== 'undefined') {
+        window.postMessage({ type: 'BLOCKLIST_UPDATED' }, '*');
+      }
     } catch (error) {
       console.error('Failed to add website to blocklist:', error);
       throw error;
@@ -69,6 +73,10 @@ export class BlocklistAPI {
 
     try {
       await apiClient.removeWebsite(token, website);
+      // Notify extension to sync immediately
+      if (typeof window !== 'undefined') {
+        window.postMessage({ type: 'BLOCKLIST_UPDATED' }, '*');
+      }
     } catch (error) {
       console.error('Failed to remove website from blocklist:', error);
       throw error;

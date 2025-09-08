@@ -201,6 +201,17 @@ chrome.runtime.onMessage.addListener(async (message) => {
       console.error('Missing extensionAuth or tokens in OAuth callback');
     }
   }
+
+  // Blocklist updated from web app - trigger immediate sync and rule refresh
+  if (message && message.type === 'BLOCKLIST_UPDATED') {
+    console.log('Background: BLOCKLIST_UPDATED received, syncing and refreshing rules');
+    try {
+      if (blocklistSync) await blocklistSync.syncBlocklist();
+      await enableBlocking();
+    } catch (e) {
+      console.error('Failed to sync/refresh after blocklist update:', e);
+    }
+  }
   
   // Logout handling
   if (message && message.type === 'USER_LOGOUT') {

@@ -125,3 +125,15 @@ if (window.location.href.includes('extension-auth-callback')) {
     }
   });
 }
+
+// Listen for blocklist updates from the web app and forward to background
+window.addEventListener('message', (event) => {
+  const allowedOrigins = new Set([
+    'http://localhost:3000',
+    'https://leetguard.com'
+  ]);
+  if (!allowedOrigins.has(event.origin)) return;
+  if (event.data && event.data.type === 'BLOCKLIST_UPDATED') {
+    chrome.runtime.sendMessage({ type: 'BLOCKLIST_UPDATED' });
+  }
+});
