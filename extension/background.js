@@ -35,28 +35,64 @@ async function getBlockRules() {
   return blocklist.map((site, idx) => ({
     id: idx + 1,
     priority: 1,
-    action: { type: 'block' },
+    action: {
+      type: 'redirect',
+      redirect: {
+        url: 'http://localhost:3000/'
+      }
+    },
     condition: {
       urlFilter: `||${site}/*`,
-      resourceTypes: ['main_frame']
+      resourceTypes: ['main_frame', 'sub_frame']
     }
   }));
 }
 
+// Debug-friendly wrapper for updating dynamic rules
+async function updateDynamicRules(rules) {
+  try {
+    // Log DNR rule limits
+    const limits = chrome.declarativeNetRequest.MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES;
+    console.log('Rule limits:', limits);
+
+    console.log('🔄 Starting updateDynamicRules with:', rules);
+    
+    // Check current state
+    const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
+    console.log('📋 Existing rules before update:', existingRules);
+    
+    const ruleIdsToRemove = existingRules.map(rule => rule.id);
+    
+    // Perform the update
+    await chrome.declarativeNetRequest.updateDynamicRules({
+      removeRuleIds: ruleIdsToRemove,
+      addRules: rules
+    });
+    
+    console.log('✅ updateDynamicRules completed successfully');
+    
+    // Verify the update worked
+    const finalRules = await chrome.declarativeNetRequest.getDynamicRules();
+    console.log('🔍 Final rules after update:', finalRules);
+    
+    if (finalRules.length === 0 && rules.length > 0) {
+      console.error('⚠️ WARNING: Rules were supposed to be added but none are active!');
+    }
+    
+  } catch (error) {
+    console.error('❌ updateDynamicRules failed:', error);
+    console.error('Error details:', error.message, error.stack);
+  }
+}
+
 async function enableBlocking() {
   const rules = await getBlockRules();
-  chrome.declarativeNetRequest.updateDynamicRules({
-    addRules: rules,
-    removeRuleIds: rules.map((_, idx) => idx + 1)
-  });
+  await updateDynamicRules(rules);
 }
 
 async function disableBlocking() {
   const rules = await getBlockRules();
-  chrome.declarativeNetRequest.updateDynamicRules({
-    addRules: [],
-    removeRuleIds: rules.map((_, idx) => idx + 1)
-  });
+  await updateDynamicRules([]);
 }
 
 // Initialize blocking state from storage
@@ -180,6 +216,60 @@ chrome.runtime.onMessage.addListener(async (message) => {
   }
   
   // Note: localStorage auth change detection removed - extension now checks localStorage on-demand
+});
+
+// Debug: Log when a tab navigates to a potentially blocked URL
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  try {
+    const url = changeInfo.url || tab?.url;
+    if (!url) return;
+
+    // Only consider http(s) main-frame navigations
+    if (!url.startsWith('http://') && !url.startsWith('https://')) return;
+
+    // Determine if URL is on a known blocked domain without triggering auth checks
+    const isBlocked = DEFAULT_BLOCKLIST.some(site => url.includes(site));
+
+    if (!isBlocked) return;
+
+    // Gather context for debugging
+    const [existingRules, storage] = await Promise.all([
+      chrome.declarativeNetRequest.getDynamicRules(),
+      chrome.storage.local.get(['extension_blocking_enabled'])
+    ]);
+
+    console.log('🧭 Navigation to blocked URL detected:', {
+      tabId,
+      url,
+      extensionEnabled: storage.extension_blocking_enabled !== false,
+      dynamicRuleCount: existingRules.length,
+      sampleRule: existingRules[0] || null
+    });
+
+    // After a short delay, check where the tab ended up to infer redirect success
+    setTimeout(async () => {
+      try {
+        const latestTab = await chrome.tabs.get(tabId);
+        const finalUrl = latestTab?.url || null;
+        const redirected = !!finalUrl && (
+          finalUrl.startsWith('http://localhost:3000/') ||
+          finalUrl.startsWith('https://localhost:3000/') ||
+          finalUrl.startsWith('https://leetguard.com/')
+        );
+
+        console.log('🚦 Redirect result:', {
+          tabId,
+          from: url,
+          to: finalUrl,
+          redirected
+        });
+      } catch (e) {
+        console.error('Failed to verify redirect result:', e);
+      }
+    }, 600);
+  } catch (error) {
+    console.error('Navigation debug logging failed:', error);
+  }
 });
 
 // Initialize sync modules when background script starts
