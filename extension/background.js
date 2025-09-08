@@ -18,8 +18,19 @@ const DEFAULT_BLOCKLIST = [
 
 // Note: notifyAuthStateChange function removed - no longer needed with on-demand auth checking
 
-// Generate blocking rules for each site
-async function getBlockRules() {
+// Generation counter and single-flight queue for dynamic rule updates
+let rulesGeneration = 0; // monotonically increasing generation number
+let rulesUpdateChain = Promise.resolve(); // serialize updates
+
+function enqueueRuleUpdate(task) {
+  rulesUpdateChain = rulesUpdateChain.then(() => task()).catch((e) => {
+    console.error('Rule update task failed:', e);
+  });
+  return rulesUpdateChain;
+}
+
+// Generate blocking rules for each site, using generation-scoped unique IDs
+async function getBlockRules(generation) {
   // Get current blocklist (user's if authenticated, default otherwise)
   let blocklist = DEFAULT_BLOCKLIST;
   
@@ -33,7 +44,7 @@ async function getBlockRules() {
   }
     
   return blocklist.map((site, idx) => ({
-    id: idx + 1,
+    id: generation * 10000 + (idx + 1),
     priority: 1,
     action: {
       type: 'redirect',
@@ -86,13 +97,17 @@ async function updateDynamicRules(rules) {
 }
 
 async function enableBlocking() {
-  const rules = await getBlockRules();
-  await updateDynamicRules(rules);
+  const generation = ++rulesGeneration;
+  return enqueueRuleUpdate(async () => {
+    const rules = await getBlockRules(generation);
+    await updateDynamicRules(rules);
+  });
 }
 
 async function disableBlocking() {
-  const rules = await getBlockRules();
-  await updateDynamicRules([]);
+  return enqueueRuleUpdate(async () => {
+    await updateDynamicRules([]);
+  });
 }
 
 // Initialize blocking state from storage
@@ -219,11 +234,17 @@ chrome.runtime.onMessage.addListener(async (message) => {
   if (message && message.type === 'USER_LOGOUT') {
     console.log('Background: Handling user logout');
     if (extensionAuth) {
-      extensionAuth.clearAuth().then(() => {
+      extensionAuth.clearAuth().then(async () => {
         console.log('User logout handled successfully');
         // Clear any cached data
         if (blocklistSync) blocklistSync.clearCachedBlocklist();
         if (activityLogger) activityLogger.clearPendingActivities();
+        // Apply default blocklist immediately by refreshing rules
+        try {
+          await enableBlocking();
+        } catch (e) {
+          console.error('Failed to refresh rules after logout:', e);
+        }
       });
     }
   }
