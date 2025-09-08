@@ -133,7 +133,24 @@ window.addEventListener('message', (event) => {
     'https://leetguard.com'
   ]);
   if (!allowedOrigins.has(event.origin)) return;
-  if (event.data && event.data.type === 'BLOCKLIST_UPDATED') {
+  if (!event.data) return;
+
+  // Blocklist updated notification
+  if (event.data.type === 'BLOCKLIST_UPDATED') {
     chrome.runtime.sendMessage({ type: 'BLOCKLIST_UPDATED' });
+  }
+
+  // Login/auth sync from web app
+  if (event.data.type === 'LEETGUARD_AUTH_SYNC' && event.data.tokens) {
+    chrome.runtime.sendMessage({
+      type: 'OAUTH_CALLBACK',
+      tokens: event.data.tokens,
+      user: event.data.user
+    });
+  }
+
+  // Logout from web app
+  if (event.data.type === 'LEETGUARD_LOGOUT') {
+    chrome.runtime.sendMessage({ type: 'USER_LOGOUT' });
   }
 });

@@ -185,11 +185,13 @@ chrome.runtime.onMessage.addListener(async (message) => {
       hasUser: !!message.user
     });
     if (extensionAuth && message.tokens) {
-      extensionAuth.handleOAuthCallback(message.tokens).then(success => {
+      extensionAuth.handleOAuthCallback(message.tokens).then(async success => {
         if (success) {
           console.log('OAuth callback handled successfully');
           // Trigger sync after successful authentication
-          if (blocklistSync) blocklistSync.syncBlocklist();
+          if (blocklistSync) await blocklistSync.syncBlocklist();
+          // Immediately refresh rules to apply latest blocklist
+          await enableBlocking();
           if (activityLogger) activityLogger.syncLocalActivities();
         } else {
           console.error('OAuth callback handling failed');
