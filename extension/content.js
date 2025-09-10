@@ -82,9 +82,15 @@ window.addEventListener("message", (event) => {
       const statusData = event.data.responseData;
       console.log("📊 Status check response:", statusData);
       
-      // Check if submission is accepted (status_code 10 = Accepted)
-      if (statusData && statusData.status_code === 10) {
-        console.log("✅ Submission ACCEPTED!");
+      // Check if this is a real submission (not a test run)
+      if (statusData && 
+          statusData.status_code === 10 && 
+          statusData.task_name === "judger.judgetask.Judge" &&
+          statusData.question_id &&
+          statusData.finished === true &&
+          !statusData.submission_id.startsWith("runcode_")) {
+        
+        console.log("✅ Real submission ACCEPTED!");
         
         // Extract problem info from URL
         const urlParts = window.location.pathname.split('/');
@@ -96,6 +102,18 @@ window.addEventListener("message", (event) => {
         console.log("🎉 Creating congratulations popup...");
         showLeetGuardPopup(problemSlug);
         
+        // Extract additional problem info from the page
+        const titleElement = document.querySelector('[data-cy="question-title"]');
+        const difficultyElement = document.querySelector('[diff]');
+        
+        const problemInfo = {
+          problemSlug,
+          url: window.location.href,
+          problem_name: titleElement?.textContent?.trim() || problemSlug,
+          difficulty: difficultyElement?.getAttribute('diff') || 'Unknown',
+          timestamp: Date.now()
+        };
+        
         // Send message to background script
         chrome.runtime.sendMessage({
           type: "SUBMISSION_ACCEPTED",
@@ -103,8 +121,13 @@ window.addEventListener("message", (event) => {
           submissionId: statusData.submission_id,
           timestamp: Date.now(),
           url: window.location.href,
-          statusData: statusData
+          statusData: statusData,
+          problemInfo: problemInfo
         });
+      } else if (statusData && statusData.status_code === 10) {
+        console.log("🧪 Test run detected (not a real submission)");
+        console.log("Task name:", statusData.task_name);
+        console.log("Submission ID:", statusData.submission_id);
       }
     }
   }

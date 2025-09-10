@@ -175,9 +175,8 @@ chrome.runtime.onMessage.addListener(async (message) => {
     
     // Log the activity
     if (activityLogger) {
-      const problemInfo = activityLogger.extractProblemInfo(message.slug, message.url);
       activityLogger.logActivity({
-        ...problemInfo,
+        ...message.problemInfo,
         submissionId: message.submissionId,
         statusData: message.statusData
       }).catch(error => {
