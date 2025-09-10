@@ -190,7 +190,7 @@ export default function LandingPage() {
                 Up Next
               </div>
               <span className="relative z-10">
-                Your distractions blocked while you apply &nbsp; {">"}
+                Your progress tracked while you solve &nbsp; {">"}
               </span>
             </div>
 
