@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import BlocklistAPI from "@/lib/blocklist-api";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Extend Window interface for extension properties
 declare global {
@@ -35,28 +36,30 @@ export default function BlockListPage() {
   }, []);
 
   return (
-    <div className="min-h-screen text-black">
-      <div className="flex h-screen">
-        <Sidebar activePage="blocklist" />
+    <ProtectedRoute>
+      <div className="min-h-screen text-black">
+        <div className="flex h-screen">
+          <Sidebar activePage="blocklist" />
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <header className="h-32 border-b border-gray-200 flex items-center px-6 bg-white">
-            <h1 className="text-4xl font-normal text-black">Block List</h1>
-          </header>
+          {/* Main Content */}
+          <div className="flex-1 flex flex-col">
+            {/* Header */}
+            <header className="h-32 border-b border-gray-200 flex items-center px-6 bg-white">
+              <h1 className="text-4xl font-normal text-black">Block List</h1>
+            </header>
 
-          {/* Content Area */}
-          <main className="flex-1 p-6 overflow-y-auto">
-            <div className="flex">
-              <div className="w-full font-dm-sans">
-                <BlockList />
+            {/* Content Area */}
+            <main className="flex-1 p-6 overflow-y-auto">
+              <div className="flex">
+                <div className="w-full font-dm-sans">
+                  <BlockList />
+                </div>
               </div>
-            </div>
-          </main>
+            </main>
+          </div>
         </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }
 
