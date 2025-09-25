@@ -54,6 +54,13 @@ chrome.runtime.onMessage.addListener((message) => {
     // Show celebration if goal is completed
     if (message.isGoalCompleted) {
       showGoalCompletedCelebration();
+      
+      // Update extension toggle to reflect automatic disable
+      const extensionToggle = document.getElementById('extensionToggle');
+      if (extensionToggle) {
+        extensionToggle.checked = false;
+        console.log('Extension automatically disabled due to goal completion');
+      }
     }
   }
   

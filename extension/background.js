@@ -191,12 +191,19 @@ async function updateProgressOnProblemSolved() {
       }
     }
     
+    // Check if goal is completed and automatically disable blocking
+    const isGoalCompleted = newProgress >= goal.target_daily;
+    if (isGoalCompleted) {
+      console.log('Goal completed! Automatically disabling extension blocking.');
+      await updateBlockingStorage(false);
+    }
+    
     // Notify popup of progress update
     chrome.runtime.sendMessage({
       type: 'PROGRESS_UPDATED',
       progress: newProgress,
       goal: goal.target_daily,
-      isGoalCompleted: newProgress >= goal.target_daily
+      isGoalCompleted: isGoalCompleted
     }).catch(error => {
       // Popup might not be open, that's okay
       console.log('Could not send progress update to popup:', error.message);

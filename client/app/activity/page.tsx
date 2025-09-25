@@ -71,6 +71,12 @@ export default function ActivityPage() {
         setGoalInputValue(goalData.target_daily.toString());
         setCompletedToday(goalData.progress_today);
         setIsGoalSaved(true);
+
+        // Check if goal is completed and automatically disable extension
+        if (goalData.is_goal_completed) {
+          setExtensionEnabled(false);
+          console.log("Goal completed! Extension automatically disabled.");
+        }
       } catch (error) {
         console.error("Failed to load goal data:", error);
         // Fallback to defaults
@@ -201,6 +207,13 @@ export default function ActivityPage() {
       setGoalInputValue(goalData.target_daily.toString());
       setCompletedToday(goalData.progress_today);
       setIsGoalSaved(true);
+
+      // Check if goal is completed and automatically disable extension
+      if (goalData.is_goal_completed) {
+        setExtensionEnabled(false);
+        console.log("Goal completed! Extension automatically disabled.");
+      }
+
       console.log("Goal saved to backend:", finalValue);
 
       // Notify extension to sync immediately
@@ -381,7 +394,7 @@ export default function ActivityPage() {
                           {isLoading
                             ? "Loading..."
                             : completedToday >= goalQuestions
-                            ? "🎉 Daily goal completed! Enjoy your scroll."
+                            ? "Daily goal completed! Extension automatically disabled."
                             : `Complete ${Math.max(
                                 goalQuestions - completedToday,
                                 0

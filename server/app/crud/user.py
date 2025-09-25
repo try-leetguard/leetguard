@@ -113,10 +113,12 @@ def get_user_goal(db: Session, user_id: int):
     ensure_progress_for_today(db, user_id)
     user = db.query(User).filter(User.id == user_id).first()
     if user:
+        is_goal_completed = user.progress_today >= user.target_daily
         return {
             "target_daily": user.target_daily,
             "progress_today": user.progress_today,
-            "progress_date": user.progress_date
+            "progress_date": user.progress_date,
+            "is_goal_completed": is_goal_completed
         }
     return None
 
@@ -128,10 +130,13 @@ def update_user_goal(db: Session, user_id: int, target_daily: int):
         user.target_daily = target_daily
         db.commit()
         db.refresh(user)
+        
+        is_goal_completed = user.progress_today >= user.target_daily
         return {
             "target_daily": user.target_daily,
             "progress_today": user.progress_today,
-            "progress_date": user.progress_date
+            "progress_date": user.progress_date,
+            "is_goal_completed": is_goal_completed
         }
     return None
 
@@ -143,9 +148,14 @@ def increment_progress(db: Session, user_id: int, delta: int = 1):
         user.progress_today += delta
         db.commit()
         db.refresh(user)
+        
+        # Check if goal is completed
+        is_goal_completed = user.progress_today >= user.target_daily
+        
         return {
             "target_daily": user.target_daily,
             "progress_today": user.progress_today,
-            "progress_date": user.progress_date
+            "progress_date": user.progress_date,
+            "is_goal_completed": is_goal_completed
         }
     return None
