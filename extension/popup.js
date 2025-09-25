@@ -11,6 +11,9 @@ let guestProgress = {
   last_reset: null
 };
 
+// Note: incrementGuestProgress function is no longer needed
+// All progress updates are now handled by the PROGRESS_UPDATED message from background script
+
 // 20-second countdown dialog variables
 let isUnblockDialogVisible = false;
 let countdown = 20;
@@ -35,22 +38,55 @@ const motivationalMessages = [
 chrome.runtime.onMessage.addListener((message) => {
   console.log('Popup received message:', message);
   
-  if (message.type === 'PROBLEM_COMPLETED') {
-    console.log('Problem completed:', message);
+  // Note: PROBLEM_COMPLETED message is no longer used
+  // All progress updates now come through PROGRESS_UPDATED message
+  
+  if (message.type === 'PROGRESS_UPDATED') {
+    console.log('Progress updated:', message);
     
-    // Handle problem completion for both guest and authenticated modes
-    if (isGuestMode) {
-      incrementGuestProgress();
-    } else {
-      // For authenticated users, this will be handled by the activity logger
-      console.log('Problem completion handled by activity logger for authenticated user');
+    // Update progress variables
+    completedToday = message.progress;
+    goalQuestions = message.goal;
+    
+    // Update the progress display immediately
+    updateProgressDisplay();
+    
+    // Show celebration if goal is completed
+    if (message.isGoalCompleted) {
+      showGoalCompletedCelebration();
     }
   }
   
 });
 
+// Load current progress from storage
+async function loadCurrentProgress() {
+  try {
+    const result = await chrome.storage.local.get(['daily_progress', 'user_goal', 'guest_progress']);
+    
+    // Load progress
+    if (result.daily_progress !== undefined) {
+      completedToday = result.daily_progress;
+    }
+    
+    // Load goal
+    if (result.user_goal) {
+      goalQuestions = result.user_goal.target_daily || 5;
+    } else if (result.guest_progress) {
+      goalQuestions = result.guest_progress.target_daily || 1;
+    }
+    
+    console.log('Loaded progress from storage:', { completedToday, goalQuestions });
+  } catch (error) {
+    console.error('Failed to load progress from storage:', error);
+  }
+}
+
 // Initialize popup with new activity-focused logic
 async function initializePopup() {
+  // Load current progress from storage first
+  await loadCurrentProgress();
+  
   // Always check extension storage for current auth state when popup opens
   if (typeof extensionAuth !== 'undefined') {
     await extensionAuth.init();
@@ -185,14 +221,15 @@ async function updateProgressDisplay() {
   }
   
   if (progressBarFill) {
-    // Update the progress bar fill width
+    // Update the progress bar fill width with smooth animation
+    progressBarFill.style.transition = 'width 0.5s ease-in-out';
     progressBarFill.style.width = `${percentage}%`;
   }
   
   if (progressMessage) {
     const remaining = Math.max(goalQuestions - completedToday, 0);
     if (completedToday >= goalQuestions) {
-      progressMessage.textContent = "🎉 Daily goal completed! Enjoy your scroll.";
+      progressMessage.textContent = "Daily goal completed! Enjoy your scroll.";
     } else {
       progressMessage.textContent = `Complete ${remaining} more questions to unlock.`;
     }
@@ -208,6 +245,79 @@ async function updateProgressDisplay() {
     percentage,
     isGuestMode
   });
+}
+
+// Show celebration when goal is completed
+function showGoalCompletedCelebration() {
+  // Create celebration overlay
+  const celebration = document.createElement('div');
+  celebration.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease-in-out;
+  `;
+  
+  celebration.innerHTML = `
+    <div style="
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      animation: scaleIn 0.3s ease-in-out;
+    ">
+      <div style="font-size: 48px; margin-bottom: 16px;">🎉</div>
+      <h2 style="margin: 0 0 8px 0; color: #333; font-size: 24px;">Goal Completed!</h2>
+      <p style="margin: 0 0 20px 0; color: #666; font-size: 16px;">You've solved ${goalQuestions} problems today!</p>
+      <button id="closeCelebration" style="
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+      ">Awesome!</button>
+    </div>
+  `;
+  
+  // Add CSS animations
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes scaleIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+  `;
+  document.head.appendChild(style);
+  
+  document.body.appendChild(celebration);
+  
+  // Close celebration on button click
+  document.getElementById('closeCelebration').onclick = () => {
+    celebration.remove();
+    style.remove();
+  };
+  
+  // Auto-close after 5 seconds
+  setTimeout(() => {
+    if (celebration.parentNode) {
+      celebration.remove();
+      style.remove();
+    }
+  }, 5000);
 }
 
 // Initialize toggle state from storage
@@ -740,19 +850,4 @@ async function checkAndResetGuestProgress() {
   }
 }
 
-async function incrementGuestProgress() {
-  await checkAndResetGuestProgress();
-  
-  guestProgress.progress_today += 1;
-  completedToday = guestProgress.progress_today;
-  
-  await chrome.storage.local.set({ guest_progress: guestProgress });
-  
-  // Update UI
-  await updateProgressDisplay();
-  
-  console.log('Guest progress incremented:', guestProgress.progress_today);
-  
-  // Note: Blocking state is now managed independently of goal completion
-  // The toggle state is controlled by user choice and daily resets only
-} 
+// Note: incrementGuestProgress function removed - now handled by PROGRESS_UPDATED message system 

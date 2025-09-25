@@ -9,14 +9,11 @@ class ActivityLogger {
   // Log a LeetCode problem submission
   async logActivity(activityData) {
     const activity = {
-      problem_name: activityData.problemSlug || 'Unknown Problem',
+      problem_name: activityData.problemSlug || activityData.problem_name || 'Unknown Problem',
       problem_url: activityData.url || window.location.href,
       difficulty: activityData.difficulty || 'Unknown',
       topic_tags: activityData.topicTags || [],
-      status: 'completed',
-      completed_at: new Date().toISOString(),
-      submission_id: activityData.submissionId,
-      ...activityData
+      status: 'completed'
     };
 
     if (this.auth.isAuthenticated()) {

@@ -1,5 +1,6 @@
 // Import sync modules
-importScripts('auth.js', 'blocklist-sync.js', 'activity-logger.js', 'goal-sync.js');
+importScripts('auth.js', 'blocklist-sync.js', 'goal-sync.js');
+// importScripts('activity-logger.js'); // DISABLED for now
 
 // Extension blocking state - now managed via storage
 // No longer need isBlockingEnabled variable
@@ -151,6 +152,81 @@ async function updateBlockingStorage(enabled) {
   console.log('Background: Blocking state updated:', { enabled });
 }
 
+// Update progress when a problem is solved
+async function updateProgressOnProblemSolved() {
+  try {
+    // Get current goal data
+    const goal = await getCurrentGoalData();
+    
+    // Increment progress
+    const newProgress = (goal.progress_today || 0) + 1;
+    
+    // Update local storage
+    await chrome.storage.local.set({
+      daily_progress: newProgress,
+      progress_updated_at: Date.now()
+    });
+    
+    // Update guest goal if in guest mode
+    if (!extensionAuth || !extensionAuth.isAuthenticated()) {
+      const guestGoal = await getCurrentGoalData();
+      guestGoal.progress_today = newProgress;
+      await chrome.storage.local.set({ guest_progress: guestGoal });
+    }
+    
+    // If user is authenticated, update backend
+    if (extensionAuth && extensionAuth.isAuthenticated()) {
+      try {
+        await extensionAuth.apiRequest('/api/me/goal/progress', {
+          method: 'POST',
+          body: JSON.stringify({ delta: 1 })
+        });
+        console.log('Progress updated on backend');
+      } catch (error) {
+        console.error('Failed to update progress on backend:', error);
+        // Store for later sync
+        await chrome.storage.local.set({
+          pending_progress_update: newProgress
+        });
+      }
+    }
+    
+    // Notify popup of progress update
+    chrome.runtime.sendMessage({
+      type: 'PROGRESS_UPDATED',
+      progress: newProgress,
+      goal: goal.target_daily,
+      isGoalCompleted: newProgress >= goal.target_daily
+    }).catch(error => {
+      // Popup might not be open, that's okay
+      console.log('Could not send progress update to popup:', error.message);
+    });
+    
+    console.log(`Progress updated: ${newProgress}/${goal.target_daily}`);
+    
+  } catch (error) {
+    console.error('Failed to update progress:', error);
+  }
+}
+
+// Get current goal data (authenticated or guest)
+async function getCurrentGoalData() {
+  if (extensionAuth && extensionAuth.isAuthenticated() && goalSync) {
+    return await goalSync.getCurrentGoal();
+  } else {
+    // Guest mode - get from storage or use default
+    const result = await chrome.storage.local.get(['guest_progress']);
+    const guestGoal = result.guest_progress || { target_daily: 1, progress_today: 0 };
+    
+    // Update guest goal in storage if it doesn't exist
+    if (!result.guest_progress) {
+      await chrome.storage.local.set({ guest_progress: guestGoal });
+    }
+    
+    return guestGoal;
+  }
+}
+
 // Listen for messages from popup and content scripts
 chrome.runtime.onMessage.addListener(async (message) => {
   console.log('Background received message:', message);
@@ -173,16 +249,18 @@ chrome.runtime.onMessage.addListener(async (message) => {
     // Turn off focus mode but keep timer running
     chrome.storage.local.set({ leetguardSolved: true, focusMode: false });
     
-    // Log the activity
-    if (activityLogger) {
-      activityLogger.logActivity({
-        ...message.problemInfo,
-        submissionId: message.submissionId,
-        statusData: message.statusData
-      }).catch(error => {
-        console.error('Failed to log activity:', error);
-      });
-    }
+    // Log the activity - DISABLED for now
+    // if (activityLogger) {
+    //   activityLogger.logActivity({
+    //     ...message.problemInfo,
+    //     submissionId: message.submissionId
+    //   }).catch(error => {
+    //     console.error('Failed to log activity:', error);
+    //   });
+    // }
+
+    // Update progress and notify popup
+    await updateProgressOnProblemSolved();
   }
   
   // Storage sync messages
@@ -207,7 +285,7 @@ chrome.runtime.onMessage.addListener(async (message) => {
           if (goalSync) await goalSync.syncGoal();
           // Immediately refresh rules to apply latest blocklist
           await enableBlocking();
-          if (activityLogger) activityLogger.syncLocalActivities();
+          // if (activityLogger) activityLogger.syncLocalActivities(); // DISABLED for now
         } else {
           console.error('OAuth callback handling failed');
         }
