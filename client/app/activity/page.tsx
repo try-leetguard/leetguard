@@ -51,6 +51,43 @@ export default function ActivityPage() {
     localStorage.setItem("theme", "light");
   }, []);
 
+  // Listen for messages from extension
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === "TOGGLE_STATE_CHANGED") {
+        console.log(
+          "Web app received toggle state from extension:",
+          event.data.enabled
+        );
+        setExtensionEnabled(event.data.enabled);
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
+  // Sync with extension state on page load
+  useEffect(() => {
+    const syncWithExtension = async () => {
+      try {
+        // Request current state from extension
+        if (typeof window !== "undefined") {
+          window.postMessage(
+            {
+              type: "REQUEST_TOGGLE_STATE",
+            },
+            "*"
+          );
+        }
+      } catch (error) {
+        console.error("Failed to sync with extension:", error);
+      }
+    };
+
+    syncWithExtension();
+  }, []);
+
   // Load goal data from backend
   useEffect(() => {
     const loadGoalData = async () => {
@@ -71,6 +108,12 @@ export default function ActivityPage() {
         setGoalInputValue(goalData.target_daily.toString());
         setCompletedToday(goalData.progress_today);
         setIsGoalSaved(true);
+
+        // Check if goal is completed and automatically disable extension
+        if (goalData.is_goal_completed) {
+          setExtensionEnabled(false);
+          console.log("Goal completed! Extension automatically disabled.");
+        }
       } catch (error) {
         console.error("Failed to load goal data:", error);
         // Fallback to defaults
@@ -201,6 +244,13 @@ export default function ActivityPage() {
       setGoalInputValue(goalData.target_daily.toString());
       setCompletedToday(goalData.progress_today);
       setIsGoalSaved(true);
+
+      // Check if goal is completed and automatically disable extension
+      if (goalData.is_goal_completed) {
+        setExtensionEnabled(false);
+        console.log("Goal completed! Extension automatically disabled.");
+      }
+
       console.log("Goal saved to backend:", finalValue);
 
       // Notify extension to sync immediately
@@ -231,6 +281,18 @@ export default function ActivityPage() {
       setIsMessageVisible(true);
     } else {
       setExtensionEnabled(enabled);
+
+      // Notify extension of toggle change
+      if (typeof window !== "undefined") {
+        window.postMessage(
+          {
+            type: "EXTENSION_TOGGLE",
+            enabled: enabled,
+          },
+          "*"
+        );
+        console.log("Web app notified extension of toggle change:", enabled);
+      }
     }
   };
 
@@ -238,6 +300,21 @@ export default function ActivityPage() {
     setExtensionEnabled(false);
     setShowUnblockDialog(false);
     setIsCountdownActive(false);
+
+    // Notify extension of toggle change
+    if (typeof window !== "undefined") {
+      window.postMessage(
+        {
+          type: "EXTENSION_TOGGLE",
+          enabled: false,
+        },
+        "*"
+      );
+      console.log(
+        "Web app notified extension of toggle change (after countdown):",
+        false
+      );
+    }
   };
 
   const handleCancelUnblock = () => {
@@ -381,7 +458,7 @@ export default function ActivityPage() {
                           {isLoading
                             ? "Loading..."
                             : completedToday >= goalQuestions
-                            ? "🎉 Daily goal completed! Enjoy your scroll."
+                            ? "Daily goal completed! Extension automatically disabled."
                             : `Complete ${Math.max(
                                 goalQuestions - completedToday,
                                 0

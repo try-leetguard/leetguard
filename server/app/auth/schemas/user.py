@@ -49,6 +49,7 @@ class GoalResponse(BaseModel):
     target_daily: int
     progress_today: int
     progress_date: date
+    is_goal_completed: bool
 
 class GoalUpdate(BaseModel):
     target_daily: int

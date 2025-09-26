@@ -67,6 +67,7 @@ export interface GoalResponse {
   target_daily: number;
   progress_today: number;
   progress_date: string;
+  is_goal_completed: boolean;
 }
 
 export interface GoalUpdateRequest {

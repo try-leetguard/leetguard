@@ -1,6 +1,44 @@
 // LeetGuard Content Script for LeetCode pages
 console.log('🎯 LeetGuard Content Script loaded');
 
+// Listen for messages from web app
+window.addEventListener('message', (event) => {
+  if (event.data?.type === 'EXTENSION_TOGGLE') {
+    console.log('Content script received toggle message from web app:', event.data.enabled);
+    // Forward to background script
+    chrome.runtime.sendMessage({
+      type: 'EXTENSION_TOGGLE',
+      enabled: event.data.enabled
+    }).catch(error => {
+      console.error('Failed to forward toggle message to background:', error);
+    });
+  } else if (event.data?.type === 'REQUEST_TOGGLE_STATE') {
+    console.log('Content script received toggle state request from web app');
+    // Get current state from storage and send back
+    chrome.storage.local.get(['extension_blocking_enabled'], (result) => {
+      const enabled = result.extension_blocking_enabled !== false; // Default to true
+      window.postMessage({
+        type: 'TOGGLE_STATE_CHANGED',
+        enabled: enabled
+      }, '*');
+      console.log('Content script sent current toggle state to web app:', enabled);
+    });
+  }
+});
+
+// Listen for storage changes from extension
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (namespace === 'local' && changes.extension_blocking_enabled) {
+    const enabled = changes.extension_blocking_enabled.newValue !== false; // Default to true
+    console.log('Content script detected storage change:', enabled);
+    // Notify web app of state change
+    window.postMessage({
+      type: 'TOGGLE_STATE_CHANGED',
+      enabled: enabled
+    }, '*');
+  }
+});
+
 // Note: localStorage monitoring removed - extension now checks localStorage on-demand
 
 // Inject script file into page context

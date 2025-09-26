@@ -87,9 +87,11 @@ class ExtensionAuth {
       });
 
       if (response.status === 401) {
+        console.log('Token expired, attempting refresh...');
         // Token might be expired, try to refresh
         const refreshed = await this.refreshTokens();
         if (refreshed) {
+          console.log('Token refreshed successfully');
           // Retry the request with new token
           headers['Authorization'] = `Bearer ${this.accessToken}`;
           const retryResponse = await fetch(url, {
@@ -103,6 +105,7 @@ class ExtensionAuth {
           
           return await retryResponse.json();
         } else {
+          console.log('Token refresh failed, clearing auth');
           // Refresh failed, user needs to login again
           await this.clearAuth();
           throw new Error('Authentication expired');

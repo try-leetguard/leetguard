@@ -432,19 +432,23 @@ export default function LogPage() {
                         {/* Topics */}
                         <div className="col-span-1 flex items-center">
                           <div className="flex flex-wrap items-center gap-1">
-                            {problem.topicTags.slice(0, 2).map((tag, index) => (
-                              <span
-                                key={index}
-                                className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                            {problem.topicTags.length > 2 && (
-                              <span className="text-xs text-gray-500 flex items-center">
-                                +{problem.topicTags.length - 2}
-                              </span>
-                            )}
+                            {problem.topicTags &&
+                              problem.topicTags
+                                .slice(0, 2)
+                                .map((tag, index) => (
+                                  <span
+                                    key={index}
+                                    className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700"
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                            {problem.topicTags &&
+                              problem.topicTags.length > 2 && (
+                                <span className="text-xs text-gray-500 flex items-center">
+                                  +{problem.topicTags.length - 2}
+                                </span>
+                              )}
                           </div>
                         </div>
                       </div>
