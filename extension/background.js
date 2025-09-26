@@ -149,6 +149,25 @@ async function updateBlockingStorage(enabled) {
     await disableBlocking();
   }
   
+  // Notify web app tabs of toggle state change
+  try {
+    const tabs = await chrome.tabs.query({});
+    for (const tab of tabs) {
+      if (tab.url && (tab.url.includes('localhost:3000') || tab.url.includes('leetguard.com'))) {
+        chrome.tabs.sendMessage(tab.id, {
+          type: 'TOGGLE_STATE_CHANGED',
+          enabled: enabled
+        }).catch(error => {
+          // Tab might not have content script, that's okay
+          console.log('Could not send toggle state to tab:', tab.id, error.message);
+        });
+      }
+    }
+    console.log('Background: Notified web app tabs of toggle state change:', { enabled });
+  } catch (error) {
+    console.error('Failed to notify web app tabs:', error);
+  }
+  
   console.log('Background: Blocking state updated:', { enabled });
 }
 

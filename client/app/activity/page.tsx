@@ -51,6 +51,43 @@ export default function ActivityPage() {
     localStorage.setItem("theme", "light");
   }, []);
 
+  // Listen for messages from extension
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === "TOGGLE_STATE_CHANGED") {
+        console.log(
+          "Web app received toggle state from extension:",
+          event.data.enabled
+        );
+        setExtensionEnabled(event.data.enabled);
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
+  // Sync with extension state on page load
+  useEffect(() => {
+    const syncWithExtension = async () => {
+      try {
+        // Request current state from extension
+        if (typeof window !== "undefined") {
+          window.postMessage(
+            {
+              type: "REQUEST_TOGGLE_STATE",
+            },
+            "*"
+          );
+        }
+      } catch (error) {
+        console.error("Failed to sync with extension:", error);
+      }
+    };
+
+    syncWithExtension();
+  }, []);
+
   // Load goal data from backend
   useEffect(() => {
     const loadGoalData = async () => {
@@ -244,6 +281,18 @@ export default function ActivityPage() {
       setIsMessageVisible(true);
     } else {
       setExtensionEnabled(enabled);
+
+      // Notify extension of toggle change
+      if (typeof window !== "undefined") {
+        window.postMessage(
+          {
+            type: "EXTENSION_TOGGLE",
+            enabled: enabled,
+          },
+          "*"
+        );
+        console.log("Web app notified extension of toggle change:", enabled);
+      }
     }
   };
 
@@ -251,6 +300,21 @@ export default function ActivityPage() {
     setExtensionEnabled(false);
     setShowUnblockDialog(false);
     setIsCountdownActive(false);
+
+    // Notify extension of toggle change
+    if (typeof window !== "undefined") {
+      window.postMessage(
+        {
+          type: "EXTENSION_TOGGLE",
+          enabled: false,
+        },
+        "*"
+      );
+      console.log(
+        "Web app notified extension of toggle change (after countdown):",
+        false
+      );
+    }
   };
 
   const handleCancelUnblock = () => {
