@@ -15,6 +15,17 @@ export class BlocklistAPI {
     return localStorage.getItem('access_token');
   }
 
+  private static notifyBlocklistUpdated(websites: string[]): void {
+    if (typeof window === 'undefined') return;
+    window.postMessage(
+      {
+        type: 'BLOCKLIST_UPDATED',
+        payload: { websites },
+      },
+      '*'
+    );
+  }
+
   /**
    * Get user's blocklist from the backend
    */
@@ -52,10 +63,8 @@ export class BlocklistAPI {
 
     try {
       await apiClient.addWebsite(token, cleanWebsite);
-      // Notify extension to sync immediately
-      if (typeof window !== 'undefined') {
-        window.postMessage({ type: 'BLOCKLIST_UPDATED' }, '*');
-      }
+      const { websites } = await apiClient.getBlocklist(token);
+      this.notifyBlocklistUpdated(websites || []);
     } catch (error) {
       console.error('Failed to add website to blocklist:', error);
       throw error;
@@ -73,10 +82,8 @@ export class BlocklistAPI {
 
     try {
       await apiClient.removeWebsite(token, website);
-      // Notify extension to sync immediately
-      if (typeof window !== 'undefined') {
-        window.postMessage({ type: 'BLOCKLIST_UPDATED' }, '*');
-      }
+      const { websites } = await apiClient.getBlocklist(token);
+      this.notifyBlocklistUpdated(websites || []);
     } catch (error) {
       console.error('Failed to remove website from blocklist:', error);
       throw error;

@@ -331,20 +331,25 @@ chrome.runtime.onMessage.addListener(async (message) => {
 
   // Blocklist updated from web app - trigger immediate sync and rule refresh
   if (message && message.type === 'BLOCKLIST_UPDATED') {
-    console.log('Background: BLOCKLIST_UPDATED received, syncing and refreshing rules');
+    console.log('Background: BLOCKLIST_UPDATED received', {
+      hasPayload: !!message.payload,
+    });
     try {
-      if (blocklistSync) await blocklistSync.syncBlocklist();
-      await enableBlocking();
+      if (blocklistSync) {
+        await blocklistSync.syncBlocklist(message.payload ?? null);
+      }
     } catch (e) {
       console.error('Failed to sync/refresh after blocklist update:', e);
     }
   }
 
-  // Goal updated from web app - trigger immediate sync
+  // Goal updated from web app — payload-driven sync or network fallback
   if (message && message.type === 'GOAL_UPDATED') {
-    console.log('Background: GOAL_UPDATED received, syncing goal');
+    console.log('Background: GOAL_UPDATED received', {
+      hasPayload: !!message.payload,
+    });
     try {
-      if (goalSync) await goalSync.syncGoal();
+      if (goalSync) await goalSync.syncGoal(message.payload ?? null);
     } catch (e) {
       console.error('Failed to sync after goal update:', e);
     }

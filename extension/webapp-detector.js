@@ -97,6 +97,33 @@ const setupMessageListener = () => {
   console.log('🔌 LeetGuard Extension: Message listener setup complete');
 };
 
+// Forward blocklist/goal payload pushes from web app to background
+const setupDataSync = () => {
+  window.addEventListener('message', (event) => {
+    if (event.origin !== window.location.origin) {
+      return;
+    }
+
+    if (event.data?.type === 'BLOCKLIST_UPDATED') {
+      chrome.runtime.sendMessage({
+        type: 'BLOCKLIST_UPDATED',
+        payload: event.data.payload ?? null,
+      }).catch((error) => {
+        console.error('🔌 LeetGuard Extension: Failed to forward blocklist update:', error);
+      });
+    }
+
+    if (event.data?.type === 'GOAL_UPDATED') {
+      chrome.runtime.sendMessage({
+        type: 'GOAL_UPDATED',
+        payload: event.data.payload ?? null,
+      }).catch((error) => {
+        console.error('🔌 LeetGuard Extension: Failed to forward goal update:', error);
+      });
+    }
+  });
+};
+
 // Setup authentication sync listener
 const setupAuthSync = () => {
   window.addEventListener('message', (event) => {
@@ -146,6 +173,7 @@ const initialize = () => {
     injectDetectionMarker();
     injectWindowProperty();
     setupMessageListener();
+    setupDataSync();
     setupAuthSync();
     
     // Notify web app that extension is ready

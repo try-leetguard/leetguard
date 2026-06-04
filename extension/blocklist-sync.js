@@ -157,15 +157,37 @@ class BlocklistSync {
     return this.getDefaultBlocklist();
   }
 
-  // Sync blocklist periodically
-  async syncBlocklist() {
-    if (this.auth.isAuthenticated()) {
-      try {
+  // Apply DNR rules when running inside the background service worker
+  async refreshBlockingRules() {
+    if (typeof enableBlocking === 'function') {
+      await enableBlocking();
+    }
+  }
+
+  // Apply blocklist from web app payload (skip network)
+  async applyBlocklistPayload(payloadData) {
+    this.localBlocklist = payloadData.websites;
+    await chrome.storage.local.set({ user_blocklist: this.localBlocklist });
+    console.log('Blocklist synced from payload:', this.localBlocklist);
+    await this.refreshBlockingRules();
+  }
+
+  // Sync blocklist — payload-driven push or network fallback
+  async syncBlocklist(payloadData = null) {
+    if (!this.auth.isAuthenticated()) {
+      return;
+    }
+
+    try {
+      if (payloadData && Array.isArray(payloadData.websites)) {
+        await this.applyBlocklistPayload(payloadData);
+      } else {
         await this.fetchUserBlocklist();
+        await this.refreshBlockingRules();
         console.log('Blocklist synced successfully');
-      } catch (error) {
-        console.error('Failed to sync blocklist:', error);
       }
+    } catch (error) {
+      console.error('Failed to sync blocklist:', error);
     }
   }
 }

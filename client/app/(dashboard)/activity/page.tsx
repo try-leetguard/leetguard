@@ -251,9 +251,15 @@ export default function ActivityPage() {
 
       console.log("Goal saved to backend:", finalValue);
 
-      // Notify extension to sync immediately
+      // Push updated goal to extension (payload-driven sync)
       if (typeof window !== "undefined") {
-        window.postMessage({ type: "GOAL_UPDATED" }, "*");
+        window.postMessage(
+          {
+            type: "GOAL_UPDATED",
+            payload: { goal: goalData },
+          },
+          "*"
+        );
       }
     } catch (error) {
       console.error("Failed to save goal:", error);

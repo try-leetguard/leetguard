@@ -17,8 +17,8 @@ class GoalSync {
       const response = await this.auth.apiRequest('/api/me/goal');
       this.userGoal = response;
       
-      // Store in local storage for offline access
-      await chrome.storage.local.set({ user_goal: this.userGoal });
+      // Store goal and keep daily_progress in sync
+      await this.persistGoal(this.userGoal);
       
       console.log('Fetched user goal:', this.userGoal);
       return this.userGoal;
@@ -44,6 +44,22 @@ class GoalSync {
     console.log('Cached goal cleared');
   }
 
+  // Persist goal to storage with unified progress counter
+  async persistGoal(goal) {
+    const progressToday = goal.progress_today ?? 0;
+    await chrome.storage.local.set({
+      user_goal: goal,
+      daily_progress: progressToday,
+    });
+  }
+
+  // Apply goal from web app payload (skip network)
+  async applyGoalPayload(payloadData) {
+    this.userGoal = payloadData.goal;
+    await this.persistGoal(this.userGoal);
+    console.log('Goal synced from payload:', this.userGoal);
+  }
+
   // Get default goal for guest users
   getDefaultGoal() {
     return {
@@ -65,15 +81,21 @@ class GoalSync {
     return this.getDefaultGoal();
   }
 
-  // Sync goal periodically
-  async syncGoal() {
-    if (this.auth.isAuthenticated()) {
-      try {
+  // Sync goal — payload-driven push or network fallback
+  async syncGoal(payloadData = null) {
+    if (!this.auth.isAuthenticated()) {
+      return;
+    }
+
+    try {
+      if (payloadData && payloadData.goal && typeof payloadData.goal === 'object') {
+        await this.applyGoalPayload(payloadData);
+      } else {
         await this.fetchUserGoal();
         console.log('Goal synced successfully');
-      } catch (error) {
-        console.error('Failed to sync goal:', error);
       }
+    } catch (error) {
+      console.error('Failed to sync goal:', error);
     }
   }
 }

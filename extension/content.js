@@ -196,14 +196,20 @@ window.addEventListener('message', (event) => {
   if (!allowedOrigins.has(event.origin)) return;
   if (!event.data) return;
 
-  // Blocklist updated notification
+  // Blocklist updated — forward payload-driven sync data to background
   if (event.data.type === 'BLOCKLIST_UPDATED') {
-    chrome.runtime.sendMessage({ type: 'BLOCKLIST_UPDATED' });
+    chrome.runtime.sendMessage({
+      type: 'BLOCKLIST_UPDATED',
+      payload: event.data.payload ?? null,
+    });
   }
 
-  // Goal updated notification
+  // Goal updated — forward payload-driven sync data to background
   if (event.data.type === 'GOAL_UPDATED') {
-    chrome.runtime.sendMessage({ type: 'GOAL_UPDATED' });
+    chrome.runtime.sendMessage({
+      type: 'GOAL_UPDATED',
+      payload: event.data.payload ?? null,
+    });
   }
 
   // Login/auth sync from web app
