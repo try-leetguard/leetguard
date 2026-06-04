@@ -16,10 +16,15 @@ class BlocklistSync {
     try {
       const response = await this.auth.apiRequest('/api/blocklist');
       this.localBlocklist = response.websites || [];
-      
+
       // Store in local storage for offline access
       await chrome.storage.local.set({ user_blocklist: this.localBlocklist });
-      
+
+      if (this.localBlocklist.length === 0) {
+        console.log('User blocklist empty, using default blocklist for blocking');
+        return this.getDefaultBlocklist();
+      }
+
       console.log('Fetched user blocklist:', this.localBlocklist);
       return this.localBlocklist;
     } catch (error) {
@@ -141,11 +146,14 @@ class BlocklistSync {
   async getCurrentBlocklist() {
     if (this.auth.isAuthenticated()) {
       if (this.localBlocklist.length === 0) {
-        return await this.fetchUserBlocklist();
+        const list = await this.fetchUserBlocklist();
+        return list.length > 0 ? list : this.getDefaultBlocklist();
       }
-      return this.localBlocklist;
+      return this.localBlocklist.length > 0
+        ? this.localBlocklist
+        : this.getDefaultBlocklist();
     }
-    
+
     return this.getDefaultBlocklist();
   }
 

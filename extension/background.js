@@ -44,20 +44,26 @@ async function getBlockRules(generation) {
     }
   }
     
-  return blocklist.map((site, idx) => ({
-    id: generation * 10000 + (idx + 1),
-    priority: 1,
-    action: {
-      type: 'redirect',
-      redirect: {
-        url: 'http://localhost:3000/'
+  return blocklist.map((site, idx) => {
+    // Strip protocols, www, and whitespace
+    const cleanSite = site.replace(/^(https?:\/\/)?(www\.)?/, '').trim();
+
+    return {
+      id: generation * 10000 + (idx + 1),
+      priority: 1,
+      action: {
+        type: 'redirect',
+        redirect: {
+          url: 'http://localhost:3000/'
+        }
+      },
+      condition: {
+        // No trailing /* — anchors naked domains (e.g. https://x.com) and subroutes
+        urlFilter: `||${cleanSite}`,
+        resourceTypes: ['main_frame', 'sub_frame']
       }
-    },
-    condition: {
-      urlFilter: `||${site}/*`,
-      resourceTypes: ['main_frame', 'sub_frame']
-    }
-  }));
+    };
+  });
 }
 
 // Debug-friendly wrapper for updating dynamic rules
