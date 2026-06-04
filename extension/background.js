@@ -241,6 +241,75 @@ async function updateProgressOnProblemSolved() {
   }
 }
 
+// Serialize concurrent full-sync requests
+let syncEverythingChain = Promise.resolve();
+
+async function waitForSyncModules(maxWaitMs = 5000) {
+  const start = Date.now();
+  while (!blocklistSync || !goalSync) {
+    if (Date.now() - start > maxWaitMs) {
+      throw new Error('Sync modules not ready');
+    }
+    await new Promise((resolve) => setTimeout(resolve, 25));
+  }
+}
+
+// Fetch a complete authenticated user snapshot from the backend in parallel
+async function syncEverything() {
+  await waitForSyncModules();
+  await extensionAuth.init();
+
+  syncEverythingChain = syncEverythingChain.then(async () => {
+    try {
+      if (extensionAuth.isAuthenticated() && blocklistSync && goalSync) {
+        const [, goal] = await Promise.all([
+          blocklistSync.fetchUserBlocklist(),
+          goalSync.fetchUserGoal(),
+        ]);
+
+        await chrome.storage.local.set({
+          user_blocklist: blocklistSync.localBlocklist,
+          user_goal: goal,
+          daily_progress: goal?.progress_today ?? 0,
+        });
+
+        console.log('Background: syncEverything complete', {
+          blocklistCount: blocklistSync.localBlocklist.length,
+          targetDaily: goal?.target_daily,
+          progressToday: goal?.progress_today,
+        });
+      } else {
+        console.log('Background: syncEverything skipped (not authenticated)');
+      }
+
+      const { extension_blocking_enabled } = await chrome.storage.local.get([
+        'extension_blocking_enabled',
+      ]);
+      if (extension_blocking_enabled !== false) {
+        await enableBlocking();
+      } else {
+        await disableBlocking();
+      }
+    } catch (error) {
+      console.error('Background: syncEverything failed:', error);
+      const { extension_blocking_enabled } = await chrome.storage.local.get([
+        'extension_blocking_enabled',
+      ]);
+      if (extension_blocking_enabled !== false) {
+        await enableBlocking();
+      }
+    }
+  });
+
+  return syncEverythingChain;
+}
+
+async function runStartupRoutine() {
+  console.log('Background: Running startup routine...');
+  await initializeBlockingFromStorage();
+  await syncEverything();
+}
+
 // Get current goal data (authenticated or guest)
 async function getCurrentGoalData() {
   if (extensionAuth && extensionAuth.isAuthenticated() && goalSync) {
@@ -312,11 +381,7 @@ chrome.runtime.onMessage.addListener(async (message) => {
       extensionAuth.handleOAuthCallback(message.tokens).then(async success => {
         if (success) {
           console.log('OAuth callback handled successfully');
-          // Trigger sync after successful authentication
-          if (blocklistSync) await blocklistSync.syncBlocklist();
-          if (goalSync) await goalSync.syncGoal();
-          // Immediately refresh rules to apply latest blocklist
-          await enableBlocking();
+          await syncEverything();
           // if (activityLogger) activityLogger.syncLocalActivities(); // DISABLED for now
         } else {
           console.error('OAuth callback handling failed');
@@ -432,21 +497,23 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   }
 });
 
-// Initialize sync modules when background script starts
-chrome.runtime.onStartup.addListener(async () => {
-  console.log('Background: Extension startup, initializing sync...');
-  if (blocklistSync) await blocklistSync.syncBlocklist();
-  if (goalSync) await goalSync.syncGoal();
-  if (activityLogger) await activityLogger.syncPendingActivities();
-});
-
-// On install or browser start, initialize blocking from storage
 chrome.runtime.onStartup.addListener(() => {
-  console.log('Background: Extension startup, initializing blocking from storage...');
-  initializeBlockingFromStorage();
+  console.log('Background: Extension startup');
+  runStartupRoutine().catch((error) => {
+    console.error('Background: Startup routine failed:', error);
+  });
 });
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('Background: Extension installed, initializing blocking from storage...');
-  initializeBlockingFromStorage();
-}); 
+  console.log('Background: Extension installed');
+  runStartupRoutine().catch((error) => {
+    console.error('Background: Install startup routine failed:', error);
+  });
+});
+
+// Service worker cold start (not covered by onStartup alone)
+waitForSyncModules()
+  .then(() => runStartupRoutine())
+  .catch((error) => {
+    console.error('Background: Cold start routine failed:', error);
+  }); 

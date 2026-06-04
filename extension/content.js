@@ -187,42 +187,5 @@ if (window.location.href.includes('extension-auth-callback')) {
   });
 }
 
-// Listen for blocklist updates from the web app and forward to background
-window.addEventListener('message', (event) => {
-  const allowedOrigins = new Set([
-    'http://localhost:3000',
-    'https://leetguard.com'
-  ]);
-  if (!allowedOrigins.has(event.origin)) return;
-  if (!event.data) return;
-
-  // Blocklist updated — forward payload-driven sync data to background
-  if (event.data.type === 'BLOCKLIST_UPDATED') {
-    chrome.runtime.sendMessage({
-      type: 'BLOCKLIST_UPDATED',
-      payload: event.data.payload ?? null,
-    });
-  }
-
-  // Goal updated — forward payload-driven sync data to background
-  if (event.data.type === 'GOAL_UPDATED') {
-    chrome.runtime.sendMessage({
-      type: 'GOAL_UPDATED',
-      payload: event.data.payload ?? null,
-    });
-  }
-
-  // Login/auth sync from web app
-  if (event.data.type === 'LEETGUARD_AUTH_SYNC' && event.data.tokens) {
-    chrome.runtime.sendMessage({
-      type: 'OAUTH_CALLBACK',
-      tokens: event.data.tokens,
-      user: event.data.user
-    });
-  }
-
-  // Logout from web app
-  if (event.data.type === 'LEETGUARD_LOGOUT') {
-    chrome.runtime.sendMessage({ type: 'USER_LOGOUT' });
-  }
-});
+// Web app data/auth sync is handled exclusively by webapp-detector.js on the
+// dashboard origin. This script only forwards extension toggle messages above.

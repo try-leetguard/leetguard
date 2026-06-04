@@ -40,7 +40,7 @@ class GoalSync {
   // Clear cached goal from storage
   async clearCachedGoal() {
     this.userGoal = null;
-    await chrome.storage.local.remove(['user_goal']);
+    await chrome.storage.local.remove(['user_goal', 'daily_progress']);
     console.log('Cached goal cleared');
   }
 
@@ -103,13 +103,10 @@ class GoalSync {
 // Initialize goal sync
 let goalSync = null;
 
-// Initialize after auth is ready
+// Initialize after auth is ready (full snapshot sync runs from background.js)
 async function initializeGoalSync() {
   await extensionAuth.init();
   goalSync = new GoalSync(extensionAuth);
-  
-  // Initial sync
-  await goalSync.syncGoal();
 }
 
 // Initialize when script loads

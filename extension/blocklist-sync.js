@@ -195,13 +195,10 @@ class BlocklistSync {
 // Initialize blocklist sync
 let blocklistSync = null;
 
-// Initialize after auth is ready
+// Initialize after auth is ready (full snapshot sync runs from background.js)
 async function initializeBlocklistSync() {
   await extensionAuth.init();
   blocklistSync = new BlocklistSync(extensionAuth);
-  
-  // Initial sync
-  await blocklistSync.syncBlocklist();
 }
 
 // Initialize when script loads
