@@ -126,12 +126,20 @@ async function initializeBlockingFromStorage() {
   // Check if we need to reset for new day
   const today = new Date().toISOString().split('T')[0];
   if (result.extension_last_reset_date !== today) {
-    // New day - reset to enabled
+    const guestResult = await chrome.storage.local.get(['guest_progress']);
+    const guestGoal = guestResult.guest_progress || { target_daily: 1, progress_today: 0 };
+    guestGoal.progress_today = 0;
+
+    // New day - reset blocking, progress cache, and solve dedup trackers
     await chrome.storage.local.set({
       extension_blocking_enabled: true,
-      extension_last_reset_date: today
+      extension_last_reset_date: today,
+      daily_progress: 0,
+      guest_progress: guestGoal,
+      processed_submission_ids: [],
+      daily_solved_slugs: [],
     });
-    console.log('Background: New day detected, resetting extension to enabled');
+    console.log('Background: New day detected, resetting extension, progress, and solve trackers');
   }
   
   // Apply blocking based on storage state
@@ -175,6 +183,49 @@ async function updateBlockingStorage(enabled) {
   }
   
   console.log('Background: Blocking state updated:', { enabled });
+}
+
+// Idempotent transaction filter for LeetCode solve events
+async function processSubmissionAccepted(message) {
+  const submissionId = message.submissionId;
+  const slug = message.slug;
+
+  if (!submissionId || !slug) {
+    console.warn('Background: SUBMISSION_ACCEPTED missing submissionId or slug, ignoring');
+    return;
+  }
+
+  const result = await chrome.storage.local.get([
+    'processed_submission_ids',
+    'daily_solved_slugs',
+  ]);
+  const processedIds = result.processed_submission_ids || [];
+  const solvedSlugs = result.daily_solved_slugs || [];
+
+  // Guard 1 (anti-spam): drop duplicate /check/ poll cycles for the same submission
+  if (processedIds.includes(submissionId)) {
+    console.log('Background: Duplicate submissionId, dropping poll cycle:', submissionId);
+    return;
+  }
+
+  // Guard 2 (anti-cheating): same problem slug already credited today
+  if (solvedSlugs.includes(slug)) {
+    console.log('Background: Problem already solved today, no progress increment:', slug);
+    // Still record submissionId so repeated /check/ polls for this re-submit are dropped
+    await chrome.storage.local.set({
+      processed_submission_ids: [...processedIds, submissionId],
+    });
+    return;
+  }
+
+  // Both guards clear — record transaction before incrementing progress
+  await chrome.storage.local.set({
+    processed_submission_ids: [...processedIds, submissionId],
+    daily_solved_slugs: [...solvedSlugs, slug],
+  });
+
+  await chrome.storage.local.set({ leetguardSolved: true, focusMode: false });
+  await updateProgressOnProblemSolved();
 }
 
 // Update progress when a problem is solved
@@ -344,12 +395,13 @@ chrome.runtime.onMessage.addListener(async (message) => {
     // Blocking is now controlled by timer state, not focus mode
   }
   
-  // Problem solved
+  // Problem solved — idempotent transaction filter before progress increment
   if (message && message.type === 'SUBMISSION_ACCEPTED') {
-    console.log('Background: Submission accepted');
-    // Turn off focus mode but keep timer running
-    chrome.storage.local.set({ leetguardSolved: true, focusMode: false });
-    
+    console.log('Background: Submission accepted', {
+      submissionId: message.submissionId,
+      slug: message.slug,
+    });
+
     // Log the activity - DISABLED for now
     // if (activityLogger) {
     //   activityLogger.logActivity({
@@ -360,8 +412,7 @@ chrome.runtime.onMessage.addListener(async (message) => {
     //   });
     // }
 
-    // Update progress and notify popup
-    await updateProgressOnProblemSolved();
+    await processSubmissionAccepted(message);
   }
   
   // Storage sync messages

@@ -152,16 +152,26 @@ window.addEventListener("message", (event) => {
           timestamp: Date.now()
         };
         
-        // Send message to background script
-        chrome.runtime.sendMessage({
-          type: "SUBMISSION_ACCEPTED",
-          slug: problemSlug,
-          submissionId: statusData.submission_id,
-          timestamp: Date.now(),
-          url: window.location.href,
-          statusData: statusData,
-          problemInfo: problemInfo
-        });
+        // Send message to background script (guard against invalidated context after extension reload)
+        if (chrome.runtime && chrome.runtime.id) {
+          try {
+            chrome.runtime.sendMessage({
+              type: "SUBMISSION_ACCEPTED",
+              slug: problemSlug,
+              submissionId: statusData.submission_id,
+              timestamp: Date.now(),
+              url: window.location.href,
+              statusData: statusData,
+              problemInfo: problemInfo
+            }).catch(() => {
+              console.log("[LeetGuard] Extension context invalidated. Please refresh the page.");
+            });
+          } catch (err) {
+            console.log("[LeetGuard] Extension context invalidated. Please refresh the page.");
+          }
+        } else {
+          console.log("[LeetGuard] Connection to extension lost.");
+        }
       } else if (statusData && statusData.status_code === 10) {
         console.log("🧪 Test run detected (not a real submission)");
         console.log("Task name:", statusData.task_name);
