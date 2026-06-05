@@ -1,6 +1,6 @@
 # AI_CONTEXT_ANCHOR — LeetGuard Machine Snapshot
 <!-- PURPOSE: Feed this file to an LLM to restore full technical context after session loss. Not human docs. -->
-<!-- LAST_ARCHITECTURE_LOCK: 2026-06-05 -->
+<!-- LAST_ARCHITECTURE_LOCK: 2026-06-05 (Section 5 idempotency + context guards locked) -->
 
 ---
 
@@ -185,40 +185,71 @@ statusData.finished === true
 !statusData.submission_id.startsWith('runcode_')       // exclude "Run Code" polls
 ```
 
-Extract `problemSlug` from `window.location.pathname` (`/problems/{slug}/…`). Attach `submissionId: statusData.submission_id`.
+Extract `problemSlug` from `window.location.pathname` (`/problems/{slug}/…`). Build payload: `{ type:'SUBMISSION_ACCEPTED', slug, submissionId, timestamp, url, statusData, problemInfo }`. Show congrats popup (`showLeetGuardPopup`) **before** background delivery.
 
-### Background idempotent transaction queue (`SUBMISSION_ACCEPTED` handler)
+### `content.js` message delivery — extension context invalidation guards
+
+After acceptance filter passes, `sendMessage` is wrapped in a **three-layer guard** to suppress uncaught `Extension context invalidated` errors during dev extension reloads (stale content-script context on an open LeetCode tab):
+
+| Layer | Mechanism | On failure |
+|-------|-----------|------------|
+| **1. Pre-check** | `if (chrome.runtime && chrome.runtime.id)` | Log `[LeetGuard] Connection to extension lost.` — skip send entirely |
+| **2. Sync try/catch** | `try { chrome.runtime.sendMessage(...) } catch` | Log `[LeetGuard] Extension context invalidated. Please refresh the page.` |
+| **3. Async `.catch()`** | `.catch()` on `sendMessage` returned Promise (MV3) | Same invalidation log — covers async rejections post-reload |
+
+Payload shape unchanged; only delivery is hardened. User must refresh LeetCode tab after reloading extension in `chrome://extensions`.
+
+### Background handler — `processSubmissionAccepted(message)` transaction filter
+
+**Architecture:** `chrome.runtime.onMessage` `SUBMISSION_ACCEPTED` branch is a **thin delegate** — it logs `{ submissionId, slug }` and calls `processSubmissionAccepted(message)`. All dedup logic and progress side effects live in that dedicated function; `updateProgressOnProblemSolved()` is never called directly from the listener.
 
 **Problem solved:** LeetCode `/check/` polling fires multiple times per submission; re-submitting the same problem the same day must not inflate progress ("cheesing").
 
-**Enforcement (background.js):** Before `updateProgressOnProblemSolved()`, the handler consults `chrome.storage.local` dedup caches:
+**Entry validation (`processSubmissionAccepted`):**
+```js
+submissionId = message.submissionId
+slug         = message.slug
+if (!submissionId || !slug) → console.warn + return
+```
+
+**Dedup caches (`chrome.storage.local`):**
 
 | Cache key | Type | Purpose |
 |-----------|------|---------|
-| `processed_submission_ids` | `string[]` | Idempotent guard — same `submissionId` never increments twice (kills multi-poll double counting) |
-| `daily_solved_slugs` | `string[]` | Per-calendar-day unique problem slugs — re-solving same slug same day is ignored (kills re-submittal cheesing) |
+| `processed_submission_ids` | `string[]` | Guard 1 — same `submissionId` never credited twice (kills multi-poll double counting) |
+| `daily_solved_slugs` | `string[]` | Guard 2 — same problem `slug` never credited twice per calendar day (kills re-submittal cheesing) |
 
-**Transaction sequence:**
+**Production transaction sequence (`processSubmissionAccepted`):**
 
 ```
-1. if submissionId ∈ processed_submission_ids → return (no-op)
-2. if problemSlug ∈ daily_solved_slugs → return (no-op)
-3. append submissionId to processed_submission_ids
-4. append problemSlug to daily_solved_slugs
-5. chrome.storage.local.set(dedup caches)
-6. updateProgressOnProblemSolved()
-     ├─ daily_progress += 1
-     ├─ POST /api/me/goal/progress { delta: 1 }  (if authenticated)
-     └─ if daily_progress >= target_daily → updateBlockingStorage(false)
+READ processed_submission_ids, daily_solved_slugs (default [])
+
+Guard 1 (anti-spam):
+  if submissionId ∈ processed_submission_ids → log + return (pure no-op)
+
+Guard 2 (anti-cheating):
+  if slug ∈ daily_solved_slugs →
+    log "already solved today"
+    SET processed_submission_ids += submissionId   // record ID so this re-submit's polls hit Guard 1
+    return — NO updateProgressOnProblemSolved(), NO backend POST
+
+Success (both guards clear):
+  SET processed_submission_ids += submissionId
+  SET daily_solved_slugs     += slug             // write-ahead before increment
+  SET leetguardSolved: true, focusMode: false
+  await updateProgressOnProblemSolved()
+    ├─ daily_progress += 1
+    ├─ POST /api/me/goal/progress { delta: 1 }  (if authenticated)
+    └─ if daily_progress >= target_daily → updateBlockingStorage(false)
 ```
 
-Dedup caches reset with daily progress rollover (`extension_last_reset_date` / backend `progress_date` reconciliation via `syncEverything`).
+**Daily cache flush:** `initializeBlockingFromStorage()` (called from `runStartupRoutine`) detects `extension_last_reset_date !== today` and atomically sets `processed_submission_ids: []`, `daily_solved_slugs: []`, `daily_progress: 0`, `guest_progress.progress_today: 0` alongside re-enabling blocking. Authenticated users may reconcile `daily_progress` from backend on next `syncEverything()`.
 
-### Progress side effects
+### Progress side effects (credited solve only)
 
-- `leetguardSolved: true`, `focusMode: false` written on accept
+- `leetguardSolved: true`, `focusMode: false` — written inside `processSubmissionAccepted` success path only
 - `chrome.runtime.sendMessage({ type:'PROGRESS_UPDATED', progress, goal, isGoalCompleted })` → popup
-- Congrats popup injected on LeetCode page (`showLeetGuardPopup(problemSlug)`)
+- Congrats popup on LeetCode page — `content.js` `showLeetGuardPopup(problemSlug)` fires before background send (including re-submits blocked by Guard 2)
 
 ---
 
@@ -230,9 +261,9 @@ Dedup caches reset with daily progress rollover (`extension_last_reset_date` / b
 | `user_goal` | `{ target_daily: int, progress_today: int, progress_date: string, is_goal_completed?: bool }` | `syncEverything`, `applyGoalPayload`, `fetchUserGoal` | `getCurrentGoalData`, popup, goal UI | Full goal profile mirror of `GET /api/me/goal`. |
 | `daily_progress` | `int` | `syncEverything`, `persistGoal`, `updateProgressOnProblemSolved` | `popup.js`, blocking unlock check | **HARDLOCK:** must always equal `user_goal.progress_today`. Never diverge — `syncEverything` and `GoalSync.persistGoal()` enforce on every write. |
 | `extension_blocking_enabled` | `boolean` | `updateBlockingStorage`, `initializeBlockingFromStorage` | DNR apply path, toggle UI | Master kill-switch for DNR rules. |
-| `extension_last_reset_date` | `string` (ISO date `YYYY-MM-DD`) | `initializeBlockingFromStorage` | daily reset logic | New day → force `extension_blocking_enabled: true`. |
-| `processed_submission_ids` | `string[]` | `SUBMISSION_ACCEPTED` handler | same | Dedup: one increment per LeetCode submission ID. |
-| `daily_solved_slugs` | `string[]` | `SUBMISSION_ACCEPTED` handler | same | Dedup: one increment per problem slug per day. |
+| `extension_last_reset_date` | `string` (ISO date `YYYY-MM-DD`) | `initializeBlockingFromStorage` | daily reset logic | New day → `extension_blocking_enabled: true`, flush dedup arrays + `daily_progress: 0`. |
+| `processed_submission_ids` | `string[]` | `processSubmissionAccepted`, `initializeBlockingFromStorage` (daily flush) | same | Dedup: one increment per LeetCode submission ID. Guard 2 still appends ID without crediting slug. |
+| `daily_solved_slugs` | `string[]` | `processSubmissionAccepted`, `initializeBlockingFromStorage` (daily flush) | same | Dedup: one increment per problem slug per calendar day. |
 | `guest_progress` | goal-shaped object | guest path in `updateProgressOnProblemSolved` | `getCurrentGoalData` (unauthenticated) | Offline guest mode; no API. |
 | `pending_progress_update` | `int` | failed backend progress POST | retry path | Staged delta when `/api/me/goal/progress` fails. |
 
@@ -282,8 +313,8 @@ Next.js ──postMessage(payload)──► webapp-detector ──sendMessage─
                                                                     ├─► DNR rules
                                                                     └─► FastAPI (login/sync/progress)
 
-leetcode.com: injected.js ──postMessage──► content.js ──SUBMISSION_ACCEPTED──► background
-                                                                                  └─► progress + unblock
+leetcode.com: injected.js ──postMessage──► content.js ──sendMessage(guarded)──► background
+                                                                                  └─► processSubmissionAccepted → progress + unblock
 ```
 
 ---
