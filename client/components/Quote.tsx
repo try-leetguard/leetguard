@@ -7,7 +7,7 @@ export default function Quote() {
   return (
     <section className="pt-24 pb-40 px-6">
       <div className="max-w-4xl mx-auto text-center">
-        <blockquote className="text-4xl md:text-5xl font-medium text-black dark:text-black leading-relaxed mb-8">
+        <blockquote className="text-4xl md:text-5xl font-normal text-black dark:text-black leading-relaxed mb-8">
           "Finally locked in."
         </blockquote>
         <Link href="/why-it-matters">

@@ -10,7 +10,7 @@ export default function Features() {
         <div className="flex flex-col lg:flex-row items-center gap-12">
           {/* Left side - Header and Subheader */}
           <div className="flex-1 text-left flex flex-col justify-center">
-            <h2 className="text-7xl md:text-7.5xl font-medium text-black dark:text-black mb-8 leading-none py-1 tracking-super-tight">
+            <h2 className="text-7xl md:text-7.5xl font-normal text-black dark:text-black mb-8 leading-none py-1 tracking-super-tight">
               Built for Focused Coders.
             </h2>
             <p className="text-xl text-neutral-900 dark:text-neutral-900 max-w-2xl mx-auto font-normal tracking-wide leading-relaxed">

@@ -22,7 +22,7 @@ export default function WhyItMattersPage() {
         <div className="relative px-6 pb-16 pt-32">
           <div className="container mx-auto px-4 relative z-10">
             <div className="text-center max-w-4xl mx-auto">
-              <h1 className="text-5xl md:text-6xl font-medium mb-12 leading-none py-1 tracking-super-tight">
+              <h1 className="text-5xl md:text-6xl font-normal mb-12 leading-none py-1 tracking-super-tight">
                 <span className="text-black">Why Focus Matters</span>
                 <br />
                 <span className="text-black">More Than Ever</span>
@@ -61,7 +61,7 @@ export default function WhyItMattersPage() {
         <div className="px-6 py-16">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-medium mb-8 text-black">
+              <h2 className="text-4xl md:text-5xl font-normal mb-8 text-black">
                 The Cost of Distraction
               </h2>
             </div>
@@ -138,7 +138,7 @@ export default function WhyItMattersPage() {
         <div className="px-6 py-16">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-medium mb-8 text-black">
+              <h2 className="text-4xl md:text-5xl font-normal mb-8 text-black">
                 LeetGuard's Mission
               </h2>
               <p className="text-xl text-neutral-900 max-w-3xl mx-auto">
@@ -220,7 +220,7 @@ export default function WhyItMattersPage() {
         <div className="px-6 py-16 pb-24">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-4xl mx-auto">
-              <h2 className="text-4xl md:text-5xl font-medium mb-8 text-black">
+              <h2 className="text-4xl md:text-5xl font-normal mb-8 text-black">
                 Join Us in Defending Focus
               </h2>
               <p className="text-xl text-neutral-900 mb-8 leading-relaxed">
@@ -229,7 +229,7 @@ export default function WhyItMattersPage() {
                 distractions — you're investing in your growth, career, and
                 peace of mind.
               </p>
-              <p className="text-2xl font-semibold text-black mb-12">
+              <p className="text-2xl font-normal text-black mb-12">
                 Together, let's build a future where focus wins.
               </p>
 

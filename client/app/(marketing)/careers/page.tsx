@@ -21,7 +21,7 @@ export default function CareersPage() {
         <div className="relative min-h-screen flex flex-col items-center justify-center px-6">
           <div className="container mx-auto px-4 relative z-10">
             <div className="text-center max-w-4xl mx-auto">
-              <h1 className="text-7xl md:text-7xl font-medium mb-8 leading-none py-1 tracking-super-tight">
+              <h1 className="text-7xl md:text-7xl font-normal mb-8 leading-none py-1 tracking-super-tight">
                 <span className="text-black">Join the team.</span>
                 <br />
                 <span className="text-black">Help us create solutions.</span>
@@ -41,7 +41,7 @@ export default function CareersPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
               {/* Engineering Section */}
               <div>
-                <h2 className="text-2xl font-semibold mb-6">Engineering</h2>
+                <h2 className="text-xl font-normal mb-6">Engineering</h2>
                 <Link href="/careers/software-engineer">
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -70,7 +70,7 @@ export default function CareersPage() {
               </div>
               {/* Other Section */}
               <div>
-                <h2 className="text-2xl font-semibold mb-6">Other</h2>
+                <h2 className="text-xl font-normal mb-6">Other</h2>
                 <Link href="/careers/anything-else">
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}

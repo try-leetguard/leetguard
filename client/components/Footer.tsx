@@ -88,16 +88,6 @@ export default function Footer() {
                   GitHub
                 </a>
               </li>
-              <li>
-                <a
-                  href="https://instagram.com/leetguard"
-                  className="text-black hover:text-black hover:underline hover:underline-offset-4 transition-colors duration-200 text-sm"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Instagram
-                </a>
-              </li>
             </ul>
           </div>
 

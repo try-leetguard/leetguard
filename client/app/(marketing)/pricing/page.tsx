@@ -26,7 +26,7 @@ export default function PricingPage() {
         <div className="relative min-h-screen flex flex-col items-center justify-center px-6">
           <div className="container mx-auto px-4 relative z-10">
             <div className="text-center max-w-4xl mx-auto">
-              <h1 className="text-7xl md:text-7xl font-medium mb-8 leading-none py-1 tracking-super-tight">
+              <h1 className="text-7xl md:text-7xl font-normal mb-8 leading-none py-1 tracking-super-tight">
                 <span className="text-black">Start for free.</span>
                 <br />
                 <span className="text-black">Cut the distractions.</span>

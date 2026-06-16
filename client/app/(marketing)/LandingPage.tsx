@@ -183,22 +183,13 @@ export default function LandingPage() {
       <div className="relative min-h-screen flex items-center justify-center pt-2 px-6 mb-5">
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center max-w-4xl mx-auto mt-4">
-            {/* Coming Soon Badge */}
-            <div className="inline-flex items-center pl-1 pr-4 py-1 rounded-full bg-gray-100 border border-gray-400 text-gray-700 text-sm font-medium mb-6 hover:border-gray-800 transition-all duration-200 cursor-pointer relative overflow-hidden">
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent from-20% via-white/80 via-50% to-transparent to-80% animate-shine"></div>
-              <div className="relative z-10 mr-2 inline-flex items-center px-2.5 py-1 rounded-full bg-gradient-to-r from-[#e8e6f9] to-[#cdc9f5] text-black text-xs font-semibold">
-                Up Next
-              </div>
-              <span className="relative z-10">
-                Your progress tracked while you solve &nbsp; {">"}
-              </span>
-            </div>
+
 
             <TextFade direction="up" delay={1.0}>
               <div className="mb-2 mt-4">
                 <WordsPullUp
                   text="Focus. Solve. Claim your day."
-                  className="text-8xl font-medium leading-none py-1 tracking-super-tight"
+                  className="text-8xl font-normal leading-none py-1 tracking-super-tight"
                 />
               </div>
             </TextFade>
