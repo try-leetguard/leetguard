@@ -1,6 +1,6 @@
 # AI_CONTEXT_ANCHOR — LeetGuard Machine Snapshot
 <!-- PURPOSE: Feed this file to an LLM to restore full technical context after session loss. Not human docs. -->
-<!-- LAST_ARCHITECTURE_LOCK: 2026-06-05 (Section 5 idempotency + context guards locked) -->
+<!-- LAST_ARCHITECTURE_LOCK: 2026-06-17 (Auth stabilization + extension refresh sync locked) -->
 
 ---
 
@@ -35,14 +35,15 @@ background.js  [MV3 service worker]
 |--------|-------------------|-------------------|
 | `BLOCKLIST_UPDATED` | `{ websites: string[] }` | `BlocklistSync.applyBlocklistPayload()` → `user_blocklist` + DNR refresh |
 | `GOAL_UPDATED` | `{ goal: GoalObject }` | `GoalSync.applyGoalPayload()` → `user_goal` + `daily_progress` |
-| `LEETGUARD_AUTH_SYNC` / `OAUTH_SUCCESS` | `{ tokens, user? }` | `OAUTH_CALLBACK` → `extensionAuth.handleOAuthCallback()` → `syncEverything()` |
+| `LEETGUARD_AUTH_SYNC` / `OAUTH_SUCCESS` | `{ sync_id?, tokens, user? }` | `OAUTH_CALLBACK` → `extensionAuth.handleOAuthCallback()` → `syncEverything()` → `LEETGUARD_AUTH_SYNC_ACK` |
 | `LEETGUARD_LOGOUT` | — | `USER_LOGOUT` → clear caches, restore default blocklist rules |
 
 ### Webapp emitters (canonical)
 
 - `client/lib/blocklist-api.ts` → `notifyBlocklistUpdated(websites)` after add/remove
 - `client/app/(dashboard)/activity/page.tsx` → `GOAL_UPDATED` with `{ goal: goalData }` after `PATCH /api/me/goal`
-- `client/lib/auth-context.tsx` → auth sync / logout messages
+- `client/lib/auth-state.ts` → canonical token storage, refresh, auth sync, logout messages
+- `client/lib/auth-context.tsx` → delegates token/auth side effects to `auth-state.ts`
 
 ### Network fallback (not happy path)
 
@@ -55,7 +56,168 @@ If `payload` is `null` or malformed, `syncBlocklist()` / `syncGoal()` fall back 
 
 ---
 
-## 3. INITIALIZATION ROUTINE (`syncEverything`)
+## 3. AUTH / TOKEN STABILIZATION
+
+**Architecture lock:** FastAPI is the token authority; the Next.js app owns `localStorage`; the MV3 extension owns enforcement state in `chrome.storage.local`. Auth changes are bridged explicitly via `window.postMessage` and never inferred from web `localStorage` by the extension.
+
+### Client-side auth state (`client/lib/auth-state.ts`)
+
+Canonical browser token keys:
+
+| Key | Owner | Notes |
+|-----|-------|-------|
+| `access_token` | Next.js web app | Short-lived JWT with `token_use: "access"` |
+| `refresh_token` | Next.js web app | Long-lived JWT with `token_use: "refresh"` |
+
+Core helpers:
+
+| Helper | Contract |
+|--------|----------|
+| `getAccessToken()` / `getRefreshToken()` | Browser-safe reads from `localStorage`; return `null` during SSR |
+| `setAuthTokens(tokens, { syncExtension?, user? })` | Writes both tokens; syncs extension unless explicitly disabled |
+| `refreshTokensOnce(refresher)` | Single-flight refresh. Concurrent 401s join one refresh promise. |
+| `syncAuthWithExtension(tokens, user?)` | Posts `LEETGUARD_AUTH_SYNC` with `sync_id`; retries 3 times waiting for ACK; API retry does not block on ACK. |
+| `clearAuthState()` | Removes both tokens, posts `LEETGUARD_LOGOUT`, dispatches `leetguardAuthCleared` + `userLoggedOut`. |
+
+### Protected request flow (`client/lib/api.ts`)
+
+```
+authenticatedRequest(endpoint, options, fallbackToken)
+  1. attach Authorization: Bearer {access_token || fallbackToken}
+  2. fetch FastAPI
+  3. on 401 once:
+       await refreshTokensOnce(refreshToken => POST /auth/refresh)
+       retry original request once with the new access token
+  4. on refresh failure:
+       clearAuthState()
+       throw original auth error to caller
+```
+
+Refresh success writes both new tokens to `localStorage` and immediately broadcasts `LEETGUARD_AUTH_SYNC` to the extension bridge. Refresh failure clears web auth and broadcasts `LEETGUARD_LOGOUT`.
+
+### ACK-based extension refresh sync
+
+```
+Next.js auth-state.ts
+  └─ window.postMessage({
+       type: 'LEETGUARD_AUTH_SYNC',
+       sync_id,
+       tokens: { access_token, refresh_token },
+       user?
+     }, window.location.origin)
+       │
+webapp-detector.js
+  ├─ require event.origin === window.location.origin
+  ├─ chrome.runtime.sendMessage({ type:'OAUTH_CALLBACK', tokens, user, sync_id })
+  └─ window.postMessage({ type:'LEETGUARD_AUTH_SYNC_ACK', sync_id, success }, same-origin)
+       │
+background.js
+  ├─ await extensionAuth.handleOAuthCallback(tokens)
+  ├─ await syncEverything()
+  └─ sendResponse({ success })
+```
+
+`background.js` uses the MV3-safe pattern: the listener is not `async`; it starts an async IIFE, calls `sendResponse`, and returns `true`.
+
+### Logout / refresh-failure teardown
+
+```
+clearAuthState()
+  └─ LEETGUARD_LOGOUT
+       │
+webapp-detector.js
+  └─ USER_LOGOUT
+       │
+background.js
+  ├─ extensionAuth.clearAuth()
+  ├─ blocklistSync.clearCachedBlocklist()
+  ├─ goalSync.clearCachedGoal()
+  ├─ activityLogger.clearPendingActivities() if present
+  ├─ if extension_blocking_enabled !== false → enableBlocking()   // DEFAULT_BLOCKLIST
+  └─ else → disableBlocking()                                     // empty rules, defaults used next enable
+```
+
+### JWT claim contract (`server/app/utils/jwt.py`)
+
+Access token:
+
+```json
+{
+  "sub": "user-id-string",
+  "token_use": "access",
+  "iss": "leetguard-api",
+  "aud": "leetguard-client",
+  "iat": 1710000000,
+  "exp": 1710001800,
+  "jti": "uuid"
+}
+```
+
+Refresh token has the same core fields but `token_use: "refresh"`, longer expiry, and is signed with `REFRESH_SECRET_KEY`.
+
+Decode rules:
+
+| Decoder | Signing key | Required `token_use` | Also validates |
+|---------|-------------|----------------------|----------------|
+| `decode_access_token()` | `SECRET_KEY` | `access` | `iss`, `aud`, `exp` |
+| `decode_refresh_token()` | `REFRESH_SECRET_KEY` | `refresh` | `iss`, `aud`, `exp` |
+
+Cross-use is rejected: refresh tokens cannot access bearer endpoints; access tokens cannot call `/auth/refresh`.
+
+### FastAPI auth edge rules
+
+| Flow | Rule |
+|------|------|
+| Protected bearer endpoints | `get_current_user` rejects malformed/missing/non-integer `sub`, missing users, wrong token type, and unverified users. |
+| `/auth/refresh` | Decodes refresh token, re-fetches user, requires user exists + `is_verified == true`, then issues new access + refresh pair. |
+| `/auth/login` unverified user | Verifies password first, writes a new verification code/expiry, sends email, returns `200 OK` verification-needed response, creates no JWTs, returns no tokens, triggers no client token storage/sync. |
+| OAuth-only user | `users.hashed_password` may be `NULL`; password login returns invalid credentials instead of crashing. |
+
+### Backend route compatibility
+
+Canonical blocklist check:
+
+```
+GET /api/blocklist/check?website=example.com
+```
+
+Legacy fallback:
+
+```
+GET /api/blocklist/check/{website}
+```
+
+The query route is declared before the path route. Both call the same internal handler, so auth, normalization, errors, and response shape are identical. The client uses the query route because it safely supports full URLs and path-hostile characters.
+
+### PostgreSQL test isolation (`server/tests/conftest.py`)
+
+Tests no longer use SQLite. Resolution order:
+
+1. Use `TEST_DATABASE_URL` when supplied.
+2. Otherwise start disposable `postgres:16-alpine` via `testcontainers`.
+3. Fail fast if the resolved database URL is not PostgreSQL.
+
+Isolation model:
+
+```
+session start:
+  create unique schema test_{uuid}
+  connect with search_path={schema}
+  Base.metadata.create_all(engine)
+
+each test:
+  TRUNCATE all app tables RESTART IDENTITY CASCADE before and after
+
+session teardown:
+  drop schema cascade
+  stop test container if owned by pytest
+```
+
+Live API smoke tests in `server/test_api.py` are opt-in via `RUN_LIVE_API_TESTS=1`; real Resend email integration tests require an actual non-test `RESEND_API_KEY`.
+
+---
+
+## 4. INITIALIZATION ROUTINE (`syncEverything`)
 
 **File:** `extension/background.js`
 
@@ -116,7 +278,7 @@ initializeBlockingFromStorage()   // daily reset via extension_last_reset_date
 
 ---
 
-## 4. NETWORK INTERCEPTION ENGINE (DNR)
+## 5. NETWORK INTERCEPTION ENGINE (DNR)
 
 **Why not content-script blocking:** DOM redirects are bypassed by aggressive Service Workers and client-side routers on SPAs (notably `x.com`, `twitter.com`). LeetGuard blocks at **`chrome.declarativeNetRequest`** in the MV3 service worker — before the page loads.
 
@@ -153,7 +315,7 @@ updateDynamicRules:
 
 ---
 
-## 5. LEETCODE SOLVE TELEMETRY
+## 6. LEETCODE SOLVE TELEMETRY
 
 **Detection strategy:** API interception, **not** DOM/MutationObservers. LeetCode UI class churn does not break detection.
 
@@ -253,10 +415,13 @@ Success (both guards clear):
 
 ---
 
-## 6. DATA STORAGE MAPPING (`chrome.storage.local`)
+## 7. DATA STORAGE MAPPING (`chrome.storage.local`)
 
 | Key | Schema | Writer(s) | Reader(s) | Semantics |
 |-----|--------|-----------|-----------|-----------|
+| `access_token` | JWT string | `extensionAuth.setAuth`, `extensionAuth.refreshTokens`, `extensionAuth.handleOAuthCallback` | `extensionAuth.apiRequest`, sync modules | Extension-local access token mirror. Cleared on logout / failed OAuth callback. |
+| `refresh_token` | JWT string | `extensionAuth.setAuth`, `extensionAuth.refreshTokens`, `extensionAuth.handleOAuthCallback` | `extensionAuth.refreshTokens` | Extension-local refresh token mirror. Replaced on every successful refresh. |
+| `user` | user object | `extensionAuth.setAuth`, `extensionAuth.getCurrentUser` | `extensionAuth.init`, `extensionAuth.isAuthenticated` | Extension auth presence requires both `access_token` and `user`. |
 | `user_blocklist` | `string[]` (domain strings, no protocol) | `syncEverything`, `applyBlocklistPayload`, `fetchUserBlocklist` | `getBlockRules`, `BlocklistSync.getCachedBlocklist` | Effective blocklist for authenticated users. Empty → fall back to `DEFAULT_BLOCKLIST` for DNR. |
 | `user_goal` | `{ target_daily: int, progress_today: int, progress_date: string, is_goal_completed?: bool }` | `syncEverything`, `applyGoalPayload`, `fetchUserGoal` | `getCurrentGoalData`, popup, goal UI | Full goal profile mirror of `GET /api/me/goal`. |
 | `daily_progress` | `int` | `syncEverything`, `persistGoal`, `updateProgressOnProblemSolved` | `popup.js`, blocking unlock check | **HARDLOCK:** must always equal `user_goal.progress_today`. Never diverge — `syncEverything` and `GoalSync.persistGoal()` enforce on every write. |
@@ -297,9 +462,13 @@ extension/       MV3 Chrome extension (load unpacked)
 ## FASTAPI ENDPOINTS (extension-touching)
 
 ```
+POST   /auth/refresh               → new access + refresh pair; refresh token only
+GET    /me                         → current verified user; access token only
 GET    /api/blocklist              → { websites: string[] }
 POST   /api/blocklist/add
 DELETE /api/blocklist/remove
+GET    /api/blocklist/check        → query canonical: ?website=...
+GET    /api/blocklist/check/{site} → legacy fallback, same handler
 GET    /api/me/goal                → GoalResponse
 PATCH  /api/me/goal                → { target_daily }
 POST   /api/me/goal/progress       → { delta: 1 }
@@ -308,10 +477,11 @@ POST   /api/me/goal/progress       → { delta: 1 }
 ## DISTRIBUTED LOOP (ASCII)
 
 ```
-Next.js ──postMessage(payload)──► webapp-detector ──sendMessage──► background
-                                                                    ├─► storage.local
-                                                                    ├─► DNR rules
-                                                                    └─► FastAPI (login/sync/progress)
+Next.js ──postMessage(payload/auth sync)──► webapp-detector ──sendMessage──► background
+                                             ▲                              ├─► storage.local
+                                             └─AUTH_SYNC_ACK ◄─────────────┤
+                                                                            ├─► DNR rules
+                                                                            └─► FastAPI (login/sync/progress)
 
 leetcode.com: injected.js ──postMessage──► content.js ──sendMessage(guarded)──► background
                                                                                   └─► processSubmissionAccepted → progress + unblock
