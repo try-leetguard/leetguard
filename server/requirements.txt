@@ -10,3 +10,4 @@ resend
 pytest
 pytest-asyncio
 httpx
+testcontainers

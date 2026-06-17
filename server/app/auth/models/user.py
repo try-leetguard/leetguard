@@ -11,7 +11,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)  # Unique user ID
     email = Column(String, unique=True, index=True, nullable=False)  # User's email address
-    hashed_password = Column(String, nullable=False)  # Hashed password for authentication
+    hashed_password = Column(String, nullable=True)  # OAuth-only users may not have a password yet
     created_at = Column(DateTime(timezone=True), server_default=func.now())  # Timestamp of account creation
     is_verified = Column(Boolean, default=False)  # Whether the user's email is verified
     verification_code = Column(String, nullable=True)  # 6-digit email verification code
@@ -19,7 +19,7 @@ class User(Base):
     resend_cooldown_seconds = Column(Integer, default=30)  # Cooldown in seconds for resending code
     last_code_sent_at = Column(DateTime(timezone=True), nullable=True)  # Last time a code was sent
     display_name = Column(String, nullable=True)  # User's display name
-    
+
     # Daily goal fields
     target_daily = Column(Integer, default=5)  # Daily goal target
     progress_today = Column(Integer, default=0)  # Current day's progress
@@ -53,4 +53,4 @@ class Activity(Base):
     completed_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationship
-    user = relationship("User", back_populates="activities") 
+    user = relationship("User", back_populates="activities")

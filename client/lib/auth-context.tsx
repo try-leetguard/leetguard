@@ -2,6 +2,14 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { apiClient, User, AuthResponse } from "./api";
+import {
+  clearAuthState,
+  getAccessToken,
+  getRefreshToken,
+  onAuthCleared,
+  setAuthTokens,
+  syncAuthWithExtension,
+} from "./auth-state";
 
 interface AuthContextType {
   user: User | null;
@@ -45,87 +53,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Token management
-  const getAccessToken = () => localStorage.getItem("access_token");
-  const getRefreshToken = () => localStorage.getItem("refresh_token");
-  const setTokens = (accessToken: string, refreshToken: string) => {
-    localStorage.setItem("access_token", accessToken);
-    localStorage.setItem("refresh_token", refreshToken);
-  };
-  const clearTokens = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-  };
-
-  // Send authentication tokens to extension
-  const syncAuthWithExtension = (
-    accessToken: string,
-    refreshToken: string,
-    userData: User
-  ) => {
-    try {
-      window.postMessage(
-        {
-          type: "LEETGUARD_AUTH_SYNC",
-          tokens: {
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          },
-          user: userData,
-        },
-        "*"
-      );
-      console.log("Auth tokens sent to extension");
-    } catch (error) {
-      console.error("Failed to send auth tokens to extension:", error);
-    }
-  };
-
   // Initialize auth state on mount
   useEffect(() => {
+    const unsubscribeAuthCleared = onAuthCleared(() => setUser(null));
+
     const initializeAuth = async () => {
       const accessToken = getAccessToken();
-      if (accessToken) {
+      const refreshToken = getRefreshToken();
+      if (accessToken || refreshToken) {
         try {
-          const userData = await apiClient.getCurrentUser(accessToken);
+          const userData = await apiClient.getCurrentUser(accessToken ?? undefined);
           setUser(userData);
 
-          // Sync authentication with extension
-          const refreshToken = getRefreshToken();
-          if (refreshToken) {
-            syncAuthWithExtension(accessToken, refreshToken, userData);
+          const currentAccessToken = getAccessToken();
+          const currentRefreshToken = getRefreshToken();
+          if (currentAccessToken && currentRefreshToken) {
+            syncAuthWithExtension(
+              { access_token: currentAccessToken, refresh_token: currentRefreshToken },
+              userData
+            );
           }
         } catch (error) {
-          // Token might be expired, try to refresh
-          const refreshToken = getRefreshToken();
-          if (refreshToken) {
-            try {
-              const newTokens = await apiClient.refreshToken(refreshToken);
-              setTokens(newTokens.access_token, newTokens.refresh_token);
-              const userData = await apiClient.getCurrentUser(
-                newTokens.access_token
-              );
-              setUser(userData);
-
-              // Sync authentication with extension
-              syncAuthWithExtension(
-                newTokens.access_token,
-                newTokens.refresh_token,
-                userData
-              );
-            } catch (refreshError) {
-              // Refresh failed, clear tokens
-              clearTokens();
-            }
-          } else {
-            clearTokens();
-          }
+          setUser(null);
         }
       }
       setIsLoading(false);
     };
 
     initializeAuth();
+    return unsubscribeAuthCleared;
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -135,18 +91,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Check if response is AuthResponse (successful login)
       if ("access_token" in response) {
         const authResponse = response as AuthResponse;
-        setTokens(authResponse.access_token, authResponse.refresh_token);
+        setAuthTokens(authResponse, { syncExtension: false });
         const userData = await apiClient.getCurrentUser(
           authResponse.access_token
         );
         setUser(userData);
 
-        // Sync authentication with extension
-        syncAuthWithExtension(
-          authResponse.access_token,
-          authResponse.refresh_token,
-          userData
-        );
+        syncAuthWithExtension(authResponse, userData);
 
         return { success: true };
       } else {
@@ -182,23 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     setUser(null);
-    clearTokens();
-
-    // Notify extension of logout
-    try {
-      window.postMessage(
-        {
-          type: "LEETGUARD_LOGOUT",
-        },
-        "*"
-      );
-      console.log("Logout notification sent to extension");
-    } catch (error) {
-      console.error("Failed to send logout notification to extension:", error);
-    }
-
-    // Dispatch a custom event to notify other components about logout
-    window.dispatchEvent(new CustomEvent("userLoggedOut"));
+    clearAuthState();
   };
 
   const verifyEmail = async (email: string, code: string) => {
@@ -214,9 +149,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const resendVerificationCode = async (email: string, code: string) => {
+  const resendVerificationCode = async (email: string, _code: string) => {
     try {
-      const response = await apiClient.resendVerificationCode({ email, code });
+      const response = await apiClient.resendVerificationCode({ email });
       return { success: true, message: response.message };
     } catch (error) {
       return {
@@ -247,16 +182,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         code,
         redirect_uri: redirectUri,
       });
-      setTokens(response.access_token, response.refresh_token);
+      setAuthTokens(response, { syncExtension: false });
       const userData = await apiClient.getCurrentUser(response.access_token);
       setUser(userData);
 
-      // Sync authentication with extension
-      syncAuthWithExtension(
-        response.access_token,
-        response.refresh_token,
-        userData
-      );
+      syncAuthWithExtension(response, userData);
 
       return { success: true };
     } catch (error) {
@@ -273,16 +203,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         code,
         redirect_uri: redirectUri,
       });
-      setTokens(response.access_token, response.refresh_token);
+      setAuthTokens(response, { syncExtension: false });
       const userData = await apiClient.getCurrentUser(response.access_token);
       setUser(userData);
 
-      // Sync authentication with extension
-      syncAuthWithExtension(
-        response.access_token,
-        response.refresh_token,
-        userData
-      );
+      syncAuthWithExtension(response, userData);
 
       return { success: true };
     } catch (error) {

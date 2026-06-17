@@ -8,7 +8,7 @@ importScripts('auth.js', 'blocklist-sync.js', 'goal-sync.js');
 // Default blocklist for guest users and fallback scenarios
 const DEFAULT_BLOCKLIST = [
   'facebook.com',
-  'reddit.com', 
+  'reddit.com',
   'youtube.com',
   'instagram.com',
   'x.com',
@@ -34,7 +34,7 @@ function enqueueRuleUpdate(task) {
 async function getBlockRules(generation) {
   // Get current blocklist (user's if authenticated, default otherwise)
   let blocklist = DEFAULT_BLOCKLIST;
-  
+
   if (blocklistSync) {
     try {
       blocklist = await blocklistSync.getCurrentBlocklist();
@@ -43,7 +43,7 @@ async function getBlockRules(generation) {
       blocklist = DEFAULT_BLOCKLIST;
     }
   }
-    
+
   return blocklist.map((site, idx) => {
     // Strip protocols, www, and whitespace
     const cleanSite = site.replace(/^(https?:\/\/)?(www\.)?/, '').trim();
@@ -74,29 +74,29 @@ async function updateDynamicRules(rules) {
     console.log('Rule limits:', limits);
 
     console.log('🔄 Starting updateDynamicRules with:', rules);
-    
+
     // Check current state
     const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
     console.log('📋 Existing rules before update:', existingRules);
-    
+
     const ruleIdsToRemove = existingRules.map(rule => rule.id);
-    
+
     // Perform the update
     await chrome.declarativeNetRequest.updateDynamicRules({
       removeRuleIds: ruleIdsToRemove,
       addRules: rules
     });
-    
+
     console.log('✅ updateDynamicRules completed successfully');
-    
+
     // Verify the update worked
     const finalRules = await chrome.declarativeNetRequest.getDynamicRules();
     console.log('🔍 Final rules after update:', finalRules);
-    
+
     if (finalRules.length === 0 && rules.length > 0) {
       console.error('⚠️ WARNING: Rules were supposed to be added but none are active!');
     }
-    
+
   } catch (error) {
     console.error('❌ updateDynamicRules failed:', error);
     console.error('Error details:', error.message, error.stack);
@@ -120,9 +120,9 @@ async function disableBlocking() {
 // Initialize blocking state from storage
 async function initializeBlockingFromStorage() {
   console.log('Background: Initializing blocking state from storage...');
-  
+
   const result = await chrome.storage.local.get(['extension_blocking_enabled', 'extension_last_reset_date']);
-  
+
   // Check if we need to reset for new day
   const today = new Date().toISOString().split('T')[0];
   if (result.extension_last_reset_date !== today) {
@@ -141,7 +141,7 @@ async function initializeBlockingFromStorage() {
     });
     console.log('Background: New day detected, resetting extension, progress, and solve trackers');
   }
-  
+
   // Apply blocking based on storage state
   const isEnabled = result.extension_blocking_enabled !== false; // Default to true
   if (isEnabled) {
@@ -149,20 +149,20 @@ async function initializeBlockingFromStorage() {
   } else {
     await disableBlocking();
   }
-  
+
   console.log('Background: Blocking state initialized:', { isEnabled });
 }
 
 // Update blocking state in storage and apply changes
 async function updateBlockingStorage(enabled) {
   await chrome.storage.local.set({ extension_blocking_enabled: enabled });
-  
+
   if (enabled) {
     await enableBlocking();
   } else {
     await disableBlocking();
   }
-  
+
   // Notify web app tabs of toggle state change
   try {
     const tabs = await chrome.tabs.query({});
@@ -181,7 +181,7 @@ async function updateBlockingStorage(enabled) {
   } catch (error) {
     console.error('Failed to notify web app tabs:', error);
   }
-  
+
   console.log('Background: Blocking state updated:', { enabled });
 }
 
@@ -233,23 +233,23 @@ async function updateProgressOnProblemSolved() {
   try {
     // Get current goal data
     const goal = await getCurrentGoalData();
-    
+
     // Increment progress
     const newProgress = (goal.progress_today || 0) + 1;
-    
+
     // Update local storage
     await chrome.storage.local.set({
       daily_progress: newProgress,
       progress_updated_at: Date.now()
     });
-    
+
     // Update guest goal if in guest mode
     if (!extensionAuth || !extensionAuth.isAuthenticated()) {
       const guestGoal = await getCurrentGoalData();
       guestGoal.progress_today = newProgress;
       await chrome.storage.local.set({ guest_progress: guestGoal });
     }
-    
+
     // If user is authenticated, update backend
     if (extensionAuth && extensionAuth.isAuthenticated()) {
       try {
@@ -266,14 +266,14 @@ async function updateProgressOnProblemSolved() {
         });
       }
     }
-    
+
     // Check if goal is completed and automatically disable blocking
     const isGoalCompleted = newProgress >= goal.target_daily;
     if (isGoalCompleted) {
       console.log('Goal completed! Automatically disabling extension blocking.');
       await updateBlockingStorage(false);
     }
-    
+
     // Notify popup of progress update
     chrome.runtime.sendMessage({
       type: 'PROGRESS_UPDATED',
@@ -284,9 +284,9 @@ async function updateProgressOnProblemSolved() {
       // Popup might not be open, that's okay
       console.log('Could not send progress update to popup:', error.message);
     });
-    
+
     console.log(`Progress updated: ${newProgress}/${goal.target_daily}`);
-    
+
   } catch (error) {
     console.error('Failed to update progress:', error);
   }
@@ -369,67 +369,74 @@ async function getCurrentGoalData() {
     // Guest mode - get from storage or use default
     const result = await chrome.storage.local.get(['guest_progress']);
     const guestGoal = result.guest_progress || { target_daily: 1, progress_today: 0 };
-    
+
     // Update guest goal in storage if it doesn't exist
     if (!result.guest_progress) {
       await chrome.storage.local.set({ guest_progress: guestGoal });
     }
-    
+
     return guestGoal;
   }
 }
 
 // Listen for messages from popup and content scripts
-chrome.runtime.onMessage.addListener(async (message) => {
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   console.log('Background received message:', message);
-  
-  // Extension toggle control
-  if (message && message.type === 'EXTENSION_TOGGLE') {
-    console.log('Background: Extension toggle to', message.enabled);
-    await updateBlockingStorage(message.enabled);
-  }
-  
-  // Focus mode toggle (now just for tracking, blocking is controlled by timer)
-  if (message && message.type === 'FOCUS_MODE_TOGGLE') {
-    console.log('Background: Focus mode toggled to', message.focusMode);
-    // Blocking is now controlled by timer state, not focus mode
-  }
-  
-  // Problem solved — idempotent transaction filter before progress increment
-  if (message && message.type === 'SUBMISSION_ACCEPTED') {
-    console.log('Background: Submission accepted', {
-      submissionId: message.submissionId,
-      slug: message.slug,
-    });
 
-    // Log the activity - DISABLED for now
-    // if (activityLogger) {
-    //   activityLogger.logActivity({
-    //     ...message.problemInfo,
-    //     submissionId: message.submissionId
-    //   }).catch(error => {
-    //     console.error('Failed to log activity:', error);
-    //   });
-    // }
+  (async () => {
+    try {
+      // Extension toggle control
+      if (message && message.type === 'EXTENSION_TOGGLE') {
+        console.log('Background: Extension toggle to', message.enabled);
+        await updateBlockingStorage(message.enabled);
+      }
 
-    await processSubmissionAccepted(message);
-  }
-  
-  // Storage sync messages
-  if (message && message.type === 'SYNC_FROM_STORAGE') {
-    console.log('Background: Received storage sync request');
-    await initializeBlockingFromStorage();
-  }
-  
-  // OAuth callback handling - webapp sends tokens to extension
-  if (message && message.type === 'OAUTH_CALLBACK') {
-    console.log('Background: Handling OAuth callback:', {
-      hasExtensionAuth: !!extensionAuth,
-      hasTokens: !!message.tokens,
-      hasUser: !!message.user
-    });
-    if (extensionAuth && message.tokens) {
-      extensionAuth.handleOAuthCallback(message.tokens).then(async success => {
+      // Focus mode toggle (now just for tracking, blocking is controlled by timer)
+      if (message && message.type === 'FOCUS_MODE_TOGGLE') {
+        console.log('Background: Focus mode toggled to', message.focusMode);
+        // Blocking is now controlled by timer state, not focus mode
+      }
+
+      // Problem solved — idempotent transaction filter before progress increment
+      if (message && message.type === 'SUBMISSION_ACCEPTED') {
+        console.log('Background: Submission accepted', {
+          submissionId: message.submissionId,
+          slug: message.slug,
+        });
+
+        // Log the activity - DISABLED for now
+        // if (activityLogger) {
+        //   activityLogger.logActivity({
+        //     ...message.problemInfo,
+        //     submissionId: message.submissionId
+        //   }).catch(error => {
+        //     console.error('Failed to log activity:', error);
+        //   });
+        // }
+
+        await processSubmissionAccepted(message);
+      }
+
+      // Storage sync messages
+      if (message && message.type === 'SYNC_FROM_STORAGE') {
+        console.log('Background: Received storage sync request');
+        await initializeBlockingFromStorage();
+      }
+
+      // OAuth callback handling - webapp sends tokens to extension
+      if (message && message.type === 'OAUTH_CALLBACK') {
+        console.log('Background: Handling OAuth callback:', {
+          hasExtensionAuth: !!extensionAuth,
+          hasTokens: !!message.tokens,
+          hasUser: !!message.user
+        });
+        if (!extensionAuth || !message.tokens) {
+          console.error('Missing extensionAuth or tokens in OAuth callback');
+          sendResponse({ success: false, error: 'Missing auth state or tokens' });
+          return;
+        }
+
+        const success = await extensionAuth.handleOAuthCallback(message.tokens);
         if (success) {
           console.log('OAuth callback handled successfully');
           await syncEverything();
@@ -437,61 +444,65 @@ chrome.runtime.onMessage.addListener(async (message) => {
         } else {
           console.error('OAuth callback handling failed');
         }
-      }).catch(error => {
-        console.error('OAuth callback handling error:', error);
-      });
-    } else {
-      console.error('Missing extensionAuth or tokens in OAuth callback');
-    }
-  }
 
-  // Blocklist updated from web app - trigger immediate sync and rule refresh
-  if (message && message.type === 'BLOCKLIST_UPDATED') {
-    console.log('Background: BLOCKLIST_UPDATED received', {
-      hasPayload: !!message.payload,
-    });
-    try {
-      if (blocklistSync) {
-        await blocklistSync.syncBlocklist(message.payload ?? null);
+        sendResponse({ success });
+        return;
       }
-    } catch (e) {
-      console.error('Failed to sync/refresh after blocklist update:', e);
-    }
-  }
 
-  // Goal updated from web app — payload-driven sync or network fallback
-  if (message && message.type === 'GOAL_UPDATED') {
-    console.log('Background: GOAL_UPDATED received', {
-      hasPayload: !!message.payload,
-    });
-    try {
-      if (goalSync) await goalSync.syncGoal(message.payload ?? null);
-    } catch (e) {
-      console.error('Failed to sync after goal update:', e);
-    }
-  }
-  
-  // Logout handling
-  if (message && message.type === 'USER_LOGOUT') {
-    console.log('Background: Handling user logout');
-    if (extensionAuth) {
-      extensionAuth.clearAuth().then(async () => {
-        console.log('User logout handled successfully');
-        // Clear any cached data
-        if (blocklistSync) blocklistSync.clearCachedBlocklist();
-        if (goalSync) goalSync.clearCachedGoal();
-        if (activityLogger) activityLogger.clearPendingActivities();
-        // Apply default blocklist immediately by refreshing rules
-        try {
-          await enableBlocking();
-        } catch (e) {
-          console.error('Failed to refresh rules after logout:', e);
+      // Blocklist updated from web app - trigger immediate sync and rule refresh
+      if (message && message.type === 'BLOCKLIST_UPDATED') {
+        console.log('Background: BLOCKLIST_UPDATED received', {
+          hasPayload: !!message.payload,
+        });
+        if (blocklistSync) {
+          await blocklistSync.syncBlocklist(message.payload ?? null);
         }
-      });
+      }
+
+      // Goal updated from web app — payload-driven sync or network fallback
+      if (message && message.type === 'GOAL_UPDATED') {
+        console.log('Background: GOAL_UPDATED received', {
+          hasPayload: !!message.payload,
+        });
+        if (goalSync) await goalSync.syncGoal(message.payload ?? null);
+      }
+
+      // Logout handling
+      if (message && message.type === 'USER_LOGOUT') {
+        console.log('Background: Handling user logout');
+        if (extensionAuth) {
+          await extensionAuth.clearAuth();
+        }
+
+        if (blocklistSync) await blocklistSync.clearCachedBlocklist();
+        if (goalSync) await goalSync.clearCachedGoal();
+        if (typeof activityLogger !== 'undefined' && activityLogger) {
+          await activityLogger.clearPendingActivities();
+        }
+
+        const { extension_blocking_enabled } = await chrome.storage.local.get([
+          'extension_blocking_enabled',
+        ]);
+        if (extension_blocking_enabled !== false) {
+          await enableBlocking();
+        } else {
+          await disableBlocking();
+        }
+
+        console.log('User logout handled successfully');
+        sendResponse({ success: true });
+        return;
+      }
+
+      // Note: localStorage auth change detection removed - extension now checks localStorage on-demand
+      sendResponse({ success: true });
+    } catch (error) {
+      console.error('Background message handling failed:', error);
+      sendResponse({ success: false, error: error?.message || String(error) });
     }
-  }
-  
-  // Note: localStorage auth change detection removed - extension now checks localStorage on-demand
+  })();
+
+  return true;
 });
 
 // Debug: Log when a tab navigates to a potentially blocked URL
@@ -567,4 +578,4 @@ waitForSyncModules()
   .then(() => runStartupRoutine())
   .catch((error) => {
     console.error('Background: Cold start routine failed:', error);
-  }); 
+  });
