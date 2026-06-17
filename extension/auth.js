@@ -174,7 +174,10 @@ class ExtensionAuth {
   // Handle OAuth callback from web app
   async handleOAuthCallback(tokens) {
     try {
-      console.log('Handling OAuth callback with tokens:', tokens);
+      console.log('Handling OAuth callback with tokens:', {
+        hasAccessToken: !!tokens?.access_token,
+        hasRefreshToken: !!tokens?.refresh_token
+      });
       
       // Set tokens first
       this.accessToken = tokens.access_token;
@@ -190,6 +193,7 @@ class ExtensionAuth {
       return true;
     } catch (error) {
       console.error('OAuth callback handling failed:', error);
+      await this.clearAuth();
       return false;
     }
   }

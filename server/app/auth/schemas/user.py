@@ -35,6 +35,9 @@ class EmailVerificationInput(BaseModel):
     email: EmailStr
     code: str
 
+class EmailResendInput(BaseModel):
+    email: EmailStr
+
 class SignupResponse(BaseModel):
     user: UserOut
     email_sent: bool
@@ -55,4 +58,4 @@ class GoalUpdate(BaseModel):
     target_daily: int
 
 class ProgressIncrement(BaseModel):
-    delta: int = 1 
+    delta: int = 1

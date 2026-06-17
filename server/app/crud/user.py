@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import date
+from typing import Optional
 from passlib.context import CryptContext
 import random
 from datetime import datetime, timedelta, timezone
@@ -50,7 +51,9 @@ def create_oauth_user(db: Session, email: str, display_name: str = None):
     return db_user
 
 # Verifies that a plain password matches the hashed password stored in the database. Used during login.
-def verify_password(plain_password: str, hashed_password: str):
+def verify_password(plain_password: str, hashed_password: Optional[str]):
+    if not hashed_password:
+        return False
     return pwd_context.verify(plain_password, hashed_password)
 
 # Retrieves a user from the database by their unique user ID. Used for protected routes to fetch the current user.

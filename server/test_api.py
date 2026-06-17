@@ -5,6 +5,13 @@ Test script for the new blocklist and activity API endpoints
 
 import requests
 import json
+import os
+import pytest
+
+pytestmark = pytest.mark.skipif(
+    os.getenv("RUN_LIVE_API_TESTS") != "1",
+    reason="Live API smoke tests require RUN_LIVE_API_TESTS=1 and a server on localhost:8000",
+)
 
 # Base URL for the API
 BASE_URL = "http://localhost:8000"

@@ -1,11 +1,11 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Body
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from app.db.session import SessionLocal
-from app.auth.schemas.user import UserCreate, UserOut, UserUpdate, EmailVerificationInput, SignupResponse, LoginVerificationResponse, GoalResponse, GoalUpdate, ProgressIncrement
+from app.db.session import get_db
+from app.auth.schemas.user import UserCreate, UserOut, UserUpdate, EmailVerificationInput, EmailResendInput, SignupResponse, LoginVerificationResponse, GoalResponse, GoalUpdate, ProgressIncrement
 from app.auth.schemas.token import Token, RefreshTokenRequest
-from app.crud.user import get_user_by_email, create_user, verify_password, update_user_profile, get_user_goal, update_user_goal, increment_progress
+from app.crud.user import get_user_by_email, get_user_by_id, create_user, verify_password, update_user_profile, get_user_goal, update_user_goal, increment_progress
 from app.utils import jwt as jwt_utils
 from app.dependencies import get_current_user
 from app.utils.email import send_verification_email, send_welcome_email
@@ -22,7 +22,7 @@ from app.crud.data import (
 from datetime import datetime, timedelta, timezone
 import random
 from app.config import settings
-from typing import Union, List
+from typing import Union
 import json
 
 app = FastAPI()
@@ -35,13 +35,6 @@ app.add_middleware(
     allow_methods=["*"],  # Allow all methods
     allow_headers=["*"],  # Allow all headers
 )
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 # Health check endpoint. Anyone can access this to check if the server and database are running.
 @app.get("/health")
@@ -139,8 +132,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
 # Token refresh endpoint. Allows users to get new access and refresh tokens using a valid refresh token.
-@app.post("/auth/refresh", response_model = Token)
-def refresh_token(request: RefreshTokenRequest):
+@app.post("/auth/refresh", response_model=Token)
+def refresh_token(request: RefreshTokenRequest, db: Session = Depends(get_db)):
     payload = jwt_utils.decode_refresh_token(request.refresh_token)
     if payload is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
@@ -148,9 +141,15 @@ def refresh_token(request: RefreshTokenRequest):
     user_id = payload.get("sub")
     if user_id is None: 
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token payload")
+    try:
+        user = get_user_by_id(db, int(user_id))
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token payload")
+    if user is None or not user.is_verified:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
     
-    access_token = jwt_utils.create_access_token(data={"sub": user_id})
-    new_refresh_token = jwt_utils.create_refresh_token(data={"sub": user_id})
+    access_token = jwt_utils.create_access_token(data={"sub": str(user.id)})
+    new_refresh_token = jwt_utils.create_refresh_token(data={"sub": str(user.id)})
 
     return {"access_token": access_token, "refresh_token": new_refresh_token, "token_type": "bearer"}
 
@@ -206,7 +205,7 @@ def verify_email_code(data: EmailVerificationInput, db: Session = Depends(get_db
 
 # Resend verification code endpoint. Allows users to request a new code if not yet verified.
 @app.post("/auth/resend-verification-code")
-def resend_verification_code(data: EmailVerificationInput, db: Session = Depends(get_db)):
+def resend_verification_code(data: EmailResendInput, db: Session = Depends(get_db)):
     user = get_user_by_email(db, data.email)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -321,15 +320,27 @@ def get_blocklist(
     items = get_user_blocklist(db, current_user.id)
     return BlocklistResponse(websites=[item.website for item in items])
 
-@app.get("/api/blocklist/check/{website}")
-def check_blocklist(
+def _check_blocklist_response(db: Session, user_id: int, website: str):
+    is_blocked = check_website_blocked(db, user_id, website)
+    return {"website": website, "is_blocked": is_blocked}
+
+@app.get("/api/blocklist/check")
+def check_blocklist_query(
     website: str,
     current_user: UserOut = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Check if a website is in user's blocklist"""
-    is_blocked = check_website_blocked(db, current_user.id, website)
-    return {"website": website, "is_blocked": is_blocked}
+    return _check_blocklist_response(db, current_user.id, website)
+
+@app.get("/api/blocklist/check/{website}")
+def check_blocklist_path(
+    website: str,
+    current_user: UserOut = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Check if a website is in user's blocklist (legacy path fallback)"""
+    return _check_blocklist_response(db, current_user.id, website)
 
 # Activity endpoints
 @app.post("/api/activity")
@@ -379,6 +390,15 @@ def get_activities(
         ))
     
     return ActivitiesResponse(activities=activity_responses)
+
+@app.get("/api/activity/stats")
+def get_activity_statistics(
+    current_user: UserOut = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get user's activity statistics"""
+    stats = get_activity_stats(db, current_user.id)
+    return stats
 
 @app.get("/api/activity/{activity_id}", response_model=ActivityResponse)
 def get_activity_by_id(
@@ -440,15 +460,6 @@ def delete_activity_by_id(
         raise HTTPException(status_code=404, detail="Activity not found")
     
     return {"message": "Activity deleted successfully"}
-
-@app.get("/api/activity/stats")
-def get_activity_statistics(
-    current_user: UserOut = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Get user's activity statistics"""
-    stats = get_activity_stats(db, current_user.id)
-    return stats
 
 # Goal-related endpoints
 @app.get("/api/me/goal", response_model=GoalResponse)

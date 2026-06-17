@@ -133,6 +133,7 @@ const setupAuthSync = () => {
     
     // Handle authentication tokens from web app
     if ((event.data?.type === 'LEETGUARD_AUTH_SYNC' || event.data?.type === 'OAUTH_SUCCESS') && event.data.tokens) {
+      const syncId = event.data.sync_id || null;
       console.log('🔌 LeetGuard Extension: Received auth tokens from web app:', {
         type: event.data.type,
         hasTokens: !!event.data.tokens,
@@ -143,11 +144,27 @@ const setupAuthSync = () => {
       chrome.runtime.sendMessage({
         type: 'OAUTH_CALLBACK',
         tokens: event.data.tokens,
-        user: event.data.user
-      }).then(() => {
-        console.log('🔌 LeetGuard Extension: Auth tokens forwarded to background');
+        user: event.data.user,
+        sync_id: syncId
+      }).then((response) => {
+        const success = response?.success === true;
+        console.log('🔌 LeetGuard Extension: Auth tokens forwarded to background', { success });
+        if (syncId) {
+          window.postMessage({
+            type: 'LEETGUARD_AUTH_SYNC_ACK',
+            sync_id: syncId,
+            success,
+          }, window.location.origin);
+        }
       }).catch(error => {
         console.error('🔌 LeetGuard Extension: Failed to forward auth tokens:', error);
+        if (syncId) {
+          window.postMessage({
+            type: 'LEETGUARD_AUTH_SYNC_ACK',
+            sync_id: syncId,
+            success: false,
+          }, window.location.origin);
+        }
       });
     }
     
@@ -158,8 +175,10 @@ const setupAuthSync = () => {
       // Forward to background script
       chrome.runtime.sendMessage({
         type: 'USER_LOGOUT'
-      }).then(() => {
-        console.log('🔌 LeetGuard Extension: Logout notification forwarded to background');
+      }).then((response) => {
+        console.log('🔌 LeetGuard Extension: Logout notification forwarded to background', {
+          success: response?.success === true
+        });
       }).catch(error => {
         console.error('🔌 LeetGuard Extension: Failed to forward logout notification:', error);
       });

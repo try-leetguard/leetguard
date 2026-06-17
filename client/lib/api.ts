@@ -1,3 +1,8 @@
+import {
+  getAccessToken,
+  refreshTokensOnce,
+} from './auth-state';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export interface LoginRequest {
@@ -34,6 +39,10 @@ export interface LoginVerificationResponse {
 export interface EmailVerificationRequest {
   email: string;
   code: string;
+}
+
+export interface EmailResendRequest {
+  email: string;
 }
 
 export interface User {
@@ -99,7 +108,38 @@ class ApiClient {
     };
 
     const response = await fetch(url, config);
-    
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.detail || errorData.message || `HTTP error! status: ${response.status}`;
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
+  }
+
+  private async authenticatedRequest<T>(
+    endpoint: string,
+    options: RequestInit = {},
+    fallbackToken?: string,
+    retryOnUnauthorized: boolean = true
+  ): Promise<T> {
+    const accessToken = getAccessToken() || fallbackToken;
+    const headers = new Headers(options.headers);
+    if (accessToken) {
+      headers.set('Authorization', `Bearer ${accessToken}`);
+    }
+
+    const response = await fetch(`${this.baseURL}${endpoint}`, {
+      ...options,
+      headers,
+    });
+
+    if (response.status === 401 && retryOnUnauthorized) {
+      await refreshTokensOnce((refreshToken) => this.refreshToken(refreshToken));
+      return this.authenticatedRequest<T>(endpoint, options, undefined, false);
+    }
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       const errorMessage = errorData.detail || errorData.message || `HTTP error! status: ${response.status}`;
@@ -138,7 +178,7 @@ class ApiClient {
     });
   }
 
-  async resendVerificationCode(data: EmailVerificationRequest): Promise<{ message: string }> {
+  async resendVerificationCode(data: EmailResendRequest): Promise<{ message: string }> {
     return this.request<{ message: string }>('/auth/resend-verification-code', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -152,22 +192,18 @@ class ApiClient {
     });
   }
 
-  async getCurrentUser(token: string): Promise<User> {
-    return this.request<User>('/me', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+  async getCurrentUser(token?: string): Promise<User> {
+    return this.authenticatedRequest<User>('/me', {}, token);
   }
 
   async updateProfile(token: string, data: UserUpdateRequest): Promise<User> {
-    return this.request<User>('/me', {
+    return this.authenticatedRequest<User>('/me', {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
-    });
+    }, token);
   }
 
   // OAuth endpoints
@@ -187,128 +223,95 @@ class ApiClient {
 
   // Activity endpoints
   async getActivities(token: string, limit: number = 100, offset: number = 0): Promise<{ activities: any[] }> {
-    return this.request<{ activities: any[] }>(`/api/activity?limit=${limit}&offset=${offset}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+    return this.authenticatedRequest<{ activities: any[] }>(`/api/activity?limit=${limit}&offset=${offset}`, {}, token);
   }
 
   async addActivity(token: string, activityData: any): Promise<{ message: string; activity_id: number }> {
-    return this.request<{ message: string; activity_id: number }>('/api/activity', {
+    return this.authenticatedRequest<{ message: string; activity_id: number }>('/api/activity', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(activityData),
-    });
+    }, token);
   }
 
   async getActivity(token: string, activityId: number): Promise<any> {
-    return this.request<any>(`/api/activity/${activityId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+    return this.authenticatedRequest<any>(`/api/activity/${activityId}`, {}, token);
   }
 
   async updateActivity(token: string, activityId: number, updates: any): Promise<any> {
-    return this.request<any>(`/api/activity/${activityId}`, {
+    return this.authenticatedRequest<any>(`/api/activity/${activityId}`, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(updates),
-    });
+    }, token);
   }
 
   async deleteActivity(token: string, activityId: number): Promise<{ message: string }> {
-    return this.request<{ message: string }>(`/api/activity/${activityId}`, {
+    return this.authenticatedRequest<{ message: string }>(`/api/activity/${activityId}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+    }, token);
   }
 
   async getActivityStats(token: string): Promise<any> {
-    return this.request<any>('/api/activity/stats', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+    return this.authenticatedRequest<any>('/api/activity/stats', {}, token);
   }
 
   // Blocklist endpoints
   async getBlocklist(token: string): Promise<{ websites: string[] }> {
-    return this.request<{ websites: string[] }>('/api/blocklist', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+    return this.authenticatedRequest<{ websites: string[] }>('/api/blocklist', {}, token);
   }
 
   async addWebsite(token: string, website: string): Promise<{ message: string }> {
-    return this.request<{ message: string }>('/api/blocklist/add', {
+    return this.authenticatedRequest<{ message: string }>('/api/blocklist/add', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ website }),
-    });
+    }, token);
   }
 
   async removeWebsite(token: string, website: string): Promise<{ message: string }> {
-    return this.request<{ message: string }>('/api/blocklist/remove', {
+    return this.authenticatedRequest<{ message: string }>('/api/blocklist/remove', {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ website }),
-    });
+    }, token);
   }
 
   async checkWebsite(token: string, website: string): Promise<{ website: string; is_blocked: boolean }> {
-    return this.request<{ website: string; is_blocked: boolean }>(`/api/blocklist/check?website=${encodeURIComponent(website)}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+    return this.authenticatedRequest<{ website: string; is_blocked: boolean }>(`/api/blocklist/check?website=${encodeURIComponent(website)}`, {}, token);
   }
 
   // Goal endpoints
   async getGoal(token: string): Promise<GoalResponse> {
-    return this.request<GoalResponse>('/api/me/goal', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+    return this.authenticatedRequest<GoalResponse>('/api/me/goal', {}, token);
   }
 
   async updateGoal(token: string, goalData: GoalUpdateRequest): Promise<GoalResponse> {
-    return this.request<GoalResponse>('/api/me/goal', {
+    return this.authenticatedRequest<GoalResponse>('/api/me/goal', {
       method: 'PATCH',
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(goalData),
-    });
+    }, token);
   }
 
   async incrementProgress(token: string, progressData: ProgressIncrementRequest): Promise<GoalResponse> {
-    return this.request<GoalResponse>('/api/me/goal/progress', {
+    return this.authenticatedRequest<GoalResponse>('/api/me/goal/progress', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(progressData),
-    });
+    }, token);
   }
 
   // Health check
@@ -317,4 +320,4 @@ class ApiClient {
   }
 }
 
-export const apiClient = new ApiClient(API_BASE_URL); 
+export const apiClient = new ApiClient(API_BASE_URL);
