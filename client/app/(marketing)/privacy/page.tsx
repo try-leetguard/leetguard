@@ -11,7 +11,7 @@ export default function PrivacyPolicy() {
         {/* Header */}
         <header className="border-b border-gray-200 pt-32">
           <div className="max-w-4xl mx-auto px-6 py-12">
-            <h1 className="text-6xl font-semibold text-black mb-3">
+            <h1 className="text-6xl font-normal text-black mb-3">
               Privacy Policy
             </h1>
             <p className="text-lg text-black">Last Updated: June 26, 2025</p>
@@ -39,11 +39,11 @@ export default function PrivacyPolicy() {
 
               {/* Section I */}
               <section>
-                <h2 className="text-2xl font-semibold text-black mb-4">
+                <h2 className="text-2xl font-normal text-black mb-4">
                   I. Information We Collect
                 </h2>
 
-                <h3 className="text-xl font-medium text-black mb-3">
+                <h3 className="text-xl font-normal text-black mb-3">
                   A. Personal Information
                 </h3>
                 <p className="text-black leading-relaxed mb-6">
@@ -52,7 +52,7 @@ export default function PrivacyPolicy() {
                   information if applicable.
                 </p>
 
-                <h3 className="text-xl font-medium text-black mb-3">
+                <h3 className="text-xl font-normal text-black mb-3">
                   B. Usage Information
                 </h3>
                 <p className="text-black leading-relaxed mb-6">
@@ -61,7 +61,7 @@ export default function PrivacyPolicy() {
                   IP address, log data, and usage patterns.
                 </p>
 
-                <h3 className="text-xl font-medium text-black mb-3">
+                <h3 className="text-xl font-normal text-black mb-3">
                   C. Cookies and Tracking Technologies
                 </h3>
                 <p className="text-black leading-relaxed">
@@ -73,7 +73,7 @@ export default function PrivacyPolicy() {
 
               {/* Section II */}
               <section>
-                <h2 className="text-2xl font-semibold text-black mb-4">
+                <h2 className="text-2xl font-normal text-black mb-4">
                   II. How We Use Your Information
                 </h2>
                 <p className="text-black leading-relaxed mb-4">
@@ -93,7 +93,7 @@ export default function PrivacyPolicy() {
 
               {/* Section III */}
               <section>
-                <h2 className="text-2xl font-semibold text-black mb-4">
+                <h2 className="text-2xl font-normal text-black mb-4">
                   III. Information Sharing and Disclosure
                 </h2>
                 <p className="text-black leading-relaxed mb-4">
@@ -115,7 +115,7 @@ export default function PrivacyPolicy() {
 
               {/* Section IV */}
               <section>
-                <h2 className="text-2xl font-semibold text-black mb-4">
+                <h2 className="text-2xl font-normal text-black mb-4">
                   IV. Data Security
                 </h2>
                 <p className="text-black leading-relaxed">
@@ -128,7 +128,7 @@ export default function PrivacyPolicy() {
 
               {/* Section V */}
               <section>
-                <h2 className="text-2xl font-semibold text-black mb-4">
+                <h2 className="text-2xl font-normal text-black mb-4">
                   V. Your Rights and Choices
                 </h2>
                 <p className="text-black leading-relaxed mb-4">
@@ -155,7 +155,7 @@ export default function PrivacyPolicy() {
 
               {/* Section VI */}
               <section>
-                <h2 className="text-2xl font-semibold text-black mb-4">
+                <h2 className="text-2xl font-normal text-black mb-4">
                   VI. Children's Privacy
                 </h2>
                 <p className="text-black leading-relaxed">
@@ -167,7 +167,7 @@ export default function PrivacyPolicy() {
 
               {/* Section VII */}
               <section>
-                <h2 className="text-2xl font-semibold text-black mb-4">
+                <h2 className="text-2xl font-normal text-black mb-4">
                   VII. International Users
                 </h2>
                 <p className="text-black leading-relaxed">
@@ -180,7 +180,7 @@ export default function PrivacyPolicy() {
 
               {/* Section VIII */}
               <section>
-                <h2 className="text-2xl font-semibold text-black mb-4">
+                <h2 className="text-2xl font-normal text-black mb-4">
                   VIII. Changes to This Privacy Policy
                 </h2>
                 <p className="text-black leading-relaxed">
@@ -193,7 +193,7 @@ export default function PrivacyPolicy() {
 
               {/* Section IX */}
               <section>
-                <h2 className="text-2xl font-semibold text-black mb-4">
+                <h2 className="text-2xl font-normal text-black mb-4">
                   IX. Contact Us
                 </h2>
                 <p className="text-black leading-relaxed">

@@ -11,7 +11,7 @@ export default function TermsOfService() {
         {/* Header */}
         <header className="border-b border-gray-200 pt-32">
           <div className="max-w-4xl mx-auto px-6 py-12">
-            <h1 className="text-6xl font-semibold text-black mb-3">
+            <h1 className="text-6xl font-normal text-black mb-3">
               Terms of Service
             </h1>
             <p className="text-lg text-black">Last Updated: June 26, 2025</p>
@@ -42,11 +42,11 @@ export default function TermsOfService() {
 
               {/* Section I */}
               <section>
-                <h2 className="text-2xl font-semibold text-black mb-4">
+                <h2 className="text-2xl font-normal text-black mb-4">
                   I. Service and Modifications
                 </h2>
 
-                <h3 className="text-xl font-medium text-black mb-3">
+                <h3 className="text-xl font-normal text-black mb-3">
                   Services Description
                 </h3>
                 <p className="text-black leading-relaxed mb-6">
@@ -56,7 +56,7 @@ export default function TermsOfService() {
                   both free and paid subscription plans with varying features.
                 </p>
 
-                <h3 className="text-xl font-medium text-black mb-3">
+                <h3 className="text-xl font-normal text-black mb-3">
                   Modifications
                 </h3>
                 <p className="text-black leading-relaxed">
@@ -71,11 +71,11 @@ export default function TermsOfService() {
 
               {/* Section II */}
               <section>
-                <h2 className="text-2xl font-semibold text-black mb-4">
+                <h2 className="text-2xl font-normal text-black mb-4">
                   II. Registration
                 </h2>
 
-                <h3 className="text-xl font-medium text-black mb-3">
+                <h3 className="text-xl font-normal text-black mb-3">
                   Your Obligations
                 </h3>
                 <p className="text-black leading-relaxed mb-6">
@@ -86,7 +86,7 @@ export default function TermsOfService() {
                   required by your jurisdiction.
                 </p>
 
-                <h3 className="text-xl font-medium text-black mb-3">
+                <h3 className="text-xl font-normal text-black mb-3">
                   Account Security
                 </h3>
                 <p className="text-black leading-relaxed">
@@ -99,11 +99,11 @@ export default function TermsOfService() {
 
               {/* Section III */}
               <section>
-                <h2 className="text-2xl font-semibold text-black mb-4">
+                <h2 className="text-2xl font-normal text-black mb-4">
                   III. User Content
                 </h2>
 
-                <h3 className="text-xl font-medium text-black mb-3">
+                <h3 className="text-xl font-normal text-black mb-3">
                   Responsibility for Content
                 </h3>
                 <p className="text-black leading-relaxed mb-6">
@@ -113,7 +113,7 @@ export default function TermsOfService() {
                   property, contains malware, or is otherwise objectionable.
                 </p>
 
-                <h3 className="text-xl font-medium text-black mb-3">
+                <h3 className="text-xl font-normal text-black mb-3">
                   Rights Granted
                 </h3>
                 <p className="text-black leading-relaxed">
@@ -126,7 +126,7 @@ export default function TermsOfService() {
 
               {/* Section IV */}
               <section>
-                <h2 className="text-2xl font-semibold text-black mb-4">
+                <h2 className="text-2xl font-normal text-black mb-4">
                   IV. Intellectual Property
                 </h2>
                 <p className="text-black leading-relaxed">
@@ -140,7 +140,7 @@ export default function TermsOfService() {
 
               {/* Section V */}
               <section>
-                <h2 className="text-2xl font-semibold text-black mb-4">
+                <h2 className="text-2xl font-normal text-black mb-4">
                   V. Termination
                 </h2>
                 <p className="text-black leading-relaxed">
@@ -153,7 +153,7 @@ export default function TermsOfService() {
 
               {/* Section VI */}
               <section>
-                <h2 className="text-2xl font-semibold text-black mb-4">
+                <h2 className="text-2xl font-normal text-black mb-4">
                   VI. Disclaimer and Limitation of Liability
                 </h2>
                 <p className="text-black leading-relaxed">
@@ -166,7 +166,7 @@ export default function TermsOfService() {
 
               {/* Section VII */}
               <section>
-                <h2 className="text-2xl font-semibold text-black mb-4">
+                <h2 className="text-2xl font-normal text-black mb-4">
                   VII. Changes to Terms
                 </h2>
                 <p className="text-black leading-relaxed">
@@ -178,7 +178,7 @@ export default function TermsOfService() {
 
               {/* Section VIII */}
               <section>
-                <h2 className="text-2xl font-semibold text-black mb-4">
+                <h2 className="text-2xl font-normal text-black mb-4">
                   VIII. Governing Law
                 </h2>
                 <p className="text-black leading-relaxed">
@@ -189,7 +189,7 @@ export default function TermsOfService() {
 
               {/* Section IX */}
               <section>
-                <h2 className="text-2xl font-semibold text-black mb-4">
+                <h2 className="text-2xl font-normal text-black mb-4">
                   IX. Contact Information
                 </h2>
                 <p className="text-black leading-relaxed">
