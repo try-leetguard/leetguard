@@ -27,7 +27,8 @@ class GoalSync {
       
       // Fall back to cached goal or default
       const cached = await this.getCachedGoal();
-      return cached || this.getDefaultGoal();
+      this.userGoal = cached || this.getDefaultGoal();
+      return this.userGoal;
     }
   }
 
@@ -55,9 +56,14 @@ class GoalSync {
 
   // Apply goal from web app payload (skip network)
   async applyGoalPayload(payloadData) {
+    if (!payloadData?.goal || typeof payloadData.goal !== 'object') {
+      return null;
+    }
+
     this.userGoal = payloadData.goal;
     await this.persistGoal(this.userGoal);
     console.log('Goal synced from payload:', this.userGoal);
+    return this.userGoal;
   }
 
   // Get default goal for guest users
@@ -84,18 +90,20 @@ class GoalSync {
   // Sync goal — payload-driven push or network fallback
   async syncGoal(payloadData = null) {
     if (!this.auth.isAuthenticated()) {
-      return;
+      return null;
     }
 
     try {
       if (payloadData && payloadData.goal && typeof payloadData.goal === 'object') {
-        await this.applyGoalPayload(payloadData);
+        return await this.applyGoalPayload(payloadData);
       } else {
-        await this.fetchUserGoal();
+        const goal = await this.fetchUserGoal();
         console.log('Goal synced successfully');
+        return goal;
       }
     } catch (error) {
       console.error('Failed to sync goal:', error);
+      return null;
     }
   }
 }

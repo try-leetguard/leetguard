@@ -228,14 +228,64 @@ async function processSubmissionAccepted(message) {
   await updateProgressOnProblemSolved();
 }
 
+function isGoalCompleted(goal) {
+  if (!goal) {
+    return false;
+  }
+
+  const progressToday = Number(goal.progress_today ?? 0);
+  const targetDaily = Number(goal.target_daily ?? 0);
+  return (
+    goal.is_goal_completed === true ||
+    (targetDaily > 0 && progressToday >= targetDaily)
+  );
+}
+
+async function reconcileGoalCompletion(goal, context = 'goal sync') {
+  if (!isGoalCompleted(goal)) {
+    return false;
+  }
+
+  const { extension_blocking_enabled } = await chrome.storage.local.get([
+    'extension_blocking_enabled',
+  ]);
+
+  if (extension_blocking_enabled !== false) {
+    console.log(
+      `Goal completed via ${context}! Automatically disabling extension blocking.`
+    );
+    await updateBlockingStorage(false);
+  }
+
+  return true;
+}
+
 // Update progress when a problem is solved
 async function updateProgressOnProblemSolved() {
   try {
+    try {
+      await waitForSyncModules();
+      if (extensionAuth) {
+        await extensionAuth.init();
+      }
+    } catch (error) {
+      console.warn(
+        'Progress update continuing before sync modules are ready:',
+        error
+      );
+    }
+
     // Get current goal data
     const goal = await getCurrentGoalData();
 
     // Increment progress
     const newProgress = (goal.progress_today || 0) + 1;
+    let latestGoal = {
+      ...goal,
+      progress_today: newProgress,
+      is_goal_completed:
+        goal.is_goal_completed === true || newProgress >= goal.target_daily,
+    };
 
     // Update local storage
     await chrome.storage.local.set({
@@ -245,18 +295,28 @@ async function updateProgressOnProblemSolved() {
 
     // Update guest goal if in guest mode
     if (!extensionAuth || !extensionAuth.isAuthenticated()) {
-      const guestGoal = await getCurrentGoalData();
-      guestGoal.progress_today = newProgress;
-      await chrome.storage.local.set({ guest_progress: guestGoal });
+      await chrome.storage.local.set({ guest_progress: latestGoal });
+    } else if (goalSync) {
+      await goalSync.applyGoalPayload({ goal: latestGoal });
     }
 
     // If user is authenticated, update backend
     if (extensionAuth && extensionAuth.isAuthenticated()) {
       try {
-        await extensionAuth.apiRequest('/api/me/goal/progress', {
-          method: 'POST',
-          body: JSON.stringify({ delta: 1 })
-        });
+        const backendGoal = await extensionAuth.apiRequest(
+          '/api/me/goal/progress',
+          {
+            method: 'POST',
+            body: JSON.stringify({ delta: 1 })
+          }
+        );
+        if (goalSync) {
+          latestGoal =
+            await goalSync.applyGoalPayload({ goal: backendGoal }) ||
+            backendGoal;
+        } else {
+          latestGoal = backendGoal;
+        }
         console.log('Progress updated on backend');
       } catch (error) {
         console.error('Failed to update progress on backend:', error);
@@ -268,24 +328,25 @@ async function updateProgressOnProblemSolved() {
     }
 
     // Check if goal is completed and automatically disable blocking
-    const isGoalCompleted = newProgress >= goal.target_daily;
-    if (isGoalCompleted) {
-      console.log('Goal completed! Automatically disabling extension blocking.');
-      await updateBlockingStorage(false);
-    }
+    const goalCompleted = await reconcileGoalCompletion(
+      latestGoal,
+      'problem solved'
+    );
 
     // Notify popup of progress update
     chrome.runtime.sendMessage({
       type: 'PROGRESS_UPDATED',
-      progress: newProgress,
-      goal: goal.target_daily,
-      isGoalCompleted: isGoalCompleted
+      progress: latestGoal.progress_today ?? newProgress,
+      goal: latestGoal.target_daily ?? goal.target_daily,
+      isGoalCompleted: goalCompleted
     }).catch(error => {
       // Popup might not be open, that's okay
       console.log('Could not send progress update to popup:', error.message);
     });
 
-    console.log(`Progress updated: ${newProgress}/${goal.target_daily}`);
+    console.log(
+      `Progress updated: ${latestGoal.progress_today}/${latestGoal.target_daily}`
+    );
 
   } catch (error) {
     console.error('Failed to update progress:', error);
@@ -323,6 +384,7 @@ async function syncEverything() {
           user_goal: goal,
           daily_progress: goal?.progress_today ?? 0,
         });
+        await reconcileGoalCompletion(goal, 'full sync');
 
         console.log('Background: syncEverything complete', {
           blocklistCount: blocklistSync.localBlocklist.length,
@@ -464,7 +526,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         console.log('Background: GOAL_UPDATED received', {
           hasPayload: !!message.payload,
         });
-        if (goalSync) await goalSync.syncGoal(message.payload ?? null);
+        await waitForSyncModules();
+        const goal = await goalSync.syncGoal(message.payload ?? null);
+        await reconcileGoalCompletion(goal, 'goal sync');
       }
 
       // Logout handling

@@ -1,10 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,10 +13,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { RefreshCw } from "lucide-react";
-import { apiClient, GoalResponse } from "@/lib/api";
+import { apiClient, type GoalResponse } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+
 export default function ActivityPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [goalQuestions, setGoalQuestions] = useState(5);
   const [goalInputValue, setGoalInputValue] = useState("5");
   const [isGoalSaved, setIsGoalSaved] = useState(true);
@@ -42,6 +40,33 @@ export default function ActivityPage() {
     "Don't let a website steal your momentum.",
     "Small habits today create big wins tomorrow.",
   ];
+
+  const applyGoalData = useCallback(
+    (goalData: GoalResponse, options: { syncExtension?: boolean } = {}) => {
+      setGoalQuestions(goalData.target_daily);
+      setGoalInputValue(goalData.target_daily.toString());
+      setCompletedToday(goalData.progress_today);
+      setIsGoalSaved(true);
+
+      // Check if goal is completed and automatically disable extension
+      if (goalData.is_goal_completed) {
+        setExtensionEnabled(false);
+        console.log("Goal completed! Extension automatically disabled.");
+      }
+
+      // Push updated goal/progress to extension (payload-driven sync)
+      if (options.syncExtension && typeof window !== "undefined") {
+        window.postMessage(
+          {
+            type: "GOAL_UPDATED",
+            payload: { goal: goalData },
+          },
+          window.location.origin
+        );
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     // Set light mode for activity page
@@ -102,16 +127,7 @@ export default function ActivityPage() {
         }
 
         const goalData = await apiClient.getGoal(token);
-        setGoalQuestions(goalData.target_daily);
-        setGoalInputValue(goalData.target_daily.toString());
-        setCompletedToday(goalData.progress_today);
-        setIsGoalSaved(true);
-
-        // Check if goal is completed and automatically disable extension
-        if (goalData.is_goal_completed) {
-          setExtensionEnabled(false);
-          console.log("Goal completed! Extension automatically disabled.");
-        }
+        applyGoalData(goalData, { syncExtension: true });
       } catch (error) {
         console.error("Failed to load goal data:", error);
         // Fallback to defaults
@@ -124,7 +140,7 @@ export default function ActivityPage() {
     };
 
     loadGoalData();
-  }, [isAuthenticated]);
+  }, [applyGoalData, isAuthenticated]);
 
   // Universal UTC countdown that resets at 00:00:00 UTC
   useEffect(() => {
@@ -238,29 +254,9 @@ export default function ActivityPage() {
       const goalData = await apiClient.updateGoal(token, {
         target_daily: finalValue,
       });
-      setGoalQuestions(goalData.target_daily);
-      setGoalInputValue(goalData.target_daily.toString());
-      setCompletedToday(goalData.progress_today);
-      setIsGoalSaved(true);
-
-      // Check if goal is completed and automatically disable extension
-      if (goalData.is_goal_completed) {
-        setExtensionEnabled(false);
-        console.log("Goal completed! Extension automatically disabled.");
-      }
+      applyGoalData(goalData, { syncExtension: true });
 
       console.log("Goal saved to backend:", finalValue);
-
-      // Push updated goal to extension (payload-driven sync)
-      if (typeof window !== "undefined") {
-        window.postMessage(
-          {
-            type: "GOAL_UPDATED",
-            payload: { goal: goalData },
-          },
-          "*"
-        );
-      }
     } catch (error) {
       console.error("Failed to save goal:", error);
       // Fallback to frontend-only
@@ -376,9 +372,7 @@ export default function ActivityPage() {
       }
 
       const goalData = await apiClient.getGoal(token);
-      setGoalQuestions(goalData.target_daily);
-      setGoalInputValue(goalData.target_daily.toString());
-      setCompletedToday(goalData.progress_today);
+      applyGoalData(goalData, { syncExtension: true });
       console.log("Progress refreshed:", goalData.progress_today);
     } catch (error) {
       console.error("Failed to refresh progress:", error);
