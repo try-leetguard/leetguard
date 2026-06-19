@@ -3,6 +3,25 @@
 
 console.log('🔌 LeetGuard Extension: Web app detector loaded');
 
+const BLOCKED_PAGE_STORAGE_KEYS = [
+  'daily_progress',
+  'user_goal',
+  'guest_progress',
+  'user_blocklist',
+  'extension_blocking_enabled',
+  'access_token',
+  'user'
+];
+
+const DEFAULT_BLOCKED_PAGE_BLOCKLIST = [
+  'facebook.com',
+  'reddit.com',
+  'youtube.com',
+  'instagram.com',
+  'x.com',
+  'twitter.com'
+];
+
 // Detect if extension is in developer mode
 const isDeveloperMode = () => {
   // Check if extension is unpacked (developer mode)
@@ -124,6 +143,66 @@ const setupDataSync = () => {
   });
 };
 
+const buildBlockedPageSnapshot = async () => {
+  const result = await chrome.storage.local.get(BLOCKED_PAGE_STORAGE_KEYS);
+  const userBlocklist = Array.isArray(result.user_blocklist)
+    ? result.user_blocklist
+    : [];
+
+  return {
+    daily_progress: result.daily_progress,
+    user_goal: result.user_goal || null,
+    guest_progress: result.guest_progress || null,
+    user_blocklist: userBlocklist,
+    effective_blocklist:
+      userBlocklist.length > 0 ? userBlocklist : DEFAULT_BLOCKED_PAGE_BLOCKLIST,
+    extension_blocking_enabled: result.extension_blocking_enabled !== false,
+    is_authenticated: Boolean(result.access_token && result.user),
+    user: result.user || null,
+    source: 'extension-storage',
+    timestamp: Date.now()
+  };
+};
+
+const postBlockedPageSnapshot = async () => {
+  try {
+    const snapshot = await buildBlockedPageSnapshot();
+    window.postMessage(
+      {
+        type: 'BLOCKED_PAGE_SNAPSHOT',
+        snapshot
+      },
+      window.location.origin
+    );
+    console.log('🔌 LeetGuard Extension: Sent blocked page snapshot', snapshot);
+  } catch (error) {
+    console.error('🔌 LeetGuard Extension: Failed to build blocked page snapshot:', error);
+  }
+};
+
+const setupBlockedPageSnapshotSync = () => {
+  window.addEventListener('message', (event) => {
+    if (event.origin !== window.location.origin) {
+      return;
+    }
+
+    if (event.data?.type === 'REQUEST_BLOCKED_PAGE_SNAPSHOT') {
+      postBlockedPageSnapshot();
+    }
+  });
+
+  chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace !== 'local') {
+      return;
+    }
+
+    const shouldRefresh = BLOCKED_PAGE_STORAGE_KEYS.some((key) => key in changes);
+    if (shouldRefresh) {
+      postBlockedPageSnapshot();
+    }
+  });
+};
+
 // Setup authentication sync listener
 const setupAuthSync = () => {
   window.addEventListener('message', (event) => {
@@ -193,6 +272,7 @@ const initialize = () => {
     injectWindowProperty();
     setupMessageListener();
     setupDataSync();
+    setupBlockedPageSnapshotSync();
     setupAuthSync();
     
     // Notify web app that extension is ready

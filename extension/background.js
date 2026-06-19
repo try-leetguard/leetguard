@@ -54,7 +54,7 @@ async function getBlockRules(generation) {
       action: {
         type: 'redirect',
         redirect: {
-          url: 'http://localhost:3000/'
+          url: 'http://localhost:3000/blocked'
         }
       },
       condition: {
