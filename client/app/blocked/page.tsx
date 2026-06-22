@@ -685,7 +685,7 @@ export default function BlockedPage() {
 
             {displayData.isGuest && (
               <div className="mt-5 shrink-0 rounded-lg border border-gray-200 bg-white p-4">
-                <p className="text-sm leading-6 text-slate-700">
+                <p className="text-sm leading-relaxed text-black">
                   Want to customize? Sign in to add your own distracting sites
                   and sync across devices
                 </p>
