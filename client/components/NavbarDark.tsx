@@ -12,7 +12,7 @@ export default function NavbarDark() {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <Image
-              src="/leetguard-logo-black.svg"
+              src="/leetguard-logo.png"
               alt="LeetGuard Logo"
               width={32}
               height={32}

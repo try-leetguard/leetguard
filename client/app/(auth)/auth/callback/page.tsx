@@ -97,7 +97,7 @@ export default function AuthCallbackPage() {
       <div className="text-center">
         <div className="mb-6">
           <Image
-            src="/leetguard-logo-black.svg"
+            src="/leetguard-logo.png"
             alt="LeetGuard Logo"
             width={60}
             height={60}

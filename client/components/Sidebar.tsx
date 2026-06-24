@@ -53,7 +53,7 @@ export default function Sidebar({ activePage = "activity" }: SidebarProps) {
       <div className="p-4">
         <div className="flex items-center space-x-2">
           <Image
-            src="/leetguard-logo-black.svg"
+            src="/leetguard-logo.png"
             alt="LeetGuard Logo"
             width={28}
             height={28}

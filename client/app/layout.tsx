@@ -12,14 +12,14 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/leetguard-logo-circle.svg",
-        type: "image/svg+xml",
+        url: "/leetguard-logo.png",
+        type: "image/png",
       },
     ],
     apple: [
       {
-        url: "/leetguard-logo-circle.svg",
-        type: "image/svg+xml",
+        url: "/leetguard-logo.png",
+        type: "image/png",
       },
     ],
   },

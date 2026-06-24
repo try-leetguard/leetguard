@@ -90,7 +90,7 @@ export default function VerifyEmailPage() {
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center space-x-3">
               <Image
-                src="/leetguard-logo-black.svg"
+                src="/leetguard-logo.png"
                 alt="LeetGuard Logo"
                 width={40}
                 height={40}

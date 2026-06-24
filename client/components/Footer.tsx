@@ -12,7 +12,7 @@ export default function Footer() {
           <div className="md:col-span-2">
             <div className="flex items-center space-x-2 mb-4">
               <Image
-                src="/leetguard-logo-black.svg"
+                src="/leetguard-logo.png"
                 alt="LeetGuard Logo"
                 width={48}
                 height={48}

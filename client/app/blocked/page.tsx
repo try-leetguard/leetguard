@@ -523,7 +523,7 @@ export default function BlockedPage() {
         <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <Link href="/" className="flex items-center gap-3">
             <Image
-              src="/leetguard-logo-black.svg"
+              src="/leetguard-logo.png"
               alt="LeetGuard"
               width={36}
               height={36}
