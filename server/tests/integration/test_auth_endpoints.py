@@ -4,6 +4,7 @@ Integration tests for authentication endpoints.
 from datetime import datetime, timedelta, timezone
 from fastapi import status
 from unittest.mock import patch
+from app.auth.models.user import Activity, BlocklistItem
 from app.auth.schemas.user import UserCreate
 from app.crud.data import create_blocklist_item
 from app.crud.user import create_oauth_user, create_user, get_user_by_email
@@ -212,6 +213,130 @@ class TestAuthEndpoints:
 
         assert response.status_code == status.HTTP_200_OK
         assert response.json() == {"total": 0, "solved": 0, "attempted": 0}
+
+    def test_activity_create_accepts_legacy_status_and_normalizes_url(self, client, db_session):
+        """Test activity creation maps legacy status values and canonicalizes LeetCode URLs."""
+        user = create_user(db_session, UserCreate(email="verified@example.com", password="password123"))
+        user.is_verified = True
+        db_session.commit()
+        access_token = create_access_token(data={"sub": str(user.id)})
+        headers = {"Authorization": f"Bearer {access_token}"}
+
+        response = client.post(
+            "/api/activity",
+            headers=headers,
+            json={
+                "problem_name": "Two Sum",
+                "problem_url": "https://leetcode.com/problems/two-sum/?envType=study-plan",
+                "difficulty": "Easy",
+                "topic_tags": ["Array", "Hash Table"],
+                "status": "completed",
+            },
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        activity = db_session.query(Activity).filter(Activity.user_id == user.id).one()
+        assert activity.problem_url == "https://leetcode.com/problems/two-sum/"
+        assert activity.status == "solved"
+
+        stats_response = client.get("/api/activity/stats", headers=headers)
+        assert stats_response.status_code == status.HTTP_200_OK
+        assert stats_response.json() == {"total": 1, "solved": 1, "attempted": 0}
+
+    def test_activity_create_updates_duplicate_problem_instead_of_inserting(self, client, db_session):
+        """Test duplicate problem URLs update the existing user activity."""
+        user = create_user(db_session, UserCreate(email="verified@example.com", password="password123"))
+        user.is_verified = True
+        db_session.commit()
+        access_token = create_access_token(data={"sub": str(user.id)})
+        headers = {"Authorization": f"Bearer {access_token}"}
+
+        first_response = client.post(
+            "/api/activity",
+            headers=headers,
+            json={
+                "problem_name": "Two Sum",
+                "problem_url": "https://leetcode.com/problems/two-sum/",
+                "difficulty": "Easy",
+                "topic_tags": ["Array"],
+                "status": "solved",
+            },
+        )
+        second_response = client.post(
+            "/api/activity",
+            headers=headers,
+            json={
+                "problem_name": "Two Sum",
+                "problem_url": "https://leetcode.com/problems/two-sum/description/",
+                "difficulty": "Easy",
+                "topic_tags": ["Array"],
+                "status": "in_progress",
+            },
+        )
+
+        assert first_response.status_code == status.HTTP_200_OK
+        assert second_response.status_code == status.HTTP_200_OK
+        assert second_response.json()["message"] == "Activity updated"
+        assert second_response.json()["activity_id"] == first_response.json()["activity_id"]
+        activities = db_session.query(Activity).filter(Activity.user_id == user.id).all()
+        assert len(activities) == 1
+        assert activities[0].status == "attempted"
+
+    def test_blocklist_normalizes_domains_and_blocks_duplicates(self, client, db_session):
+        """Test blocklist add/check/remove all use canonical domains."""
+        user = create_user(db_session, UserCreate(email="verified@example.com", password="password123"))
+        user.is_verified = True
+        db_session.commit()
+        access_token = create_access_token(data={"sub": str(user.id)})
+        headers = {"Authorization": f"Bearer {access_token}"}
+
+        add_response = client.post(
+            "/api/blocklist/add",
+            headers=headers,
+            json={"website": "https://www.YouTube.com/watch?v=123"},
+        )
+        duplicate_response = client.post(
+            "/api/blocklist/add",
+            headers=headers,
+            json={"website": "youtube.com"},
+        )
+        check_response = client.get(
+            "/api/blocklist/check?website=https%3A%2F%2Fwww.youtube.com%2Fshorts%2Fabc",
+            headers=headers,
+        )
+        list_response = client.get("/api/blocklist", headers=headers)
+        remove_response = client.request(
+            "DELETE",
+            "/api/blocklist/remove",
+            headers=headers,
+            json={"website": "https://youtube.com/feed/subscriptions"},
+        )
+
+        assert add_response.status_code == status.HTTP_200_OK
+        assert add_response.json()["website"] == "youtube.com"
+        assert duplicate_response.status_code == status.HTTP_400_BAD_REQUEST
+        assert check_response.status_code == status.HTTP_200_OK
+        assert check_response.json() == {"website": "youtube.com", "is_blocked": True}
+        assert list_response.json() == {"websites": ["youtube.com"]}
+        assert remove_response.status_code == status.HTTP_200_OK
+        assert db_session.query(BlocklistItem).filter(BlocklistItem.user_id == user.id).count() == 0
+
+    def test_goal_progress_is_independent_from_activity_history(self, client, db_session):
+        """Test progress increments do not require activity rows."""
+        user = create_user(db_session, UserCreate(email="verified@example.com", password="password123"))
+        user.is_verified = True
+        db_session.commit()
+        access_token = create_access_token(data={"sub": str(user.id)})
+
+        response = client.post(
+            "/api/me/goal/progress",
+            headers={"Authorization": f"Bearer {access_token}"},
+            json={"delta": 1},
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["progress_today"] == 1
+        assert db_session.query(Activity).filter(Activity.user_id == user.id).count() == 0
 
     @patch('app.main.send_verification_email')
     @patch('app.main.send_welcome_email')

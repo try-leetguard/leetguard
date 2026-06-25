@@ -48,7 +48,7 @@ export default function LogPage() {
       problemUrl: activity.problem_url,
       difficulty: activity.difficulty,
       topicTags: activity.topic_tags,
-      status: activity.status === "completed" ? "solved" : "attempted",
+      status: activity.status === "solved" ? "solved" : "attempted",
       timeSpent: undefined, // Not available from API
       notes: undefined, // Not available from API
     };

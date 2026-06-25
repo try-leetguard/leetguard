@@ -13,7 +13,7 @@ class ActivityLogger {
       problem_url: activityData.url || window.location.href,
       difficulty: activityData.difficulty || 'Unknown',
       topic_tags: activityData.topicTags || [],
-      status: 'completed'
+      status: 'solved'
     };
 
     if (this.auth.isAuthenticated()) {
@@ -172,8 +172,9 @@ class ActivityLogger {
       const localActivities = result.local_activities || [];
       
       return {
-        total_problems: localActivities.length,
-        completed_problems: localActivities.filter(a => a.status === 'completed').length,
+        total: localActivities.length,
+        solved: localActivities.filter(a => a.status === 'solved').length,
+        attempted: localActivities.filter(a => a.status === 'attempted').length,
         easy_problems: localActivities.filter(a => a.difficulty === 'Easy').length,
         medium_problems: localActivities.filter(a => a.difficulty === 'Medium').length,
         hard_problems: localActivities.filter(a => a.difficulty === 'Hard').length,

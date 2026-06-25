@@ -64,9 +64,38 @@ function injectLeetGuardPopupCSS() {
   }
 }
 
+function cleanProblemTitle(title) {
+  return (title || '').replace(/^\s*\d+\.\s*/, '').trim();
+}
+
+function titleizeProblemSlug(problemSlug) {
+  return (problemSlug || 'Unknown Problem')
+    .split(/[-_]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function getProblemDisplayName(problemSlug) {
+  const titleElement = document.querySelector('[data-cy="question-title"]');
+  const pageTitle = cleanProblemTitle(titleElement?.textContent);
+  if (pageTitle) {
+    return pageTitle;
+  }
+
+  const documentProblemTitle = cleanProblemTitle(
+    document.title.split(' - ')[0]
+  );
+  if (documentProblemTitle && documentProblemTitle !== 'LeetCode') {
+    return documentProblemTitle;
+  }
+
+  return titleizeProblemSlug(problemSlug);
+}
+
 // Popup function to show when a problem is solved
-function showLeetGuardPopup(problemSlug) {
-  console.log("🎉 showLeetGuardPopup called with problemSlug:", problemSlug);
+function showLeetGuardPopup(problemName) {
+  console.log("🎉 showLeetGuardPopup called with problemName:", problemName);
   
   injectLeetGuardPopupCSS();
   
@@ -80,12 +109,24 @@ function showLeetGuardPopup(problemSlug) {
   // Create popup container
   const popup = document.createElement('div');
   popup.id = 'leetguard-congrats-popup';
-  popup.innerHTML = `🎉 Congratulations! You solved <b>${problemSlug}</b>! <span class="close-btn">✖</span>`;
-  
-  console.log("🎉 Popup HTML created:", popup.innerHTML);
+
+  const message = document.createElement('span');
+  message.className = 'message';
+  message.append('🎉 Congratulations! You solved ');
+
+  const title = document.createElement('strong');
+  title.textContent = problemName;
+  message.append(title, '!');
+
+  const closeButton = document.createElement('span');
+  closeButton.className = 'close-btn';
+  closeButton.textContent = '✖';
+  popup.append(message, closeButton);
+
+  console.log("🎉 Popup created for:", problemName);
 
   // Add close event
-  popup.querySelector('.close-btn').onclick = () => {
+  closeButton.onclick = () => {
     console.log("🎉 Close button clicked");
     popup.remove();
   };
@@ -133,21 +174,21 @@ window.addEventListener("message", (event) => {
         // Extract problem info from URL
         const urlParts = window.location.pathname.split('/');
         const problemSlug = urlParts[2]; // /problems/two-sum/...
+        const problemName = getProblemDisplayName(problemSlug);
         
-        console.log(`🎉 Problem "${problemSlug}" solved successfully!`);
+        console.log(`🎉 Problem "${problemName}" solved successfully!`);
         
         // Show popup
         console.log("🎉 Creating congratulations popup...");
-        showLeetGuardPopup(problemSlug);
+        showLeetGuardPopup(problemName);
         
         // Extract additional problem info from the page
-        const titleElement = document.querySelector('[data-cy="question-title"]');
         const difficultyElement = document.querySelector('[diff]');
         
         const problemInfo = {
           problemSlug,
           url: window.location.href,
-          problem_name: titleElement?.textContent?.trim() || problemSlug,
+          problem_name: problemName,
           difficulty: difficultyElement?.getAttribute('diff') || 'Unknown',
           timestamp: Date.now()
         };

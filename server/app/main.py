@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from app.db.session import get_db
 from app.auth.schemas.user import UserCreate, UserOut, UserUpdate, EmailVerificationInput, EmailResendInput, SignupResponse, LoginVerificationResponse, GoalResponse, GoalUpdate, ProgressIncrement
 from app.auth.schemas.token import Token, RefreshTokenRequest
@@ -17,8 +18,10 @@ from app.auth.schemas.oauth import OAuthLoginRequest, OAuthUserInfo
 from app.auth.schemas.data import BlocklistItemCreate, BlocklistResponse, ActivityCreate, ActivityUpdate, ActivityResponse, ActivitiesResponse
 from app.crud.data import (
     create_blocklist_item, get_user_blocklist, delete_blocklist_item_by_website, check_website_blocked,
-    create_activity, get_user_activities, get_activity, update_activity, delete_activity, get_activity_stats
+    create_activity, get_user_activities, get_activity, update_activity, delete_activity, get_activity_stats,
+    get_activity_by_problem_url
 )
+from app.utils.normalization import normalize_activity_status, normalize_problem_url, normalize_website
 from datetime import datetime, timedelta, timezone
 import random
 from app.config import settings
@@ -288,14 +291,23 @@ def add_blocklist_item(
     db: Session = Depends(get_db)
 ):
     """Add a website to user's blocklist"""
+    try:
+        website = normalize_website(blocklist_data.website)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
     # Check if already exists
-    if check_website_blocked(db, current_user.id, blocklist_data.website):
+    if check_website_blocked(db, current_user.id, website):
         raise HTTPException(status_code=400, detail="Website already in blocklist")
     
     # Add new item
-    new_item = create_blocklist_item(db, current_user.id, blocklist_data.website)
+    try:
+        create_blocklist_item(db, current_user.id, website)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Website already in blocklist")
     
-    return {"message": "Website added to blocklist", "website": blocklist_data.website}
+    return {"message": "Website added to blocklist", "website": website}
 
 @app.delete("/api/blocklist/remove")
 def remove_blocklist_item(
@@ -304,12 +316,16 @@ def remove_blocklist_item(
     db: Session = Depends(get_db)
 ):
     """Remove a website from user's blocklist"""
-    success = delete_blocklist_item_by_website(db, current_user.id, blocklist_data.website)
+    try:
+        website = normalize_website(blocklist_data.website)
+        success = delete_blocklist_item_by_website(db, current_user.id, website)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
     
     if not success:
         raise HTTPException(status_code=404, detail="Website not found in blocklist")
     
-    return {"message": "Website removed from blocklist", "website": blocklist_data.website}
+    return {"message": "Website removed from blocklist", "website": website}
 
 @app.get("/api/blocklist", response_model=BlocklistResponse)
 def get_blocklist(
@@ -321,8 +337,9 @@ def get_blocklist(
     return BlocklistResponse(websites=[item.website for item in items])
 
 def _check_blocklist_response(db: Session, user_id: int, website: str):
-    is_blocked = check_website_blocked(db, user_id, website)
-    return {"website": website, "is_blocked": is_blocked}
+    normalized_website = normalize_website(website)
+    is_blocked = check_website_blocked(db, user_id, normalized_website)
+    return {"website": normalized_website, "is_blocked": is_blocked}
 
 @app.get("/api/blocklist/check")
 def check_blocklist_query(
@@ -331,7 +348,10 @@ def check_blocklist_query(
     db: Session = Depends(get_db)
 ):
     """Check if a website is in user's blocklist"""
-    return _check_blocklist_response(db, current_user.id, website)
+    try:
+        return _check_blocklist_response(db, current_user.id, website)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
 @app.get("/api/blocklist/check/{website}")
 def check_blocklist_path(
@@ -340,7 +360,10 @@ def check_blocklist_path(
     db: Session = Depends(get_db)
 ):
     """Check if a website is in user's blocklist (legacy path fallback)"""
-    return _check_blocklist_response(db, current_user.id, website)
+    try:
+        return _check_blocklist_response(db, current_user.id, website)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
 # Activity endpoints
 @app.post("/api/activity")
@@ -350,6 +373,12 @@ def add_activity(
     db: Session = Depends(get_db)
 ):
     """Add a new activity (LeetCode problem)"""
+    try:
+        activity_data.problem_url = normalize_problem_url(activity_data.problem_url)
+        activity_data.status = normalize_activity_status(activity_data.status)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
     # Check if activity already exists for this problem
     existing = get_activity_by_problem_url(db, current_user.id, activity_data.problem_url)
     
@@ -362,7 +391,16 @@ def add_activity(
         return {"message": "Activity updated", "activity_id": updated_activity.id}
     else:
         # Create new activity
-        new_activity = create_activity(db, current_user.id, activity_data)
+        try:
+            new_activity = create_activity(db, current_user.id, activity_data)
+        except IntegrityError:
+            db.rollback()
+            existing = get_activity_by_problem_url(db, current_user.id, activity_data.problem_url)
+            if not existing:
+                raise
+            update_data = ActivityUpdate(status=activity_data.status)
+            updated_activity = update_activity(db, existing.id, current_user.id, update_data)
+            return {"message": "Activity updated", "activity_id": updated_activity.id}
         return {"message": "Activity created", "activity_id": new_activity.id}
 
 @app.get("/api/activity", response_model=ActivitiesResponse)
@@ -431,7 +469,10 @@ def update_activity_by_id(
     db: Session = Depends(get_db)
 ):
     """Update a specific activity"""
-    updated_activity = update_activity(db, activity_id, current_user.id, activity_data)
+    try:
+        updated_activity = update_activity(db, activity_id, current_user.id, activity_data)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
     
     if not updated_activity:
         raise HTTPException(status_code=404, detail="Activity not found")

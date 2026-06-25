@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Text, Date
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Text, Date, UniqueConstraint
 from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -31,6 +31,9 @@ class User(Base):
 
 class BlocklistItem(Base):
     __tablename__ = "blocklist_items"
+    __table_args__ = (
+        UniqueConstraint("user_id", "website", name="uq_blocklist_items_user_website"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
@@ -42,6 +45,9 @@ class BlocklistItem(Base):
 
 class Activity(Base):
     __tablename__ = "activities"
+    __table_args__ = (
+        UniqueConstraint("user_id", "problem_url", name="uq_activities_user_problem_url"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)

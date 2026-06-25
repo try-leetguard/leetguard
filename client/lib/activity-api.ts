@@ -1,12 +1,14 @@
 // Activity API service for LeetCode submissions tracking
 import { apiClient } from './api';
 
+export type ActivityStatus = 'solved' | 'attempted' | 'bookmarked';
+
 export interface ActivityData {
   problem_name: string;
   problem_url: string;
   difficulty: 'Easy' | 'Medium' | 'Hard' | 'Unknown';
   topic_tags: string[];
-  status: 'completed' | 'attempted' | 'in_progress';
+  status: ActivityStatus;
   completed_at?: string;
   submission_id?: string;
 }
@@ -17,7 +19,7 @@ export interface Activity {
   problem_url: string;
   difficulty: 'Easy' | 'Medium' | 'Hard' | 'Unknown';
   topic_tags: string[];
-  status: 'completed' | 'attempted' | 'in_progress';
+  status: ActivityStatus;
   completed_at: string | null;
 }
 
@@ -26,12 +28,9 @@ export interface ActivitiesResponse {
 }
 
 export interface ActivityStats {
-  total_problems: number;
-  completed_problems: number;
-  easy_problems: number;
-  medium_problems: number;
-  hard_problems: number;
-  recent_activity: Activity[];
+  total: number;
+  solved: number;
+  attempted: number;
 }
 
 export class ActivityAPI {
@@ -179,7 +178,7 @@ export class ActivityAPI {
           problem_url: url,
           difficulty: 'Unknown',
           topic_tags: [],
-          status: 'completed',
+          status: 'solved',
           completed_at: new Date().toISOString(),
         };
       }
@@ -189,7 +188,7 @@ export class ActivityAPI {
         problem_url: url,
         difficulty: 'Unknown',
         topic_tags: [],
-        status: 'completed',
+        status: 'solved',
         completed_at: new Date().toISOString(),
       };
     } catch (error) {
@@ -199,7 +198,7 @@ export class ActivityAPI {
         problem_url: url,
         difficulty: 'Unknown',
         topic_tags: [],
-        status: 'completed',
+        status: 'solved',
         completed_at: new Date().toISOString(),
       };
     }
@@ -234,7 +233,7 @@ export class ActivityAPI {
         problem_url: `https://leetcode.com/problems/${problem.name.toLowerCase().replace(/\s+/g, '-').replace(/[()]/g, '')}/`,
         difficulty: problem.difficulty,
         topic_tags: problem.tags,
-        status: 'completed' as const,
+        status: 'solved' as const,
         completed_at: completedAt.toISOString(),
       };
     });
