@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 
 export default function NavbarLight() {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, isLoading, user, logout } = useAuth();
   const router = useRouter();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -81,7 +81,9 @@ export default function NavbarLight() {
 
           {/* Right Side */}
           <div className="flex items-center space-x-4">
-            {isAuthenticated ? (
+            {isLoading ? (
+              <div className="h-8 w-[140px]" aria-hidden="true" />
+            ) : isAuthenticated ? (
               /* User Menu */
               <div className="relative" ref={userMenuRef}>
                 <button

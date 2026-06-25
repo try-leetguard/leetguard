@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { ArrowUpRight } from "lucide-react";
-import Image from "next/image";
 import { motion, useInView } from "framer-motion";
 import * as React from "react";
 import { cn } from "@/lib/utils";
@@ -11,6 +10,7 @@ import Features from "@/components/Features";
 import Quote from "@/components/Quote";
 import Footer from "@/components/Footer";
 import LogoCarousel from "@/components/LogoCarousel";
+import ProgressiveImage from "@/components/ProgressiveImage";
 const companies = [
   { name: "adobe", logo: "/companies/adobe.svg" },
   { name: "amazon", logo: "/companies/amazon.svg" },
@@ -51,7 +51,7 @@ export function TextFade({
   return (
     <motion.div
       ref={ref}
-      initial="hidden"
+      initial={false}
       animate={isInView ? "show" : ""}
       variants={{
         hidden: {},
@@ -132,7 +132,7 @@ export function WordsPullUp({
             key={i}
             ref={ref}
             variants={pullupVariant}
-            initial="initial"
+            initial={false}
             animate={isInView ? "animate" : ""}
             custom={i}
             className={cn(
@@ -151,7 +151,7 @@ export function WordsPullUp({
             key={i + firstLine.length}
             ref={ref}
             variants={pullupVariant}
-            initial="initial"
+            initial={false}
             animate={isInView ? "animate" : ""}
             custom={i + firstLine.length}
             className={cn(
@@ -185,7 +185,7 @@ export default function LandingPage() {
           <div className="text-center max-w-4xl mx-auto mt-4">
 
 
-            <TextFade direction="up" delay={1.0}>
+            <TextFade direction="up" delay={0.1}>
               <div className="mb-2 mt-4">
                 <WordsPullUp
                   text="Focus. Solve. Claim your day."
@@ -194,7 +194,7 @@ export default function LandingPage() {
               </div>
             </TextFade>
 
-            <TextFade direction="up" delay={2.0}>
+            <TextFade direction="up" delay={0.2}>
               <p className="text-xl text-neutral-600 mb-4 max-w-lg mx-auto font-normal tracking-wide leading-loose">
                 Your coding prep, uninterrupted. Zero distractions. Only pure
                 LeetCode focus.
@@ -212,18 +212,19 @@ export default function LandingPage() {
       </div>
 
       {/* Demo Image Section */}
-      <TextFade direction="up" delay={2.0}>
-        <div className="mt-0">
-          <Image
-            src="/demo.png"
-            alt="Demo"
-            width={1600}
-            height={500}
-            className="w-full max-w-5xl h-[500px] shadow-lg object-cover object-top mx-auto mt-[-7rem] mb-12 z-20 relative border border-gray-200"
-            priority
-          />
-        </div>
-      </TextFade>
+      <div className="mt-0 px-6">
+        <ProgressiveImage
+          name="demo-hero"
+          alt="Demo"
+          width={1600}
+          height={500}
+          sizes="(max-width: 768px) calc(100vw - 3rem), 1024px"
+          loading="eager"
+          fetchPriority="high"
+          className="w-full max-w-5xl h-[320px] sm:h-[420px] lg:h-[500px] shadow-lg mx-auto mt-[-7rem] mb-12 z-20 relative border border-gray-200"
+          imageClassName="object-cover object-top"
+        />
+      </div>
 
       {/* Logo Carousel */}
       <LogoCarousel

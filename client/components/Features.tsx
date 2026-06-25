@@ -1,7 +1,6 @@
 "use client";
 
-import Image from "next/image";
-import { ArrowRight } from "lucide-react";
+import ProgressiveImage from "@/components/ProgressiveImage";
 
 export default function Features() {
   return (
@@ -19,13 +18,15 @@ export default function Features() {
           </div>
 
           {/* Right side - Demo Image */}
-          <div className="flex-2 flex justify-end">
-            <Image
-              src="/demo2.png"
+          <div className="flex-2 flex w-full justify-end">
+            <ProgressiveImage
+              name="demo-feature"
               alt="LeetGuard Demo"
               width={1000}
               height={750}
-              className="shadow-lg border border-gray-200"
+              sizes="(max-width: 1024px) calc(100vw - 3rem), 1000px"
+              className="w-full max-w-[1000px] shadow-lg border border-gray-200"
+              imageClassName="object-cover object-top"
             />
           </div>
         </div>

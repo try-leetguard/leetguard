@@ -1,15 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import { useAuth } from "@/lib/auth-context";
 
 interface MarketingPageWrapperProps {
   children: React.ReactNode;
 }
 
 export function MarketingPageWrapper({ children }: MarketingPageWrapperProps) {
-  const { isAuthenticated, isLoading } = useAuth();
-
   // Handle logout by refreshing the page to show unauthenticated version
   useEffect(() => {
     const handleLogout = () => {
@@ -34,15 +31,6 @@ export function MarketingPageWrapper({ children }: MarketingPageWrapperProps) {
     };
   }, []);
 
-  // Show loading while checking authentication
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
-      </div>
-    );
-  }
-
-  // Always show the marketing content, but pass auth state to children
+  // Marketing pages should paint immediately; auth-only redirects belong on protected routes.
   return <>{children}</>;
 }
