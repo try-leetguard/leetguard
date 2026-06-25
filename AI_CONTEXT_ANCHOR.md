@@ -1,6 +1,6 @@
 # AI_CONTEXT_ANCHOR — LeetGuard Machine Snapshot
 <!-- PURPOSE: Feed this file to an LLM to restore full technical context after session loss. Not human docs. -->
-<!-- LAST_ARCHITECTURE_LOCK: 2026-06-17 (Auth stabilization + extension refresh sync locked) -->
+<!-- LAST_ARCHITECTURE_LOCK: 2026-06-25 (DB integrity normalization + solve popup display-name fix locked) -->
 
 ---
 
@@ -189,6 +189,36 @@ GET /api/blocklist/check/{website}
 
 The query route is declared before the path route. Both call the same internal handler, so auth, normalization, errors, and response shape are identical. The client uses the query route because it safely supports full URLs and path-hostile characters.
 
+### Database integrity contract
+
+**Source of truth:** FastAPI + PostgreSQL via Alembic. Runtime app startup must not create tables; `server/app/db/session.py` only creates engine/session dependency. Test fixtures may still call `Base.metadata.create_all()` inside isolated schemas.
+
+**Relationships:**
+
+```
+users 1 ────< blocklist_items
+users 1 ────< activities
+```
+
+No many-to-many tables exist. `activities.topic_tags` is JSON text, not a tag join table. Daily goal/progress lives on `users` (`target_daily`, `progress_today`, `progress_date`) and remains the unlock source of truth.
+
+**Normalization boundary:** `server/app/utils/normalization.py`
+
+| Value | Canonical storage | Compatibility |
+|-------|-------------------|---------------|
+| Blocklist website | domain only, lowercase, no protocol/`www`/path/query/hash (`youtube.com`) | `https://www.youtube.com/watch?v=...` checks/removes as `youtube.com` |
+| Activity status | `solved`, `attempted`, `bookmarked` | legacy `completed → solved`, `in_progress → attempted` |
+| LeetCode problem URL | `https://leetcode.com/problems/{slug}/` | query/hash/description paths collapse to canonical problem URL |
+
+**Uniqueness hardlocks:**
+
+| Table | Constraint | Behavior |
+|-------|------------|----------|
+| `blocklist_items` | `uq_blocklist_items_user_website` on `(user_id, website)` | one canonical domain per user |
+| `activities` | `uq_activities_user_problem_url` on `(user_id, problem_url)` | one canonical problem row per user; repeat posts update status |
+
+Migration `add_data_integrity_constraints` normalizes existing rows, dedupes blocklist rows by lowest `id`, dedupes activities by newest `completed_at` then highest `id`, then adds constraints. Earlier migrations now create missing base tables on fresh DBs instead of relying on historical `Base.metadata.create_all()` side effects.
+
 ### PostgreSQL test isolation (`server/tests/conftest.py`)
 
 Tests no longer use SQLite. Resolution order:
@@ -347,7 +377,7 @@ statusData.finished === true
 !statusData.submission_id.startsWith('runcode_')       // exclude "Run Code" polls
 ```
 
-Extract `problemSlug` from `window.location.pathname` (`/problems/{slug}/…`). Build payload: `{ type:'SUBMISSION_ACCEPTED', slug, submissionId, timestamp, url, statusData, problemInfo }`. Show congrats popup (`showLeetGuardPopup`) **before** background delivery.
+Extract `problemSlug` from `window.location.pathname` (`/problems/{slug}/…`). Resolve user-facing `problemName` with priority: visible `[data-cy="question-title"]` text → cleaned `document.title` → titleized slug (`two-sum` → `Two Sum`). Build payload: `{ type:'SUBMISSION_ACCEPTED', slug, submissionId, timestamp, url, statusData, problemInfo }`, where `problemInfo.problem_name` uses `problemName`. Show congrats popup (`showLeetGuardPopup(problemName)`) **before** background delivery.
 
 ### `content.js` message delivery — extension context invalidation guards
 
@@ -411,7 +441,7 @@ Success (both guards clear):
 
 - `leetguardSolved: true`, `focusMode: false` — written inside `processSubmissionAccepted` success path only
 - `chrome.runtime.sendMessage({ type:'PROGRESS_UPDATED', progress, goal, isGoalCompleted })` → popup
-- Congrats popup on LeetCode page — `content.js` `showLeetGuardPopup(problemSlug)` fires before background send (including re-submits blocked by Guard 2)
+- Congrats popup on LeetCode page — `content.js` `showLeetGuardPopup(problemName)` fires before background send (including re-submits blocked by Guard 2). The popup is built with DOM nodes, not `innerHTML`, so the title has stable spacing and cannot render as `solvedtwo-sum`.
 
 ---
 
@@ -469,6 +499,11 @@ POST   /api/blocklist/add
 DELETE /api/blocklist/remove
 GET    /api/blocklist/check        → query canonical: ?website=...
 GET    /api/blocklist/check/{site} → legacy fallback, same handler
+GET    /api/activity               → current user's activity rows; statuses canonical
+POST   /api/activity               → create/update by canonical problem URL; accepts legacy statuses
+GET    /api/activity/stats         → { total, solved, attempted }
+PUT    /api/activity/{id}          → update owned activity; canonicalizes status/url
+DELETE /api/activity/{id}          → delete owned activity
 GET    /api/me/goal                → GoalResponse
 PATCH  /api/me/goal                → { target_daily }
 POST   /api/me/goal/progress       → { delta: 1 }
