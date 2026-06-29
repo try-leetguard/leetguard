@@ -26,7 +26,7 @@ export default function Features() {
               height={750}
               sizes="(max-width: 1024px) calc(100vw - 3rem), 1000px"
               className="w-full max-w-[1000px] shadow-lg border border-gray-200"
-              imageClassName="object-cover object-top"
+              imageClassName="object-cover object-[10%_top]"
             />
           </div>
         </div>
