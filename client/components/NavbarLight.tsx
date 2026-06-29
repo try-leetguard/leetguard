@@ -54,7 +54,7 @@ export default function NavbarLight() {
           {/* Center Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             <Link
-              href={"/#features"}
+              href={"/features"}
               className="text-black hover:text-black hover:underline hover:underline-offset-4 transition-colors duration-200 text-sm font-medium"
             >
               How It Works

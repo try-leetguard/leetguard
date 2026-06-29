@@ -23,7 +23,7 @@ export default function NavbarDark() {
           {/* Center Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             <Link
-              href={"/#features"}
+              href={"/features"}
               className="text-black hover:text-black hover:underline transition-colors duration-200 text-sm font-normal"
             >
               How It Works
