@@ -1,107 +1,392 @@
 "use client";
 
-import { useEffect } from "react";
-import { motion } from "framer-motion";
-import NavbarLight from "@/components/NavbarLight";
-import Footer from "@/components/Footer";
-import Image from "next/image";
+import {
+  ArrowRight,
+  ChevronDown,
+  Code2,
+  Megaphone,
+  Palette,
+  Sparkles,
+} from "lucide-react";
 import Link from "next/link";
+import { type MouseEvent, useEffect, useState } from "react";
+import CareerWorkflowTheatre from "@/components/CareerWorkflowTheatre";
+import Footer from "@/components/Footer";
+import {
+  DepthIcon,
+  FlowIcon,
+  ImpactIcon,
+  QualityIcon,
+} from "@/components/icons/CareerValueIcons";
+import NavbarLight from "@/components/NavbarLight";
+
+const departments = [
+  {
+    id: "engineering",
+    name: "Engineering",
+    icon: Code2,
+    roles: [
+      {
+        title: "Backend Engineer",
+        detail: "FastAPI, data integrity, and focus rules that stay true.",
+        href: "/careers/anything-else",
+        location: "Remote",
+      },
+      {
+        title: "Frontend Engineer",
+        detail: "Next.js surfaces, product polish, and flows users feel.",
+        href: "/careers/anything-else",
+        location: "Remote",
+      },
+      {
+        title: "Full-Stack Engineer",
+        detail: "Work across the extension, dashboard, API, and product loops.",
+        href: "/careers/software-engineer",
+        location: "Remote",
+      },
+    ],
+  },
+  {
+    id: "product",
+    name: "Product",
+    icon: Palette,
+    roles: [
+      {
+        title: "Product Designer",
+        detail: "Shape the interaction language for focus and restraint.",
+        href: "/careers/anything-else",
+        location: "Remote",
+      },
+    ],
+  },
+  {
+    id: "go-to-market",
+    name: "Go-to-market",
+    icon: Megaphone,
+    roles: [
+      {
+        title: "Marketing / Growth",
+        detail: "Tell the story to coders who know the scroll is costing them.",
+        href: "/careers/anything-else",
+        location: "Remote",
+      },
+    ],
+  },
+  {
+    id: "open-lane",
+    name: "Open lane",
+    icon: Sparkles,
+    roles: [
+      {
+        title: "Anything Else",
+        detail: "Bring a useful angle we have not named yet.",
+        href: "/careers/anything-else",
+        location: "Remote",
+      },
+    ],
+  },
+] as const;
+
+const coreValues = [
+  {
+    label: "01",
+    icon: QualityIcon,
+    title: "Quality is the bar",
+    copy: "Frontend polish and backend logic matter more than whether we use AI or not. AI helps us move; quality decides whether the work earned its place.",
+  },
+  {
+    label: "02",
+    icon: DepthIcon,
+    title: "Think past the first consequence",
+    copy: "Before shipping, we ask what can break: edge cases, vulnerabilities, use cases, and the second-order effects that follow the obvious ones.",
+  },
+  {
+    label: "03",
+    icon: FlowIcon,
+    title: "Ideas move together",
+    copy: "Good work comes from listening well. We share context early, disagree cleanly, and let the strongest version of an idea survive the room.",
+  },
+  {
+    label: "04",
+    icon: ImpactIcon,
+    title: "Impact before effort",
+    copy: "We do not protect work just because it was hard. If the outcome is weak, we change direction and put energy where users actually feel it.",
+  },
+] as const;
+
 export default function CareersPage() {
+  const [expandedDepartments, setExpandedDepartments] = useState<string[]>([]);
+
   useEffect(() => {
-    // Set light mode for careers page
     document.documentElement.classList.remove("dark");
     localStorage.setItem("theme", "light");
   }, []);
 
+  const roleCount = departments.reduce(
+    (total, department) => total + department.roles.length,
+    0
+  );
+  const allExpanded = expandedDepartments.length === departments.length;
+
+  const toggleDepartment = (departmentId: string) => {
+    setExpandedDepartments((current) =>
+      current.includes(departmentId)
+        ? current.filter((id) => id !== departmentId)
+        : [...current, departmentId]
+    );
+  };
+
+  const toggleAllDepartments = () => {
+    setExpandedDepartments(
+      allExpanded ? [] : departments.map((department) => department.id)
+    );
+  };
+
+  const scrollToOpenPositions = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+
+    const target = document.getElementById("open-positions");
+    if (!target) return;
+
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    window.history.pushState(null, "", "#open-positions");
+
+    const navbarOffset = 110;
+    const targetTop = target.getBoundingClientRect().top + window.scrollY;
+
+    window.scrollTo({
+      top: Math.max(targetTop - navbarOffset, 0),
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+    });
+  };
+
   return (
     <div className="relative min-h-screen bg-white text-black">
-        <NavbarLight />
+      <NavbarLight />
 
-        {/* Hero Section */}
-        <div className="relative min-h-screen flex flex-col items-center justify-center px-6">
-          <div className="container mx-auto px-4 relative z-10">
-            <div className="text-center max-w-4xl mx-auto">
-              <h1 className="text-7xl md:text-7xl font-normal mb-8 leading-none py-1 tracking-super-tight">
-                <span className="text-black">Join the team.</span>
-                <br />
-                <span className="text-black">Help us create solutions.</span>
-              </h1>
+      <section className="px-6 pb-28 pt-40">
+        <div className="mx-auto max-w-5xl text-center">
+          <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
+            careers
+          </p>
+          <h1 className="text-6xl font-normal leading-none tracking-super-tight text-black md:text-7xl">
+            Build where focus gets made.
+          </h1>
+          <p className="mx-auto mt-8 max-w-3xl text-xl font-normal leading-relaxed tracking-wide text-neutral-700">
+            We are a small team using AI, taste, and careful engineering to make
+            practice happen before the internet takes over.
+          </p>
+          <div className="mt-8 flex justify-center">
+            <a
+              href="#open-positions"
+              onClick={scrollToOpenPositions}
+              className="inline-flex h-12 items-center justify-center rounded-lg border border-black/20 bg-black px-6 text-sm font-medium text-white transition-all duration-200 hover:border-black/50 hover:text-white hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] hover:shadow-black/30"
+            >
+              View Open Positions
+              <ArrowRight className="ml-2 h-3.5 w-3.5" />
+            </a>
+          </div>
+        </div>
+      </section>
 
-              <p className="text-xl text-neutral-600 mb-8 max-w-2xl mx-auto font-normal tracking-wide leading-relaxed">
-                We're a small team of students who are passionate about building
-                innovative solutions for the community.
+      <CareerWorkflowTheatre />
+
+      <section className="px-6 py-28">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-10 text-center">
+            <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
+              why
+            </p>
+            <h2 className="mt-4 text-4xl font-normal leading-tight text-black md:text-5xl">
+              Our Mission
+            </h2>
+          </div>
+
+          <div className="grid gap-10 md:grid-cols-2">
+            <p className="text-2xl font-normal leading-relaxed text-black md:text-3xl">
+              LeetGuard exists to help people do the hard useful thing before
+              the easy distracting thing.
+            </p>
+            <div className="space-y-6 text-sm leading-relaxed text-neutral-700">
+              <p>
+                The product starts with LeetCode because the loop is clear:
+                practice, progress, then permission. But the deeper mission is
+                bigger than one site. We want focus to feel engineered, not
+                negotiated.
+              </p>
+              <p>
+                We build with AI because it lets a small team move with unusual
+                leverage. We still own the taste, the tradeoffs, and the final
+                product people have to trust.
               </p>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* Careers Section */}
-        <div className="relative pb-32 px-6 -mt-40">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              {/* Engineering Section */}
-              <div>
-                <h2 className="text-xl font-normal mb-6">Engineering</h2>
-                <Link href="/careers/software-engineer">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.4 }}
-                    className="bg-white border border-gray-200 p-8 transition-all duration-300 shadow-sm hover:shadow-lg hover:scale-[1.025] cursor-pointer"
+      <section className="px-6 py-28">
+        <div className="mx-auto max-w-6xl">
+          <div className="mx-auto mb-14 max-w-3xl text-center">
+            <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
+              our values
+            </p>
+            <h2 className="mt-5 text-5xl font-normal leading-tight text-black md:text-6xl">
+              Our Internal Core Values
+            </h2>
+            <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-neutral-700">
+              A framework for how we use AI, make decisions, and keep product
+              quality higher than our own attachment to the work.
+            </p>
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-2">
+            {coreValues.map((value) => {
+              const Icon = value.icon;
+
+              return (
+                <div
+                  key={value.title}
+                  className="flex min-h-[340px] flex-col justify-center rounded-lg bg-gray-100 p-8 md:p-10"
+                >
+                  <div className="flex justify-start">
+                    <Icon className="h-24 w-24 text-black" />
+                  </div>
+                  <h3 className="mt-12 text-3xl font-normal leading-tight text-black">
+                    {value.title}
+                  </h3>
+                  <p className="mt-5 max-w-xl text-sm leading-relaxed text-neutral-700">
+                    {value.copy}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="open-positions"
+        className="scroll-mt-[110px] px-6 pb-32 pt-28"
+      >
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-10 text-center">
+            <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
+              open positions
+            </p>
+            <h2 className="mt-4 text-4xl font-normal leading-tight text-black md:text-5xl">
+              Find the lane where you can raise the bar.
+            </h2>
+            <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-neutral-700">
+              Specific role pages will come later. For now, every lane is open
+              enough to start a conversation.
+            </p>
+          </div>
+
+          <div className="mb-5 flex flex-col gap-3 border-b border-gray-200 pb-5 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs font-mono uppercase tracking-[0.16em] text-gray-500">
+              {roleCount} roles across {departments.length} teams
+            </p>
+            <button
+              type="button"
+              onClick={toggleAllDepartments}
+              className="w-fit text-xs font-mono uppercase tracking-[0.16em] text-gray-500 transition-colors hover:text-black"
+            >
+              {allExpanded ? "Collapse all" : "Expand all"} ·{" "}
+              {expandedDepartments.length} of {departments.length} expanded
+            </button>
+          </div>
+
+          <div className="divide-y divide-gray-200 border-b border-gray-200">
+            {departments.map((department) => {
+              const isExpanded = expandedDepartments.includes(department.id);
+
+              return (
+                <div key={department.id}>
+                  <button
+                    type="button"
+                    onClick={() => toggleDepartment(department.id)}
+                    className="flex w-full items-center justify-between gap-5 py-7 text-left transition-colors hover:bg-gray-50"
                   >
-                    <div className="mb-2 text-lg font-medium">
-                      Full-Stack Engineer
+                    <div className="flex min-w-0 items-center gap-5 px-3">
+                      <department.icon className="h-5 w-5 shrink-0 text-gray-500" />
+                      <div>
+                        <h3 className="text-2xl font-normal text-black">
+                          {department.name}
+                        </h3>
+                        <p className="mt-1 text-xs font-mono uppercase tracking-[0.16em] text-gray-500">
+                          {department.roles.length}{" "}
+                          {department.roles.length === 1 ? "role" : "roles"}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center text-neutral-500 mb-2">
-                      <Image
-                        src="/usflag.svg"
-                        alt="US Flag"
-                        width={20}
-                        height={20}
-                        className="mr-2 inline-block align-middle"
-                      />
-                      US only
+                    <ChevronDown
+                      className={`mr-3 h-5 w-5 shrink-0 text-gray-500 transition-transform duration-200 ${
+                        isExpanded ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {isExpanded ? (
+                    <div className="bg-gray-50">
+                      {department.roles.map((role) => (
+                        <Link
+                          key={role.title}
+                          href={role.href}
+                          className="group grid gap-3 border-t border-gray-200 px-6 py-5 transition-colors hover:bg-white md:grid-cols-[1fr_1.4fr_auto]"
+                        >
+                          <div>
+                            <h4 className="text-lg font-normal text-black">
+                              {role.title}
+                            </h4>
+                            <p className="mt-1 text-xs font-mono uppercase tracking-[0.16em] text-gray-500">
+                              {department.name}
+                            </p>
+                          </div>
+                          <p className="max-w-xl text-sm leading-relaxed text-neutral-700">
+                            {role.detail}
+                          </p>
+                          <div className="flex items-center gap-5 text-xs font-mono uppercase tracking-[0.16em] text-gray-500 md:justify-end">
+                            <span>{role.location}</span>
+                            <span className="inline-flex items-center gap-2 text-black">
+                              Apply
+                              <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+                            </span>
+                          </div>
+                        </Link>
+                      ))}
                     </div>
-                    <div className="text-sm text-neutral-500">
-                      Remote • Build and scale
-                    </div>
-                  </motion.div>
-                </Link>
-              </div>
-              {/* Other Section */}
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-6 rounded-lg border border-black bg-black p-6 text-white">
+            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
               <div>
-                <h2 className="text-xl font-normal mb-6">Other</h2>
-                <Link href="/careers/anything-else">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.4 }}
-                    className="bg-white border border-gray-200 p-8 transition-all duration-300 shadow-sm hover:shadow-lg hover:scale-[1.025] cursor-pointer"
-                  >
-                    <div className="mb-2 text-lg font-medium">
-                      Anything else
-                    </div>
-                    <div className="flex items-center text-neutral-500 mb-2">
-                      <Image
-                        src="/usflag.svg"
-                        alt="US Flag"
-                        width={20}
-                        height={20}
-                        className="mr-2 inline-block align-middle"
-                      />
-                      US only
-                    </div>
-                    <div className="text-sm text-neutral-500">
-                      Remote • Contribute your ideas
-                    </div>
-                  </motion.div>
-                </Link>
+                <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-300">
+                  not sure where you fit?
+                </p>
+                <h3 className="mt-3 text-3xl font-normal">
+                  Useful people rarely fit clean boxes.
+                </h3>
               </div>
+              <Link
+                href="/careers/anything-else"
+                className="inline-flex h-12 shrink-0 items-center justify-center rounded-lg border border-white/20 bg-white px-6 text-sm font-medium text-black transition-all duration-200 hover:border-white hover:text-black"
+              >
+                Tell Us Anyway
+                <ArrowRight className="ml-2 h-3.5 w-3.5" />
+              </Link>
             </div>
           </div>
         </div>
+      </section>
 
-        <Footer />
+      <Footer />
     </div>
   );
 }
