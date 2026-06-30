@@ -29,19 +29,19 @@ const departments = [
       {
         title: "Backend Engineer",
         detail: "FastAPI, data integrity, and focus rules that stay true.",
-        href: "/careers/anything-else",
+        href: "/careers/backend-engineer",
         location: "Remote",
       },
       {
         title: "Frontend Engineer",
         detail: "Next.js surfaces, product polish, and flows users feel.",
-        href: "/careers/anything-else",
+        href: "/careers/frontend-engineer",
         location: "Remote",
       },
       {
         title: "Full-Stack Engineer",
         detail: "Work across the extension, dashboard, API, and product loops.",
-        href: "/careers/software-engineer",
+        href: "/careers/full-stack-engineer",
         location: "Remote",
       },
     ],
@@ -54,7 +54,7 @@ const departments = [
       {
         title: "Product Designer",
         detail: "Shape the interaction language for focus and restraint.",
-        href: "/careers/anything-else",
+        href: "/careers/product-designer",
         location: "Remote",
       },
     ],
@@ -67,7 +67,7 @@ const departments = [
       {
         title: "Marketing / Growth",
         detail: "Tell the story to coders who know the scroll is costing them.",
-        href: "/careers/anything-else",
+        href: "/careers/marketing-growth",
         location: "Remote",
       },
     ],
@@ -280,8 +280,8 @@ export default function CareersPage() {
               Find the lane where you can raise the bar.
             </h2>
             <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-neutral-700">
-              Specific role pages will come later. For now, every lane is open
-              enough to start a conversation.
+              Every lane has a shape now. Read the role, steal the vibe, and
+              decide where you would raise the bar.
             </p>
           </div>
 
