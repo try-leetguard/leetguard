@@ -1,240 +1,218 @@
 "use client";
 
-import Link from "next/link";
+import Footer from "@/components/Footer";
 import NavbarLight from "@/components/NavbarLight";
+
+const dataReceipts = [
+  {
+    label: "Account",
+    title: "Who are you?",
+    copy: "Email, optional display name, verification state, OAuth basics, and password auth data when you use password login.",
+  },
+  {
+    label: "Focus",
+    title: "What are you blocking?",
+    copy: "Blocklist domains, daily goal, daily progress, and activity history when LeetGuard logs a solved or attempted problem.",
+  },
+  {
+    label: "Extension",
+    title: "Can the blocker work?",
+    copy: "Chrome storage may hold tokens, settings, progress cache, and synced blocklist data so the extension can do its job.",
+  },
+  {
+    label: "Ops",
+    title: "Is the app alive?",
+    copy: "Basic technical logs can help us debug, secure, and keep the product from falling over at the worst possible time.",
+  },
+] as const;
+
+const privacyMoves = [
+  {
+    title: "We use data to run the loop.",
+    copy: "Sign in, sync the extension, remember your blocklist, count your daily progress, send verification emails, show activity, fix bugs, and keep the service safe.",
+  },
+  {
+    title: "We do not sell your personal information.",
+    copy: "Your focus habits are not our marketplace. Your blocked sites are not a lead magnet. Your progress is not ad inventory.",
+  },
+  {
+    title: "Some helpers touch the machinery.",
+    copy: "Hosting, database, email, auth, infrastructure, and debugging providers may process data only where needed to provide the service.",
+  },
+  {
+    title: "OAuth is a handshake with another company.",
+    copy: "If you use Google or GitHub login, those providers handle their side under their own terms and privacy policies.",
+  },
+  {
+    title: "Local storage is part of the product.",
+    copy: "The app and extension use browser or Chrome storage. Clearing it may sign you out, reset cached state, or make sync grumpy until you reconnect.",
+  },
+  {
+    title: "Security is serious, not magical.",
+    copy: "We use reasonable safeguards like password hashing and token-based auth. No online system gets to promise invincibility with a straight face.",
+  },
+] as const;
+
+const controls = [
+  "Update your blocklist, goal, profile name, and extension settings where the app supports it.",
+  "Ask to access, correct, or delete personal information by emailing support@leetguard.com.",
+  "Remove the extension or clear local browser storage when you want a local reset.",
+  "Expect some records to remain if law, fraud prevention, security, or dispute handling requires it.",
+] as const;
 
 export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-white text-black">
-        <NavbarLight />
+      <NavbarLight />
 
-        {/* Header */}
-        <header className="border-b border-gray-200 pt-32">
-          <div className="max-w-4xl mx-auto px-6 py-12">
-            <h1 className="text-6xl font-normal text-black mb-3">
-              Privacy Policy
-            </h1>
-            <p className="text-lg text-black">Last Updated: June 26, 2025</p>
-          </div>
-        </header>
+      <main>
+        <section className="px-6 pb-24 pt-40">
+          <div className="mx-auto max-w-6xl">
+            <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
+              privacy policy
+            </p>
 
-        {/* Content */}
-        <main className="max-w-4xl mx-auto px-6 py-12">
-          <div className="prose prose-lg max-w-none">
-            <div className="space-y-8">
-              {/* Introduction */}
-              <section>
-                <div className="bg-[#F9F6F0] border border-black rounded-lg p-6 mb-6">
-                  <p className="text-black leading-relaxed">
-                    LeetGuard, Inc. ("LeetGuard," "we," "us," or "our") values
-                    your privacy. This Privacy Policy describes how we collect,
-                    use, and protect your information when you use our website
-                    located at www.leetguard.com (the "Site") and our related
-                    services (collectively, the "Services"). By accessing or
-                    using the Services, you agree to the collection and use of
-                    information in accordance with this policy.
+            <div className="mt-6 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+              <div className="rounded-lg bg-black p-8 text-white md:p-10">
+                <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-400">
+                  the whole mood
+                </p>
+                <h1 className="mt-6 text-6xl font-normal leading-none tracking-super-tight md:text-7xl">
+                  No weird stuff.
+                </h1>
+                <p className="mt-8 max-w-2xl text-lg leading-relaxed text-gray-300">
+                  LeetGuard needs enough data to block distractions, sync your
+                  progress, and let you back in after the solve. That is the
+                  assignment. Not a surveillance side quest.
+                </p>
+              </div>
+
+              <div className="grid gap-5">
+                <div className="rounded-lg border border-gray-300 bg-gray-50 p-6">
+                  <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
+                    last updated
+                  </p>
+                  <p className="mt-4 text-4xl font-normal text-black">
+                    June 30, 2026
                   </p>
                 </div>
-              </section>
-
-              {/* Section I */}
-              <section>
-                <h2 className="text-2xl font-normal text-black mb-4">
-                  I. Information We Collect
-                </h2>
-
-                <h3 className="text-xl font-normal text-black mb-3">
-                  A. Personal Information
-                </h3>
-                <p className="text-black leading-relaxed mb-6">
-                  We may collect personal information you provide when you
-                  register, such as your name, email address, and payment
-                  information if applicable.
-                </p>
-
-                <h3 className="text-xl font-normal text-black mb-3">
-                  B. Usage Information
-                </h3>
-                <p className="text-black leading-relaxed mb-6">
-                  We automatically collect information about your interactions
-                  with the Service, including device information, browser type,
-                  IP address, log data, and usage patterns.
-                </p>
-
-                <h3 className="text-xl font-normal text-black mb-3">
-                  C. Cookies and Tracking Technologies
-                </h3>
-                <p className="text-black leading-relaxed">
-                  We use cookies and similar technologies to enhance your
-                  experience, analyze usage, and personalize content. You can
-                  manage cookie preferences through your browser settings.
-                </p>
-              </section>
-
-              {/* Section II */}
-              <section>
-                <h2 className="text-2xl font-normal text-black mb-4">
-                  II. How We Use Your Information
-                </h2>
-                <p className="text-black leading-relaxed mb-4">
-                  We use your information to:
-                </p>
-                <ul className="list-disc list-inside space-y-2 text-black leading-relaxed ml-4">
-                  <li>Provide, maintain, and improve the Services</li>
-                  <li>
-                    Communicate with you, including sending service-related
-                    messages and updates
-                  </li>
-                  <li>Process payments and prevent fraud</li>
-                  <li>Analyze usage and performance metrics</li>
-                  <li>Comply with legal obligations</li>
-                </ul>
-              </section>
-
-              {/* Section III */}
-              <section>
-                <h2 className="text-2xl font-normal text-black mb-4">
-                  III. Information Sharing and Disclosure
-                </h2>
-                <p className="text-black leading-relaxed mb-4">
-                  We do not sell your personal information. We may share
-                  information with:
-                </p>
-                <ul className="list-disc list-inside space-y-2 text-black leading-relaxed ml-4">
-                  <li>
-                    Service providers who help operate our Service (under strict
-                    confidentiality)
-                  </li>
-                  <li>
-                    Legal authorities if required by law or to protect rights
-                    and safety
-                  </li>
-                  <li>Successors in the event of a merger or acquisition</li>
-                </ul>
-              </section>
-
-              {/* Section IV */}
-              <section>
-                <h2 className="text-2xl font-normal text-black mb-4">
-                  IV. Data Security
-                </h2>
-                <p className="text-black leading-relaxed">
-                  We implement reasonable administrative, technical, and
-                  physical safeguards designed to protect your information.
-                  However, no system is completely secure, and we cannot
-                  guarantee absolute security.
-                </p>
-              </section>
-
-              {/* Section V */}
-              <section>
-                <h2 className="text-2xl font-normal text-black mb-4">
-                  V. Your Rights and Choices
-                </h2>
-                <p className="text-black leading-relaxed mb-4">
-                  Depending on your jurisdiction, you may have rights including:
-                </p>
-                <ul className="list-disc list-inside space-y-2 text-black leading-relaxed ml-4 mb-4">
-                  <li>
-                    Accessing, correcting, or deleting your personal information
-                  </li>
-                  <li>Opting out of marketing communications</li>
-                  <li>Managing cookie preferences</li>
-                </ul>
-                <p className="text-black leading-relaxed">
-                  To exercise your rights, please contact us at{" "}
-                  <a
-                    href="mailto:privacy@leetguard.com"
-                    className="text-blue-600 hover:text-blue-700 transition-colors duration-200 underline"
-                  >
-                    privacy@leetguard.com
-                  </a>
-                  .
-                </p>
-              </section>
-
-              {/* Section VI */}
-              <section>
-                <h2 className="text-2xl font-normal text-black mb-4">
-                  VI. Children's Privacy
-                </h2>
-                <p className="text-black leading-relaxed">
-                  Our Services are not directed to children under 13, and we do
-                  not knowingly collect personal information from children under
-                  13.
-                </p>
-              </section>
-
-              {/* Section VII */}
-              <section>
-                <h2 className="text-2xl font-normal text-black mb-4">
-                  VII. International Users
-                </h2>
-                <p className="text-black leading-relaxed">
-                  If you are located outside of [Your Jurisdiction], please be
-                  aware that your information may be transferred to and
-                  processed in [Your Jurisdiction], where data protection laws
-                  may differ.
-                </p>
-              </section>
-
-              {/* Section VIII */}
-              <section>
-                <h2 className="text-2xl font-normal text-black mb-4">
-                  VIII. Changes to This Privacy Policy
-                </h2>
-                <p className="text-black leading-relaxed">
-                  We may update this Privacy Policy from time to time. We will
-                  notify you of significant changes via the Site or email. Your
-                  continued use after updates means you accept the revised
-                  policy.
-                </p>
-              </section>
-
-              {/* Section IX */}
-              <section>
-                <h2 className="text-2xl font-normal text-black mb-4">
-                  IX. Contact Us
-                </h2>
-                <p className="text-black leading-relaxed">
-                  For questions or concerns, contact us at{" "}
-                  <a
-                    href="mailto:support@leetguard.com"
-                    className="text-blue-600 hover:text-blue-700 transition-colors duration-200 underline"
-                  >
-                    support@leetguard.com
-                  </a>
-                  .
-                </p>
-              </section>
-            </div>
-          </div>
-        </main>
-
-        {/* Footer */}
-        <footer className="border-t border-gray-200 mt-16">
-          <div className="max-w-4xl mx-auto px-6 py-8">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <p className="text-black text-sm">
-                © 2025 LeetGuard, Inc. All rights reserved.
-              </p>
-              <div className="flex space-x-6 mt-4 md:mt-0">
-                <Link
-                  href="/privacy"
-                  className="text-black font-medium text-sm"
-                >
-                  Privacy Policy
-                </Link>
-                <Link
-                  href="/terms"
-                  className="text-black hover:text-black transition-colors duration-200 text-sm"
-                >
-                  Terms of Service
-                </Link>
+                <div className="rounded-lg border border-gray-300 bg-white p-6">
+                  <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
+                    tiny thesis
+                  </p>
+                  <p className="mt-4 text-3xl font-normal leading-tight text-black">
+                    We protect focus. We do not flip your data into confetti.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </footer>
+        </section>
+
+        <section className="px-6 pb-24">
+          <div className="mx-auto max-w-6xl">
+            <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
+                  data receipts
+                </p>
+                <h2 className="mt-4 text-4xl font-normal leading-tight md:text-5xl">
+                  What enters the room.
+                </h2>
+              </div>
+              <p className="max-w-md text-sm leading-relaxed text-neutral-700">
+                If a data category does not help the focus loop work, it should
+                not be hanging around pretending to be useful.
+              </p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-4">
+              {dataReceipts.map((item) => (
+                <div
+                  key={item.title}
+                  className="min-h-[250px] rounded-lg border border-gray-300 bg-white p-5"
+                >
+                  <p className="text-xs font-mono uppercase tracking-[0.16em] text-gray-500">
+                    {item.label}
+                  </p>
+                  <h3 className="mt-14 text-2xl font-normal leading-tight">
+                    {item.title}
+                  </h3>
+                  <p className="mt-4 text-sm leading-relaxed text-neutral-700">
+                    {item.copy}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="px-6 pb-24">
+          <div className="mx-auto max-w-6xl">
+            <div className="grid gap-5 md:grid-cols-2">
+              {privacyMoves.map((move) => (
+                <section key={move.title} className="rounded-lg bg-gray-100 p-8">
+                  <h2 className="text-3xl font-normal leading-tight">
+                    {move.title}
+                  </h2>
+                  <p className="mt-5 text-sm leading-relaxed text-neutral-700">
+                    {move.copy}
+                  </p>
+                </section>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="px-6 pb-28">
+          <div className="mx-auto max-w-6xl">
+            <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+              <div className="rounded-lg bg-black p-8 text-white md:p-10">
+                <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-400">
+                  your controls
+                </p>
+                <h2 className="mt-5 text-5xl font-normal leading-tight">
+                  You still get buttons.
+                </h2>
+                <p className="mt-6 text-sm leading-relaxed text-gray-300">
+                  Privacy without controls is just a speech. Here is what you
+                  can actually do.
+                </p>
+              </div>
+
+              <div className="divide-y divide-gray-200 rounded-lg border border-gray-300 bg-white">
+                {controls.map((control) => (
+                  <p
+                    key={control}
+                    className="p-6 text-sm leading-relaxed text-neutral-700"
+                  >
+                    {control}
+                  </p>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-5 rounded-lg border border-gray-300 bg-gray-50 p-6">
+              <p className="text-sm leading-relaxed text-neutral-700">
+                LeetGuard is not for children under 13. We operate from the
+                United States, and your information may be processed in the
+                United States or wherever our service providers operate. If this
+                policy changes meaningfully, we update this page and may provide
+                extra notice when appropriate. Privacy questions go to{" "}
+                <a
+                  href="mailto:support@leetguard.com"
+                  className="text-black underline underline-offset-4"
+                >
+                  support@leetguard.com
+                </a>
+                .
+              </p>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <Footer />
     </div>
   );
 }
