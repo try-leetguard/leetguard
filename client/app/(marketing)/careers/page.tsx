@@ -3,9 +3,9 @@
 import {
   ArrowRight,
   ChevronDown,
-  Code2,
+  CircuitBoard,
   Megaphone,
-  Palette,
+  Spline,
   Sparkles,
 } from "lucide-react";
 import Link from "next/link";
@@ -24,7 +24,7 @@ const departments = [
   {
     id: "engineering",
     name: "Engineering",
-    icon: Code2,
+    icon: CircuitBoard,
     roles: [
       {
         title: "Backend Engineer",
@@ -49,7 +49,7 @@ const departments = [
   {
     id: "product",
     name: "Product",
-    icon: Palette,
+    icon: Spline,
     roles: [
       {
         title: "Product Designer",
@@ -154,7 +154,7 @@ export default function CareersPage() {
 
     window.history.pushState(null, "", "#open-positions");
 
-    const navbarOffset = 110;
+    const navbarOffset = 60;
     const targetTop = target.getBoundingClientRect().top + window.scrollY;
 
     window.scrollTo({
@@ -269,7 +269,7 @@ export default function CareersPage() {
 
       <section
         id="open-positions"
-        className="scroll-mt-[110px] px-6 pb-32 pt-28"
+        className="scroll-mt-24 px-6 pb-32 pt-12"
       >
         <div className="mx-auto max-w-6xl">
           <div className="mb-10 text-center">
