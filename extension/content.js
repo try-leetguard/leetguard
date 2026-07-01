@@ -93,52 +93,135 @@ function getProblemDisplayName(problemSlug) {
   return titleizeProblemSlug(problemSlug);
 }
 
+const leetGuardShownSubmissionPopups = new Set();
+
+function createLeetGuardCheckIcon() {
+  const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  icon.setAttribute('class', 'check-icon');
+  icon.setAttribute('viewBox', '0 0 24 24');
+  icon.setAttribute('aria-hidden', 'true');
+
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', 'M20 6 9 17l-5-5');
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke', 'currentColor');
+  path.setAttribute('stroke-linecap', 'round');
+  path.setAttribute('stroke-linejoin', 'round');
+  path.setAttribute('stroke-width', '3');
+  icon.appendChild(path);
+
+  return icon;
+}
+
+function createLeetGuardLogoImage() {
+  const logo = document.createElement('img');
+  logo.className = 'brand-logo';
+  logo.src = chrome.runtime.getURL('icons/leetguard-logo-black.png');
+  logo.alt = '';
+
+  return logo;
+}
+
+function createLeetGuardConfetti() {
+  const confetti = document.createElement('div');
+  confetti.className = 'confetti';
+  confetti.setAttribute('aria-hidden', 'true');
+
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    return confetti;
+  }
+
+  const colors = ['#22c55e', '#16a34a', '#111827', '#9ca3af', '#f59e0b'];
+
+  Array.from({ length: 22 }).forEach((_, index) => {
+    const particle = document.createElement('span');
+    const angle = (Math.PI * 2 * index) / 22;
+    const distance = 58 + Math.random() * 54;
+    const x = Math.cos(angle) * distance;
+    const y = Math.sin(angle) * distance - 8;
+
+    particle.style.setProperty('--x', `${x.toFixed(1)}px`);
+    particle.style.setProperty('--y', `${y.toFixed(1)}px`);
+    particle.style.setProperty('--r', `${Math.round(Math.random() * 260 - 130)}deg`);
+    particle.style.setProperty('--delay', `${Math.round(Math.random() * 90)}ms`);
+    particle.style.setProperty('--bg', colors[index % colors.length]);
+    particle.style.setProperty('--w', `${Math.round(4 + Math.random() * 4)}px`);
+    particle.style.setProperty('--h', `${Math.round(8 + Math.random() * 6)}px`);
+
+    confetti.appendChild(particle);
+  });
+
+  return confetti;
+}
+
 // Popup function to show when a problem is solved
 function showLeetGuardPopup(problemName) {
-  console.log("🎉 showLeetGuardPopup called with problemName:", problemName);
+  console.log("[LeetGuard] Showing solve toast for:", problemName);
   
   injectLeetGuardPopupCSS();
   
   // Remove existing popup if present
   const existing = document.getElementById('leetguard-congrats-popup');
   if (existing) {
-    console.log("🎉 Removing existing popup");
     existing.remove();
   }
 
   // Create popup container
   const popup = document.createElement('div');
   popup.id = 'leetguard-congrats-popup';
+  popup.setAttribute('role', 'status');
+  popup.setAttribute('aria-live', 'polite');
+
+  const statusBadge = document.createElement('span');
+  statusBadge.className = 'status-badge';
+  statusBadge.appendChild(createLeetGuardCheckIcon());
 
   const message = document.createElement('span');
   message.className = 'message';
-  message.append('🎉 Congratulations! You solved ');
+
+  const label = document.createElement('span');
+  label.className = 'label';
+  label.textContent = 'Solved';
 
   const title = document.createElement('strong');
+  title.className = 'problem-title';
   title.textContent = problemName;
-  message.append(title, '!');
+  message.append(label, title);
 
-  const closeButton = document.createElement('span');
+  const closeButton = document.createElement('button');
+  closeButton.type = 'button';
   closeButton.className = 'close-btn';
-  closeButton.textContent = '✖';
-  popup.append(message, closeButton);
+  closeButton.setAttribute('aria-label', 'Dismiss solve notification');
+  closeButton.textContent = '×';
+  popup.append(createLeetGuardConfetti(), statusBadge, message, closeButton);
 
-  console.log("🎉 Popup created for:", problemName);
-
-  // Add close event
-  closeButton.onclick = () => {
-    console.log("🎉 Close button clicked");
+  let phaseTimer;
+  let dismissTimer;
+  const dismissPopup = () => {
+    clearTimeout(phaseTimer);
+    clearTimeout(dismissTimer);
     popup.remove();
   };
 
-  document.body.appendChild(popup);
-  console.log("🎉 Popup added to body");
+  // Add close event
+  closeButton.onclick = dismissPopup;
 
-  // Auto-remove after 10 seconds
-  setTimeout(() => {
-    console.log("🎉 Auto-removing popup after 10 seconds");
-    popup.remove();
-  }, 10000);
+  document.body.appendChild(popup);
+
+  phaseTimer = setTimeout(() => {
+    if (!popup.isConnected) {
+      return;
+    }
+
+    popup.classList.add('is-progress-update');
+    statusBadge.replaceChildren(createLeetGuardLogoImage());
+    label.textContent = 'LeetGuard';
+    title.textContent = 'Progress updated';
+    closeButton.setAttribute('aria-label', 'Dismiss LeetGuard notification');
+  }, 1500);
+
+  // Auto-remove after the branded follow-up has had time to read.
+  dismissTimer = setTimeout(dismissPopup, 5200);
 }
 
 // Listen for messages from the injected script
@@ -162,12 +245,15 @@ window.addEventListener("message", (event) => {
       console.log("📊 Status check response:", statusData);
       
       // Check if this is a real submission (not a test run)
+      const submissionId = statusData?.submission_id ? String(statusData.submission_id) : '';
+
       if (statusData && 
           statusData.status_code === 10 && 
           statusData.task_name === "judger.judgetask.Judge" &&
           statusData.question_id &&
           statusData.finished === true &&
-          !statusData.submission_id.startsWith("runcode_")) {
+          submissionId &&
+          !submissionId.startsWith("runcode_")) {
         
         console.log("✅ Real submission ACCEPTED!");
         
@@ -176,11 +262,13 @@ window.addEventListener("message", (event) => {
         const problemSlug = urlParts[2]; // /problems/two-sum/...
         const problemName = getProblemDisplayName(problemSlug);
         
-        console.log(`🎉 Problem "${problemName}" solved successfully!`);
+        console.log(`[LeetGuard] Problem "${problemName}" solved successfully.`);
         
         // Show popup
-        console.log("🎉 Creating congratulations popup...");
-        showLeetGuardPopup(problemName);
+        if (!leetGuardShownSubmissionPopups.has(submissionId)) {
+          leetGuardShownSubmissionPopups.add(submissionId);
+          showLeetGuardPopup(problemName);
+        }
         
         // Extract additional problem info from the page
         const difficultyElement = document.querySelector('[diff]');
@@ -199,7 +287,7 @@ window.addEventListener("message", (event) => {
             chrome.runtime.sendMessage({
               type: "SUBMISSION_ACCEPTED",
               slug: problemSlug,
-              submissionId: statusData.submission_id,
+              submissionId,
               timestamp: Date.now(),
               url: window.location.href,
               statusData: statusData,
