@@ -3,7 +3,10 @@ import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
 
-const dmSans = DM_Sans({ subsets: ["latin"] });
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-dm-sans",
+});
 
 export const metadata: Metadata = {
   title: "LeetGuard",
@@ -32,7 +35,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={dmSans.className}>
+      <body className={`${dmSans.variable} font-dm-sans`}>
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

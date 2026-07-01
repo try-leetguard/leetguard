@@ -68,7 +68,7 @@ const config: Config = {
         },
       },
       fontFamily: {
-        'dm-sans': ['DM Sans', 'sans-serif'],
+        'dm-sans': ['var(--font-dm-sans)', 'sans-serif'],
       },
       keyframes: {
         'accordion-down': {
