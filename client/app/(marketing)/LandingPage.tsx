@@ -495,7 +495,7 @@ export default function LandingPage() {
                 LeetCode focus.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
+              <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
                 <Link
                   href="/signup"
                   className="inline-flex h-12 w-full max-w-xs items-center justify-center rounded-lg border border-black/20 bg-black px-6 py-3 text-sm font-medium text-white transition-all duration-200 hover:border-black/50 hover:text-white hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] hover:shadow-black/30 sm:w-auto sm:max-w-none"
