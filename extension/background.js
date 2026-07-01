@@ -5,14 +5,13 @@ importScripts('auth.js', 'blocklist-sync.js', 'goal-sync.js');
 // Extension blocking state - now managed via storage
 // No longer need isBlockingEnabled variable
 
-// Default blocklist for guest users and fallback scenarios
-const DEFAULT_BLOCKLIST = [
+// Default blocklist for guest users only
+const GUEST_DEFAULT_BLOCKLIST = [
   'facebook.com',
   'reddit.com',
   'youtube.com',
   'instagram.com',
-  'x.com',
-  'twitter.com'
+  'x.com'
 ];
 
 // Note: Cross-tab auth detection removed - extension now checks localStorage on-demand
@@ -32,15 +31,16 @@ function enqueueRuleUpdate(task) {
 
 // Generate blocking rules for each site, using generation-scoped unique IDs
 async function getBlockRules(generation) {
-  // Get current blocklist (user's if authenticated, default otherwise)
-  let blocklist = DEFAULT_BLOCKLIST;
+  // Get current blocklist. Authenticated empty lists are intentional.
+  const isAuthenticated = extensionAuth.isAuthenticated();
+  let blocklist = isAuthenticated ? [] : GUEST_DEFAULT_BLOCKLIST;
 
   if (blocklistSync) {
     try {
       blocklist = await blocklistSync.getCurrentBlocklist();
     } catch (error) {
-      console.log('Using default blocklist (user not authenticated or sync failed):', error.message);
-      blocklist = DEFAULT_BLOCKLIST;
+      console.log('Using safe fallback blocklist after sync failure:', error.message);
+      blocklist = isAuthenticated ? [] : GUEST_DEFAULT_BLOCKLIST;
     }
   }
 
@@ -579,7 +579,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     if (!url.startsWith('http://') && !url.startsWith('https://')) return;
 
     // Determine if URL is on a known blocked domain without triggering auth checks
-    const isBlocked = DEFAULT_BLOCKLIST.some(site => url.includes(site));
+    const isBlocked = GUEST_DEFAULT_BLOCKLIST.some(site => url.includes(site));
 
     if (!isBlocked) return;
 

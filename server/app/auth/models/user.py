@@ -1,4 +1,15 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Text, Date, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    text,
+)
 from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -19,6 +30,12 @@ class User(Base):
     resend_cooldown_seconds = Column(Integer, default=30)  # Cooldown in seconds for resending code
     last_code_sent_at = Column(DateTime(timezone=True), nullable=True)  # Last time a code was sent
     display_name = Column(String, nullable=True)  # User's display name
+    default_blocklist_seeded = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=text("false"),
+    )
 
     # Daily goal fields
     target_daily = Column(Integer, default=5)  # Daily goal target
@@ -37,7 +54,7 @@ class BlocklistItem(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    website = Column(String(255), nullable=False)  # e.g., "facebook.com", "netflix.com"
+    website = Column(String(255), nullable=False)  # e.g., "facebook.com"
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationship

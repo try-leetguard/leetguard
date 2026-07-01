@@ -73,14 +73,17 @@ const DEFAULT_DISPLAY_DATA: DisplayData = {
   sourceLabel: "Guest defaults",
 };
 
-function normalizeSites(sites: string[] | undefined): string[] {
-  if (!sites || sites.length === 0) return CORE_BLOCKED_SITES;
+function normalizeSites(
+  sites: string[] | undefined,
+  emptyFallback: string[] = CORE_BLOCKED_SITES
+): string[] {
+  if (!sites || sites.length === 0) return emptyFallback;
 
   const cleaned = sites
     .map((site) => site.trim().toLowerCase())
     .filter(Boolean);
 
-  return Array.from(new Set(cleaned));
+  return cleaned.length > 0 ? Array.from(new Set(cleaned)) : emptyFallback;
 }
 
 function toSafeNumber(value: unknown, fallback: number): number {
@@ -133,14 +136,17 @@ function deriveSnapshotDisplayData(
     )
   );
 
+  const isGuest = snapshot.is_authenticated !== true;
+
   return {
     completedToday,
     targetDaily,
     blockedSites: normalizeSites(
-      snapshot.effective_blocklist ?? snapshot.user_blocklist
+      snapshot.effective_blocklist ?? snapshot.user_blocklist,
+      isGuest ? CORE_BLOCKED_SITES : []
     ),
     extensionActive: snapshot.extension_blocking_enabled !== false,
-    isGuest: snapshot.is_authenticated !== true,
+    isGuest,
     sourceLabel: "Synced from extension",
   };
 }
@@ -153,7 +159,10 @@ function deriveGoalDisplayData(
   return {
     completedToday: Math.max(0, goal.progress_today),
     targetDaily: Math.max(1, goal.target_daily),
-    blockedSites: normalizeSites(blockedSites),
+    blockedSites: normalizeSites(
+      blockedSites,
+      isGuest ? CORE_BLOCKED_SITES : []
+    ),
     extensionActive: !goal.is_goal_completed,
     isGuest,
     sourceLabel: isGuest ? "Guest defaults" : "Synced from account",
@@ -441,6 +450,7 @@ export default function BlockedPage() {
         if (!cancelled) {
           setFallbackData({
             ...DEFAULT_DISPLAY_DATA,
+            blockedSites: [],
             isGuest: false,
             sourceLabel: "Account fallback",
           });

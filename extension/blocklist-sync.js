@@ -4,6 +4,7 @@ class BlocklistSync {
   constructor(auth) {
     this.auth = auth;
     this.localBlocklist = [];
+    this.hasFetchedBlocklist = false;
   }
 
   // Get user's blocklist from API
@@ -16,23 +17,22 @@ class BlocklistSync {
     try {
       const response = await this.auth.apiRequest('/api/blocklist');
       this.localBlocklist = response.websites || [];
+      this.hasFetchedBlocklist = true;
 
       // Store in local storage for offline access
       await chrome.storage.local.set({ user_blocklist: this.localBlocklist });
-
-      if (this.localBlocklist.length === 0) {
-        console.log('User blocklist empty, using default blocklist for blocking');
-        return this.getDefaultBlocklist();
-      }
 
       console.log('Fetched user blocklist:', this.localBlocklist);
       return this.localBlocklist;
     } catch (error) {
       console.error('Failed to fetch user blocklist:', error);
       
-      // Fall back to cached blocklist or default
+      // Authenticated users should only use account data. If the API fails and
+      // no cached list exists, block nothing instead of guest defaults.
       const cached = await this.getCachedBlocklist();
-      return cached.length > 0 ? cached : this.getDefaultBlocklist();
+      this.localBlocklist = cached;
+      this.hasFetchedBlocklist = true;
+      return cached;
     }
   }
 
@@ -45,6 +45,7 @@ class BlocklistSync {
   // Clear cached blocklist from storage
   async clearCachedBlocklist() {
     this.localBlocklist = [];
+    this.hasFetchedBlocklist = false;
     await chrome.storage.local.remove(['user_blocklist']);
     console.log('Cached blocklist cleared');
   }
@@ -56,8 +57,7 @@ class BlocklistSync {
       'reddit.com', 
       'youtube.com',
       'instagram.com',
-      'x.com',
-      'twitter.com'
+      'x.com'
     ];
   }
 
@@ -76,6 +76,7 @@ class BlocklistSync {
       // Update local cache
       if (!this.localBlocklist.includes(website)) {
         this.localBlocklist.push(website);
+        this.hasFetchedBlocklist = true;
         await chrome.storage.local.set({ user_blocklist: this.localBlocklist });
       }
 
@@ -100,6 +101,7 @@ class BlocklistSync {
 
       // Update local cache
       this.localBlocklist = this.localBlocklist.filter(site => site !== website);
+      this.hasFetchedBlocklist = true;
       await chrome.storage.local.set({ user_blocklist: this.localBlocklist });
 
       return true;
@@ -142,16 +144,13 @@ class BlocklistSync {
     }
   }
 
-  // Get current effective blocklist (user's if authenticated, default otherwise)
+  // Get current effective blocklist (account data if authenticated, guest default otherwise)
   async getCurrentBlocklist() {
     if (this.auth.isAuthenticated()) {
-      if (this.localBlocklist.length === 0) {
-        const list = await this.fetchUserBlocklist();
-        return list.length > 0 ? list : this.getDefaultBlocklist();
+      if (!this.hasFetchedBlocklist) {
+        return await this.fetchUserBlocklist();
       }
-      return this.localBlocklist.length > 0
-        ? this.localBlocklist
-        : this.getDefaultBlocklist();
+      return this.localBlocklist;
     }
 
     return this.getDefaultBlocklist();
@@ -167,6 +166,7 @@ class BlocklistSync {
   // Apply blocklist from web app payload (skip network)
   async applyBlocklistPayload(payloadData) {
     this.localBlocklist = payloadData.websites;
+    this.hasFetchedBlocklist = true;
     await chrome.storage.local.set({ user_blocklist: this.localBlocklist });
     console.log('Blocklist synced from payload:', this.localBlocklist);
     await this.refreshBlockingRules();

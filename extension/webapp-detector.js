@@ -18,8 +18,7 @@ const DEFAULT_BLOCKED_PAGE_BLOCKLIST = [
   'reddit.com',
   'youtube.com',
   'instagram.com',
-  'x.com',
-  'twitter.com'
+  'x.com'
 ];
 
 // Detect if extension is in developer mode
@@ -148,6 +147,7 @@ const buildBlockedPageSnapshot = async () => {
   const userBlocklist = Array.isArray(result.user_blocklist)
     ? result.user_blocklist
     : [];
+  const isAuthenticated = Boolean(result.access_token && result.user);
 
   return {
     daily_progress: result.daily_progress,
@@ -155,9 +155,11 @@ const buildBlockedPageSnapshot = async () => {
     guest_progress: result.guest_progress || null,
     user_blocklist: userBlocklist,
     effective_blocklist:
-      userBlocklist.length > 0 ? userBlocklist : DEFAULT_BLOCKED_PAGE_BLOCKLIST,
+      userBlocklist.length > 0 || isAuthenticated
+        ? userBlocklist
+        : DEFAULT_BLOCKED_PAGE_BLOCKLIST,
     extension_blocking_enabled: result.extension_blocking_enabled !== false,
-    is_authenticated: Boolean(result.access_token && result.user),
+    is_authenticated: isAuthenticated,
     user: result.user || null,
     source: 'extension-storage',
     timestamp: Date.now()

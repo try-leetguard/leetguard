@@ -4,10 +4,11 @@ Integration tests for authentication endpoints.
 from datetime import datetime, timedelta, timezone
 from fastapi import status
 from unittest.mock import patch
-from app.auth.models.user import Activity, BlocklistItem
+from app.auth.models.user import Activity, BlocklistItem, User
 from app.auth.schemas.user import UserCreate
 from app.crud.data import create_blocklist_item
 from app.crud.user import create_oauth_user, create_user, get_user_by_email
+from app.defaults import DEFAULT_BLOCKLIST
 from app.utils.jwt import create_access_token, create_refresh_token
 
 class TestAuthEndpoints:
@@ -202,6 +203,73 @@ class TestAuthEndpoints:
         assert path_response.status_code == status.HTTP_200_OK
         assert query_response.json() == path_response.json()
 
+    def test_blocklist_returns_seeded_defaults_for_new_user(self, client, db_session):
+        """Test new users receive default blocklist rows from the database."""
+        user = create_user(db_session, UserCreate(email="verified@example.com", password="password123"))
+        user.is_verified = True
+        db_session.commit()
+        access_token = create_access_token(data={"sub": str(user.id)})
+
+        response = client.get(
+            "/api/blocklist",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        websites = response.json()["websites"]
+        assert len(websites) == len(DEFAULT_BLOCKLIST)
+        assert set(websites) == set(DEFAULT_BLOCKLIST)
+
+    def test_blocklist_can_be_intentionally_empty_after_defaults_removed(
+        self,
+        client,
+        db_session,
+    ):
+        """Test removing seeded defaults leaves a truly empty authenticated blocklist."""
+        user = create_user(
+            db_session,
+            UserCreate(email="verified@example.com", password="password123"),
+        )
+        user.is_verified = True
+        db_session.query(BlocklistItem).filter(
+            BlocklistItem.user_id == user.id
+        ).delete()
+        db_session.commit()
+        access_token = create_access_token(data={"sub": str(user.id)})
+
+        response = client.get(
+            "/api/blocklist",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() == {"websites": []}
+
+    def test_blocklist_lazy_seeds_manual_unseeded_user_once(self, client, db_session):
+        """Test manual users with the seeded flag false are initialized on fetch."""
+        user = User(
+            email="manual@example.com",
+            hashed_password="not-used",
+            is_verified=True,
+            default_blocklist_seeded=False,
+        )
+        db_session.add(user)
+        db_session.commit()
+        db_session.refresh(user)
+        access_token = create_access_token(data={"sub": str(user.id)})
+
+        response = client.get(
+            "/api/blocklist",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        db_session.refresh(user)
+
+        assert response.status_code == status.HTTP_200_OK
+        websites = response.json()["websites"]
+        assert len(websites) == len(DEFAULT_BLOCKLIST)
+        assert set(websites) == set(DEFAULT_BLOCKLIST)
+        assert user.default_blocklist_seeded is True
+
     def test_activity_stats_route_is_not_shadowed_by_activity_id(self, client, db_session):
         """Test /api/activity/stats is handled as a static route."""
         user = create_user(db_session, UserCreate(email="verified@example.com", password="password123"))
@@ -293,15 +361,15 @@ class TestAuthEndpoints:
         add_response = client.post(
             "/api/blocklist/add",
             headers=headers,
-            json={"website": "https://www.YouTube.com/watch?v=123"},
+            json={"website": "https://www.Example.com/path?ref=123"},
         )
         duplicate_response = client.post(
             "/api/blocklist/add",
             headers=headers,
-            json={"website": "youtube.com"},
+            json={"website": "example.com"},
         )
         check_response = client.get(
-            "/api/blocklist/check?website=https%3A%2F%2Fwww.youtube.com%2Fshorts%2Fabc",
+            "/api/blocklist/check?website=https%3A%2F%2Fwww.example.com%2Fshorts%2Fabc",
             headers=headers,
         )
         list_response = client.get("/api/blocklist", headers=headers)
@@ -309,17 +377,22 @@ class TestAuthEndpoints:
             "DELETE",
             "/api/blocklist/remove",
             headers=headers,
-            json={"website": "https://youtube.com/feed/subscriptions"},
+            json={"website": "https://example.com/feed/subscriptions"},
         )
 
         assert add_response.status_code == status.HTTP_200_OK
-        assert add_response.json()["website"] == "youtube.com"
+        assert add_response.json()["website"] == "example.com"
         assert duplicate_response.status_code == status.HTTP_400_BAD_REQUEST
         assert check_response.status_code == status.HTTP_200_OK
-        assert check_response.json() == {"website": "youtube.com", "is_blocked": True}
-        assert list_response.json() == {"websites": ["youtube.com"]}
+        assert check_response.json() == {"website": "example.com", "is_blocked": True}
+        websites = list_response.json()["websites"]
+        assert "example.com" in websites
+        assert set(DEFAULT_BLOCKLIST).issubset(set(websites))
         assert remove_response.status_code == status.HTTP_200_OK
-        assert db_session.query(BlocklistItem).filter(BlocklistItem.user_id == user.id).count() == 0
+        remaining_count = db_session.query(BlocklistItem).filter(
+            BlocklistItem.user_id == user.id
+        ).count()
+        assert remaining_count == len(DEFAULT_BLOCKLIST)
 
     def test_goal_progress_is_independent_from_activity_history(self, client, db_session):
         """Test progress increments do not require activity rows."""

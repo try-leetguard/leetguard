@@ -139,22 +139,6 @@ export class BlocklistAPI {
       throw error;
     }
   }
-
-  /**
-   * Get default blocklist for new users or fallback
-   */
-  static getDefaultBlocklist(): string[] {
-    return [
-      'facebook.com',
-      'reddit.com',
-      'youtube.com',
-      'instagram.com',
-      'x.com',
-      'twitter.com',
-      'netflix.com',
-      'tiktok.com'
-    ];
-  }
 }
 
 export default BlocklistAPI;

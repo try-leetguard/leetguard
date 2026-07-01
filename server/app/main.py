@@ -6,7 +6,17 @@ from sqlalchemy.exc import IntegrityError
 from app.db.session import get_db
 from app.auth.schemas.user import UserCreate, UserOut, UserUpdate, EmailVerificationInput, EmailResendInput, SignupResponse, LoginVerificationResponse, GoalResponse, GoalUpdate, ProgressIncrement
 from app.auth.schemas.token import Token, RefreshTokenRequest
-from app.crud.user import get_user_by_email, get_user_by_id, create_user, verify_password, update_user_profile, get_user_goal, update_user_goal, increment_progress
+from app.crud.user import (
+    create_user,
+    ensure_default_blocklist_seeded,
+    get_user_by_email,
+    get_user_by_id,
+    get_user_goal,
+    increment_progress,
+    update_user_goal,
+    update_user_profile,
+    verify_password,
+)
 from app.utils import jwt as jwt_utils
 from app.dependencies import get_current_user
 from app.utils.email import send_verification_email, send_welcome_email
@@ -333,6 +343,7 @@ def get_blocklist(
     db: Session = Depends(get_db)
 ):
     """Get user's blocklist"""
+    ensure_default_blocklist_seeded(db, current_user.id)
     items = get_user_blocklist(db, current_user.id)
     return BlocklistResponse(websites=[item.website for item in items])
 

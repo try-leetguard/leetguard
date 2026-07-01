@@ -1,14 +1,42 @@
-from sqlalchemy.orm import Session
-from sqlalchemy import func
-from datetime import date
-from typing import Optional
-from passlib.context import CryptContext
 import random
-from datetime import datetime, timedelta, timezone
-from app.auth.models.user import User
+from datetime import date, datetime, timedelta, timezone
+from typing import Optional
+
+from passlib.context import CryptContext
+from sqlalchemy.orm import Session
+
+from app.auth.models.user import BlocklistItem, User
 from app.auth.schemas.user import UserCreate, UserUpdate
+from app.defaults import DEFAULT_BLOCKLIST
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def _seed_default_blocklist(db: Session, db_user: User):
+    existing_websites = {
+        website
+        for (website,) in db.query(BlocklistItem.website)
+        .filter(BlocklistItem.user_id == db_user.id)
+        .all()
+    }
+
+    for website in DEFAULT_BLOCKLIST:
+        if website not in existing_websites:
+            db.add(BlocklistItem(user_id=db_user.id, website=website))
+
+    db_user.default_blocklist_seeded = True
+
+
+def ensure_default_blocklist_seeded(db: Session, user_id: int):
+    user = get_user_by_id(db, user_id)
+    if not user or user.default_blocklist_seeded:
+        return user
+
+    _seed_default_blocklist(db, user)
+    db.commit()
+    db.refresh(user)
+    return user
+
 
 # Retrieves a user from the database by their email address. Used during login and registration to check for existing users.
 def get_user_by_email(db: Session, email: str):
@@ -26,9 +54,11 @@ def create_user(db: Session, user: UserCreate):
         is_verified=False,
         verification_code=verification_code,
         verification_code_expires=verification_code_expires,
-        last_code_sent_at=now
+        last_code_sent_at=now,
     )
     db.add(db_user)
+    db.flush()
+    _seed_default_blocklist(db, db_user)
     db.commit()
     db.refresh(db_user)
     return db_user
@@ -43,9 +73,11 @@ def create_oauth_user(db: Session, email: str, display_name: str = None):
         verification_code=None,
         verification_code_expires=None,
         last_code_sent_at=None,
-        display_name=display_name
+        display_name=display_name,
     )
     db.add(db_user)
+    db.flush()
+    _seed_default_blocklist(db, db_user)
     db.commit()
     db.refresh(db_user)
     return db_user

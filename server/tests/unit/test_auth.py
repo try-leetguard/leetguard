@@ -2,9 +2,22 @@
 Unit tests for authentication functionality.
 """
 from datetime import timedelta
-from app.crud.user import verify_password, get_user_by_email, create_user
+
+from app.auth.models.user import BlocklistItem
 from app.auth.schemas.user import UserCreate
-from app.utils.jwt import create_access_token, decode_access_token, create_refresh_token, decode_refresh_token
+from app.crud.user import (
+    create_oauth_user,
+    create_user,
+    get_user_by_email,
+    verify_password,
+)
+from app.defaults import DEFAULT_BLOCKLIST
+from app.utils.jwt import (
+    create_access_token,
+    create_refresh_token,
+    decode_access_token,
+    decode_refresh_token,
+)
 
 class TestPasswordHashing:
     """Test password hashing and verification."""
@@ -122,6 +135,30 @@ class TestUserCRUD:
         assert user.verification_code is not None
         assert len(user.verification_code) == 6
         assert user.verification_code_expires is not None
+        assert user.default_blocklist_seeded is True
+
+        seeded_websites = [
+            item.website
+            for item in db_session.query(BlocklistItem)
+            .filter(BlocklistItem.user_id == user.id)
+            .order_by(BlocklistItem.id)
+            .all()
+        ]
+        assert seeded_websites == list(DEFAULT_BLOCKLIST)
+
+    def test_create_oauth_user_seeds_default_blocklist(self, db_session):
+        """Test OAuth user creation seeds the default blocklist."""
+        user = create_oauth_user(db_session, "oauth@example.com", "OAuth User")
+
+        assert user.default_blocklist_seeded is True
+        seeded_websites = [
+            item.website
+            for item in db_session.query(BlocklistItem)
+            .filter(BlocklistItem.user_id == user.id)
+            .order_by(BlocklistItem.id)
+            .all()
+        ]
+        assert seeded_websites == list(DEFAULT_BLOCKLIST)
 
     def test_get_user_by_email(self, db_session):
         """Test retrieving user by email."""
