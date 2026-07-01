@@ -43,8 +43,8 @@ export default function NotePage({ params }: NotePageProps) {
     <div className="relative min-h-screen bg-white text-black">
       <NavbarLight />
 
-      <article className="px-6 pb-28 pt-36">
-        <div className="mx-auto max-w-6xl border-t border-gray-200 pt-14">
+      <article className="px-4 pb-20 pt-32 sm:px-6 md:pb-28 md:pt-36">
+        <div className="mx-auto max-w-6xl border-t border-gray-200 pt-10 md:pt-14">
           <Link
             href="/notes"
             className="inline-flex items-center text-sm font-medium text-neutral-700 transition-colors duration-200 hover:text-black"
@@ -53,20 +53,20 @@ export default function NotePage({ params }: NotePageProps) {
             Notes
           </Link>
 
-          <header className="mt-14 grid gap-10 border-b border-gray-200 pb-16 lg:grid-cols-[1fr_0.45fr] lg:items-end">
+          <header className="mt-10 grid gap-8 border-b border-gray-200 pb-12 md:mt-14 md:gap-10 md:pb-16 lg:grid-cols-[1fr_0.45fr] lg:items-end">
             <div>
               <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
                 {note.label}
               </p>
-              <h1 className="mt-5 max-w-4xl text-6xl font-normal leading-none tracking-super-tight text-black md:text-7xl">
+              <h1 className="mt-5 max-w-4xl text-4xl font-normal leading-none tracking-super-tight text-black sm:text-5xl md:text-7xl">
                 {note.title}
               </h1>
-              <p className="mt-8 max-w-2xl text-2xl font-normal leading-snug text-neutral-700">
+              <p className="mt-6 max-w-2xl text-xl font-normal leading-snug text-neutral-700 md:mt-8 md:text-2xl">
                 {note.dek}
               </p>
             </div>
 
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-6">
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-5 sm:p-6">
               <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
                 published
               </p>
@@ -82,10 +82,10 @@ export default function NotePage({ params }: NotePageProps) {
             </div>
           </header>
 
-          <div className="mx-auto max-w-3xl py-16">
+          <div className="mx-auto max-w-3xl py-12 md:py-16">
             {note.sections.map((section) => (
               <section key={section.title} className="mb-14 last:mb-0">
-                <h2 className="text-3xl font-normal leading-tight text-black">
+                <h2 className="text-2xl font-normal leading-tight text-black md:text-3xl">
                   {section.title}
                 </h2>
                 <div className="mt-6 space-y-5">

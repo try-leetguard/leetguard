@@ -115,11 +115,13 @@ export default function LogoCarousel({
   );
 
   return (
-    <section className="bg-white text-black pt-8 pb-4">
-      <h2 className="text-center text-2xl mb-2 font-semibold leading-8 ">
+    <section className="bg-white px-4 pb-4 pt-8 text-black sm:px-6">
+      <h2 className="mb-2 text-center text-xl font-semibold leading-8 md:text-2xl">
         {heading}
       </h2>
-      <p className="text-center text-lg font-normal leading-8 ">{subheading}</p>
+      <p className="text-center text-sm font-normal leading-relaxed sm:text-base md:text-lg md:leading-8">
+        {subheading}
+      </p>
       <div className="logos relative overflow-hidden whitespace-nowrap py-10 [mask-image:_linear-gradient(to_right,_transparent_0,_white_128px,white_calc(100%-128px),_transparent_100%)]">
         <Track />
         <Track />

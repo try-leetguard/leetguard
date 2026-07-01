@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowUpRight, User, ChevronDown } from "lucide-react";
+import { ArrowUpRight, User, ChevronDown, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 
@@ -11,13 +11,17 @@ export default function NavbarLight() {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
   const router = useRouter();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
     logout();
     router.push("/login");
     setShowUserMenu(false);
+    setShowMobileMenu(false);
   };
+
+  const closeMobileMenu = () => setShowMobileMenu(false);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -38,7 +42,7 @@ export default function NavbarLight() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg bg-white/80">
-      <div className="max-w-7xl mx-auto px-6 py-6">
+      <div className="max-w-7xl mx-auto px-4 py-4 md:px-6 md:py-6">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
@@ -48,7 +52,7 @@ export default function NavbarLight() {
               width={32}
               height={32}
             />
-            <span className="text-2xl font-normal text-black">LeetGuard</span>
+            <span className="text-xl font-normal text-black md:text-2xl">LeetGuard</span>
           </Link>
 
           {/* Center Navigation */}
@@ -80,7 +84,7 @@ export default function NavbarLight() {
           </div>
 
           {/* Right Side */}
-          <div className="flex items-center space-x-4">
+          <div className="hidden items-center space-x-4 md:flex">
             {isLoading ? (
               <div className="h-8 w-[140px]" aria-hidden="true" />
             ) : isAuthenticated ? (
@@ -143,7 +147,96 @@ export default function NavbarLight() {
               </>
             )}
           </div>
+
+          <button
+            type="button"
+            onClick={() => setShowMobileMenu((current) => !current)}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white text-black transition-colors hover:border-black md:hidden"
+            aria-label={showMobileMenu ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={showMobileMenu}
+          >
+            {showMobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
+
+        {showMobileMenu ? (
+          <div className="mt-4 border-t border-gray-200 py-4 md:hidden">
+            <div className="grid gap-1">
+              <Link
+                href="/features"
+                onClick={closeMobileMenu}
+                className="rounded-lg px-3 py-3 text-sm font-medium text-black transition-colors hover:bg-gray-50"
+              >
+                How It Works
+              </Link>
+              <Link
+                href="/why-it-matters"
+                onClick={closeMobileMenu}
+                className="rounded-lg px-3 py-3 text-sm font-medium text-black transition-colors hover:bg-gray-50"
+              >
+                Why It Matters
+              </Link>
+              <Link
+                href="/pricing"
+                onClick={closeMobileMenu}
+                className="rounded-lg px-3 py-3 text-sm font-medium text-black transition-colors hover:bg-gray-50"
+              >
+                Pricing
+              </Link>
+              <Link
+                href="/careers"
+                onClick={closeMobileMenu}
+                className="rounded-lg px-3 py-3 text-sm font-medium text-black transition-colors hover:bg-gray-50"
+              >
+                Join Us
+              </Link>
+            </div>
+
+            <div className="mt-4 grid gap-3 border-t border-gray-200 pt-4">
+              {isLoading ? (
+                <div className="h-11 rounded-lg bg-gray-100" aria-hidden="true" />
+              ) : isAuthenticated ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      router.push("/activity");
+                      closeMobileMenu();
+                    }}
+                    className="inline-flex h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-black transition-colors hover:border-black"
+                  >
+                    Activity
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="inline-flex h-11 items-center justify-center rounded-lg bg-black px-4 text-sm font-medium text-white transition-colors hover:bg-gray-800"
+                  >
+                    Log out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={closeMobileMenu}
+                    className="inline-flex h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-black transition-colors hover:border-black"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/signup"
+                    onClick={closeMobileMenu}
+                    className="inline-flex h-11 items-center justify-center rounded-lg bg-black px-4 text-sm font-medium text-white transition-colors hover:bg-gray-800"
+                  >
+                    Sign Up
+                    <ArrowUpRight className="ml-2 h-3.5 w-3.5" />
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        ) : null}
       </div>
     </nav>
   );

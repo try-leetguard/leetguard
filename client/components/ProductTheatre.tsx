@@ -107,11 +107,11 @@ const blockedSites = [
 
 function BrowserChrome({ url }: { url: string }) {
   return (
-    <div className="flex items-center gap-3 border-b border-gray-200 px-4 py-3">
+    <div className="flex items-center gap-2 border-b border-gray-200 px-3 py-2 sm:gap-3 sm:px-4 sm:py-3">
       <div className="flex gap-1.5">
-        <span className="h-3 w-3 rounded-full bg-red-400" />
-        <span className="h-3 w-3 rounded-full bg-yellow-400" />
-        <span className="h-3 w-3 rounded-full bg-green-500" />
+        <span className="h-2.5 w-2.5 rounded-full bg-red-400 sm:h-3 sm:w-3" />
+        <span className="h-2.5 w-2.5 rounded-full bg-yellow-400 sm:h-3 sm:w-3" />
+        <span className="h-2.5 w-2.5 rounded-full bg-green-500 sm:h-3 sm:w-3" />
       </div>
       <div className="flex min-w-0 flex-1 items-center gap-2 rounded-sm border border-gray-300 bg-gray-50 px-3 py-2 text-xs font-mono text-black">
         <Globe className="h-3.5 w-3.5 shrink-0" />
@@ -169,14 +169,14 @@ function BlocklistRows({ status }: { status: "blocked" | "unlocked" }) {
 
 function BlockedSiteScene() {
   return (
-    <div className="grid h-full gap-4 p-5 md:grid-cols-[1fr_0.8fr]">
-      <div className="flex flex-col justify-between rounded-lg border border-gray-300 bg-white p-5">
+    <div className="grid h-full gap-4 p-4 md:grid-cols-[1fr_0.8fr] md:p-5">
+      <div className="flex flex-col justify-between rounded-lg border border-gray-300 bg-white p-4 md:p-5">
         <div>
           <div className="mb-4 flex items-center gap-2 text-xs font-mono text-red-600">
             <Circle className="h-2.5 w-2.5 fill-red-600" />
             blocked domain detected
           </div>
-          <h3 className="text-3xl font-normal leading-tight text-black">
+          <h3 className="text-2xl font-normal leading-tight text-black md:text-3xl">
             youtube.com
           </h3>
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-neutral-700">
@@ -194,7 +194,7 @@ function BlockedSiteScene() {
           ))}
         </div>
       </div>
-      <div className="rounded-lg border border-gray-300 bg-gray-50 p-5">
+      <div className="rounded-lg border border-gray-300 bg-gray-50 p-4 md:p-5">
         <div className="mb-4 h-3 w-24 rounded-full bg-gray-200" />
         <div className="space-y-3">
           <div className="h-16 rounded-sm bg-white" />
@@ -208,8 +208,8 @@ function BlockedSiteScene() {
 
 function BlockedGateScene() {
   return (
-    <div className="grid h-full gap-4 p-5 md:grid-cols-[0.9fr_1fr]">
-      <div className="rounded-lg border border-gray-400 bg-white p-5">
+    <div className="grid h-full gap-4 p-4 md:grid-cols-[0.9fr_1fr] md:p-5">
+      <div className="rounded-lg border border-gray-400 bg-white p-4 md:p-5">
         <div className="mb-5 flex items-center gap-3">
           <LeetGuardMark className="h-9 w-9" />
           <div>
@@ -219,7 +219,7 @@ function BlockedGateScene() {
             <h3 className="text-xl font-medium text-black">LeetGuard</h3>
           </div>
         </div>
-        <h4 className="text-3xl font-normal text-black">This site is blocked</h4>
+        <h4 className="text-2xl font-normal text-black md:text-3xl">This site is blocked</h4>
         <p className="mt-3 text-sm leading-relaxed text-neutral-700">
           Complete 1 problem to unlock your blocked websites.
         </p>
@@ -233,7 +233,7 @@ function BlockedGateScene() {
           </div>
         </div>
       </div>
-      <div className="rounded-lg border border-gray-300 bg-white p-5">
+      <div className="rounded-lg border border-gray-300 bg-white p-4 md:p-5">
         <p className="mb-3 text-xs font-mono text-gray-500">blocked sites</p>
         <BlocklistRows status="blocked" />
       </div>
@@ -243,10 +243,10 @@ function BlockedGateScene() {
 
 function LeetCodeScene() {
   return (
-    <div className="grid h-full gap-4 p-5 md:grid-cols-[1fr_1fr]">
-      <div className="rounded-lg border border-gray-300 bg-white p-5">
+    <div className="grid h-full gap-4 p-4 md:grid-cols-[1fr_1fr] md:p-5">
+      <div className="rounded-lg border border-gray-300 bg-white p-4 md:p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-2xl font-normal text-black">Two Sum</h3>
+          <h3 className="text-xl font-normal text-black md:text-2xl">Two Sum</h3>
           <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-mono text-green-700">
             Accepted
           </span>
@@ -262,7 +262,7 @@ function LeetCodeScene() {
           </div>
         </div>
       </div>
-      <div className="rounded-lg border border-black bg-black p-5 font-mono text-xs text-gray-100">
+      <div className="overflow-hidden rounded-lg border border-black bg-black p-4 font-mono text-[11px] text-gray-100 md:p-5 md:text-xs">
         <div className="mb-4 flex items-center gap-2 text-gray-400">
           <Code2 className="h-4 w-4" />
           solution.ts
@@ -284,10 +284,10 @@ function LeetCodeScene() {
 
 function ProgressScene({ complete = false }: { complete?: boolean }) {
   return (
-    <div className="grid h-full gap-4 p-5 md:grid-cols-[0.8fr_1fr]">
-      <div className="rounded-lg border border-gray-400 bg-white p-5">
+    <div className="grid h-full gap-4 p-4 md:grid-cols-[0.8fr_1fr] md:p-5">
+      <div className="rounded-lg border border-gray-400 bg-white p-4 md:p-5">
         <p className="mb-2 text-xs font-mono text-gray-500">my activity</p>
-        <h3 className="text-2xl font-medium text-black">Today's Progress</h3>
+        <h3 className="text-xl font-medium text-black md:text-2xl">Today's Progress</h3>
         <p className="mt-2 text-sm text-neutral-700">
           Track your daily question completion progress.
         </p>
@@ -305,13 +305,13 @@ function ProgressScene({ complete = false }: { complete?: boolean }) {
           </div>
         </div>
       </div>
-      <div className="rounded-lg border border-gray-400 bg-white p-5">
+      <div className="rounded-lg border border-gray-400 bg-white p-4 md:p-5">
         <p className="mb-2 text-xs font-mono text-gray-500">
           extension control
         </p>
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-xl font-medium text-black">
+            <h3 className="text-lg font-medium text-black md:text-xl">
               Block/Unblock Websites
             </h3>
             <p className="mt-1 text-xs text-neutral-700">
@@ -339,8 +339,8 @@ function ProgressScene({ complete = false }: { complete?: boolean }) {
 
 function UnlockedYouTubeScene() {
   return (
-    <div className="grid h-full gap-4 p-5 md:grid-cols-[1fr_0.8fr]">
-      <div className="flex flex-col rounded-lg border border-gray-300 bg-white p-5">
+    <div className="grid h-full gap-4 p-4 md:grid-cols-[1fr_0.8fr] md:p-5">
+      <div className="flex flex-col rounded-lg border border-gray-300 bg-white p-4 md:p-5">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs font-mono text-green-700">
             <Check className="h-4 w-4" />
@@ -359,13 +359,13 @@ function UnlockedYouTubeScene() {
             className="absolute inset-0 h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-black/15" />
-          <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-white text-black shadow-lg">
-            <div className="ml-1 h-0 w-0 border-y-[14px] border-l-[22px] border-y-transparent border-l-black" />
+          <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-white text-black shadow-lg sm:h-20 sm:w-20">
+            <div className="ml-1 h-0 w-0 border-y-[10px] border-l-[16px] border-y-transparent border-l-black sm:border-y-[14px] sm:border-l-[22px]" />
           </div>
         </div>
 
         <div className="mt-5 border-b border-gray-200 pb-4">
-          <h3 className="text-2xl font-normal text-black">
+          <h3 className="text-xl font-normal text-black md:text-2xl">
             YouTube is available again
           </h3>
           <p className="mt-2 text-sm leading-relaxed text-neutral-700">
@@ -396,7 +396,7 @@ function UnlockedYouTubeScene() {
         </div>
       </div>
 
-      <div className="rounded-lg border border-gray-300 bg-white p-5">
+      <div className="rounded-lg border border-gray-300 bg-white p-4 md:p-5">
         <p className="mb-3 text-xs font-mono text-gray-500">
           recommended, but optional
         </p>
@@ -505,9 +505,9 @@ export default function ProductTheatre() {
   const cursor = useMemo(() => cursorPositions[visibleStep], [visibleStep]);
 
   return (
-    <section className="px-6 pb-28">
+    <section className="px-4 pb-20 sm:px-6 md:pb-28">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-6 grid gap-3 sm:grid-cols-5">
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
           {steps.map((item, index) => (
             <div
               key={item.label}
@@ -526,9 +526,9 @@ export default function ProductTheatre() {
         <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
           <div className="relative overflow-hidden rounded-lg border border-gray-300 bg-white shadow-lg">
             <BrowserChrome url={`https://${activeStep.url}`} />
-            <div className="relative min-h-[560px] bg-white">
+            <div className="relative bg-white md:min-h-[560px]">
               <motion.div
-                className="pointer-events-none absolute z-20 text-black"
+                className="pointer-events-none absolute z-20 hidden text-black lg:block"
                 animate={{
                   left: cursor.x,
                   top: cursor.y,
@@ -541,7 +541,7 @@ export default function ProductTheatre() {
               <AnimatePresence mode="wait">
                 <motion.div
                   key={visibleStep}
-                  className="absolute inset-0"
+                  className="relative md:absolute md:inset-0"
                   initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={prefersReducedMotion ? undefined : { opacity: 0, y: -12 }}

@@ -62,19 +62,19 @@ export default function TermsOfService() {
       <NavbarLight />
 
       <main>
-        <section className="px-6 pb-24 pt-40">
+        <section className="px-4 pb-20 pt-32 sm:px-6 md:pb-24 md:pt-40">
           <div className="mx-auto max-w-6xl">
             <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
               terms of service
             </p>
 
-            <div className="mt-6 rounded-lg bg-black p-8 text-white md:p-10">
+            <div className="mt-6 rounded-lg bg-black p-6 text-white sm:p-8 md:p-10">
               <div className="grid gap-10 lg:grid-cols-[1.25fr_0.75fr] lg:items-end">
                 <div>
                   <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-400">
                     the focus pact
                   </p>
-                  <h1 className="mt-6 text-6xl font-normal leading-none tracking-super-tight md:text-7xl">
+                  <h1 className="mt-6 text-4xl font-normal leading-none tracking-super-tight sm:text-5xl md:text-7xl">
                     Do the hard thing first.
                   </h1>
                 </div>
@@ -92,7 +92,7 @@ export default function TermsOfService() {
           </div>
         </section>
 
-        <section className="px-6 pb-24">
+        <section className="px-4 pb-20 sm:px-6 md:pb-24">
           <div className="mx-auto grid max-w-6xl gap-4 md:grid-cols-3">
             {pactCards.map((card) => (
               <div
@@ -102,7 +102,7 @@ export default function TermsOfService() {
                 <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
                   {card.label}
                 </p>
-                <h2 className="mt-12 text-3xl font-normal leading-tight">
+                <h2 className="mt-8 text-2xl font-normal leading-tight md:mt-12 md:text-3xl">
                   {card.title}
                 </h2>
                 <p className="mt-5 text-sm leading-relaxed text-neutral-700">
@@ -113,10 +113,10 @@ export default function TermsOfService() {
           </div>
         </section>
 
-        <section className="px-6 pb-28">
+        <section className="px-4 pb-20 sm:px-6 md:pb-28">
           <div className="mx-auto max-w-6xl">
             <div className="mb-10 grid gap-6 md:grid-cols-[0.8fr_1.2fr] md:items-end">
-              <h2 className="text-5xl font-normal leading-tight">
+              <h2 className="text-3xl font-normal leading-tight sm:text-4xl md:text-5xl">
                 The actual rules, still not tiny.
               </h2>
               <p className="text-sm leading-relaxed text-neutral-700">
@@ -129,9 +129,9 @@ export default function TermsOfService() {
               {rules.map((rule) => (
                 <section
                   key={rule.title}
-                  className="min-h-[230px] rounded-lg bg-gray-100 p-8"
+                  className="min-h-[210px] rounded-lg bg-gray-100 p-6 sm:p-8 md:min-h-[230px]"
                 >
-                  <h3 className="text-3xl font-normal leading-tight">
+                  <h3 className="text-2xl font-normal leading-tight md:text-3xl">
                     {rule.title}
                   </h3>
                   <p className="mt-5 text-sm leading-relaxed text-neutral-700">

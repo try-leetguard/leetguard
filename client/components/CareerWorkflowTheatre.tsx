@@ -53,7 +53,7 @@ function WorkflowCard({
 }) {
   return (
     <div
-      className={`min-h-[260px] rounded-lg border p-5 transition-colors duration-300 ${
+      className={`min-h-[220px] rounded-lg border p-4 transition-colors duration-300 sm:p-5 lg:min-h-[260px] ${
         active
           ? "border-black bg-black text-white"
           : "border-gray-300 bg-white text-black"
@@ -109,13 +109,13 @@ export default function CareerWorkflowTheatre() {
   const cursor = cursorTargets[visibleCursorStep];
 
   return (
-    <section className="px-6 pb-24">
+    <section className="px-4 pb-20 sm:px-6 md:pb-24">
       <div className="mx-auto max-w-7xl">
         <div className="mb-10 text-center">
           <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
             workflow
           </p>
-          <h2 className="mt-4 text-4xl font-normal leading-tight text-black md:text-5xl">
+          <h2 className="mt-4 text-3xl font-normal leading-tight text-black sm:text-4xl md:text-5xl">
             AI moves fast. Judgment decides where.
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-neutral-700">
@@ -124,7 +124,7 @@ export default function CareerWorkflowTheatre() {
           </p>
         </div>
 
-        <div className="relative rounded-lg border border-gray-300 bg-white p-4 shadow-lg">
+        <div className="relative rounded-lg border border-gray-300 bg-white p-3 shadow-lg sm:p-4">
           <motion.div
             className="pointer-events-none absolute z-20 hidden text-black lg:block"
             animate={{ left: cursor.x, top: cursor.y }}
@@ -142,7 +142,7 @@ export default function CareerWorkflowTheatre() {
               <p className="text-xs font-mono uppercase tracking-[0.16em] opacity-60">
                 Context
               </p>
-              <h3 className="mt-3 text-2xl font-normal">Load the truth</h3>
+              <h3 className="mt-3 text-xl font-normal sm:text-2xl">Load the truth</h3>
               <div className="mt-6 space-y-2 text-xs font-mono">
                 {["existing code", "product intent", "user friction"].map(
                   (item) => (
@@ -169,7 +169,7 @@ export default function CareerWorkflowTheatre() {
               <p className="text-xs font-mono uppercase tracking-[0.16em] opacity-60">
                 Plan
               </p>
-              <h3 className="mt-3 text-2xl font-normal">Shape the move</h3>
+              <h3 className="mt-3 text-xl font-normal sm:text-2xl">Shape the move</h3>
               <div className="mt-6 space-y-3">
                 {["Scope it", "Find risks", "Choose the boring path"].map(
                   (item, index) => (
@@ -198,7 +198,7 @@ export default function CareerWorkflowTheatre() {
               <p className="text-xs font-mono uppercase tracking-[0.16em] opacity-60">
                 Build
               </p>
-              <h3 className="mt-3 text-2xl font-normal">Make the patch</h3>
+              <h3 className="mt-3 text-xl font-normal sm:text-2xl">Make the patch</h3>
               <pre
                 className={`mt-6 overflow-hidden rounded-sm border p-3 text-[11px] leading-5 ${
                   visibleTouchedStep === 2
@@ -222,7 +222,7 @@ export default function CareerWorkflowTheatre() {
               <p className="text-xs font-mono uppercase tracking-[0.16em] opacity-60">
                 Review
               </p>
-              <h3 className="mt-3 text-2xl font-normal">Keep the taste</h3>
+              <h3 className="mt-3 text-xl font-normal sm:text-2xl">Keep the taste</h3>
               <div className="mt-6 space-y-3">
                 {["Build passes", "Copy is human", "Motion earns its place"].map(
                   (item) => (

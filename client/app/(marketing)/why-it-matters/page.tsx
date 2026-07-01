@@ -35,12 +35,12 @@ export default function WhyItMattersPage() {
     <div className="relative min-h-screen bg-white text-black">
       <NavbarLight />
 
-      <section className="px-6 pb-16 pt-40">
+      <section className="px-4 pb-12 pt-32 sm:px-6 md:pb-16 md:pt-40">
         <div className="mx-auto max-w-4xl text-center">
-          <h1 className="text-6xl font-normal leading-none tracking-super-tight text-black md:text-7xl">
+          <h1 className="text-4xl font-normal leading-none tracking-super-tight text-black sm:text-5xl md:text-7xl">
             One tab becomes the whole session.
           </h1>
-          <p className="mx-auto mt-8 max-w-2xl text-xl font-normal leading-relaxed tracking-wide text-neutral-700">
+          <p className="mx-auto mt-6 max-w-2xl text-base font-normal leading-relaxed tracking-wide text-neutral-700 sm:text-lg md:mt-8 md:text-xl">
             LeetGuard changes the order: solve first, scroll after.
           </p>
         </div>
@@ -48,13 +48,13 @@ export default function WhyItMattersPage() {
 
       <FocusCostTheatre />
 
-      <section className="px-6 pb-24">
+      <section className="px-4 pb-20 sm:px-6 md:pb-24">
         <div className="mx-auto max-w-6xl">
           <div className="mb-10 text-center">
             <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
               why it matters
             </p>
-            <h2 className="mt-4 text-4xl font-normal leading-tight text-black md:text-5xl">
+            <h2 className="mt-4 text-3xl font-normal leading-tight text-black sm:text-4xl md:text-5xl">
               Focus fails quietly.
             </h2>
           </div>
@@ -78,12 +78,12 @@ export default function WhyItMattersPage() {
         </div>
       </section>
 
-      <section className="px-6 pb-28">
-        <div className="mx-auto max-w-4xl rounded-lg border border-gray-300 bg-white p-8 text-center shadow-sm">
+      <section className="px-4 pb-20 sm:px-6 md:pb-28">
+        <div className="mx-auto max-w-4xl rounded-lg border border-gray-300 bg-white p-5 text-center shadow-sm sm:p-8">
           <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
             first solve first
           </p>
-          <h2 className="mt-5 text-5xl font-normal leading-none tracking-super-tight text-black md:text-6xl">
+          <h2 className="mt-5 text-3xl font-normal leading-none tracking-super-tight text-black sm:text-4xl md:text-6xl">
             Protect the first solve.
           </h2>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-neutral-700">

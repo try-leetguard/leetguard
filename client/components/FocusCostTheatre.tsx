@@ -46,11 +46,11 @@ function LeetGuardMark({ className }: { className: string }) {
 
 function BrowserBar({ url }: { url: string }) {
   return (
-    <div className="flex items-center gap-3 border-b border-gray-200 px-4 py-3">
+    <div className="flex items-center gap-2 border-b border-gray-200 px-3 py-2 sm:gap-3 sm:px-4 sm:py-3">
       <div className="flex gap-1.5">
-        <span className="h-3 w-3 rounded-full bg-red-400" />
-        <span className="h-3 w-3 rounded-full bg-yellow-400" />
-        <span className="h-3 w-3 rounded-full bg-green-500" />
+        <span className="h-2.5 w-2.5 rounded-full bg-red-400 sm:h-3 sm:w-3" />
+        <span className="h-2.5 w-2.5 rounded-full bg-yellow-400 sm:h-3 sm:w-3" />
+        <span className="h-2.5 w-2.5 rounded-full bg-green-500 sm:h-3 sm:w-3" />
       </div>
       <div className="flex min-w-0 flex-1 items-center gap-2 rounded-sm border border-gray-300 bg-gray-50 px-3 py-2 text-xs font-mono text-black">
         <Globe className="h-3.5 w-3.5 shrink-0" />
@@ -67,8 +67,8 @@ function ProblemCard({ dimmed, solved }: { dimmed?: boolean; solved?: boolean })
         dimmed ? "border-gray-200 opacity-40" : "border-gray-300 opacity-100"
       }`}
     >
-      <div className="mb-4 flex items-center justify-between">
-        <h4 className="text-xl font-normal text-black">Two Sum</h4>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h4 className="text-lg font-normal text-black sm:text-xl">Two Sum</h4>
         {solved ? (
           <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-mono text-green-700">
             Accepted
@@ -126,7 +126,7 @@ function DistractionPanel({ phase }: { phase: number }) {
       </div>
       <div className="rounded-lg bg-black p-4 text-white">
         <p className="text-sm font-medium">Recommended next</p>
-        <p className="mt-2 text-2xl font-normal">One quick video</p>
+        <p className="mt-2 text-xl font-normal sm:text-2xl">One quick video</p>
         <div className="mt-5 aspect-video rounded-sm bg-neutral-800" />
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
@@ -180,14 +180,14 @@ function GuardPanel({
         </div>
       ) : state === "blocked" ? (
         <div className="rounded-lg border border-gray-300 bg-white p-4">
-          <p className="text-2xl font-normal text-black">Blocked for now</p>
+          <p className="text-xl font-normal text-black sm:text-2xl">Blocked for now</p>
           <p className="mt-2 text-sm leading-relaxed text-neutral-700">
             Finish one problem before the scroll starts.
           </p>
         </div>
       ) : (
         <div className="rounded-lg border border-gray-300 bg-white p-4">
-          <p className="text-2xl font-normal text-black">Guard is armed</p>
+          <p className="text-xl font-normal text-black sm:text-2xl">Guard is armed</p>
           <p className="mt-2 text-sm leading-relaxed text-neutral-700">
             Distraction sites wait behind the first solve.
           </p>
@@ -203,11 +203,11 @@ function WithoutLeetGuard({ phase }: { phase: number }) {
   return (
     <div className="overflow-hidden rounded-lg border border-gray-300 bg-white shadow-lg">
       <BrowserBar url={phases[phase].withoutUrl} />
-      <div className="min-h-[480px] p-5">
-        <div className="mb-5 flex items-center justify-between">
+      <div className="p-4 md:min-h-[480px] md:p-5">
+        <div className="mb-5 flex items-start justify-between gap-3 sm:items-center">
           <div>
             <p className="text-xs font-mono text-gray-500">without leetguard</p>
-            <h3 className="mt-1 text-2xl font-normal text-black">
+            <h3 className="mt-1 text-xl font-normal text-black md:text-2xl">
               {drifted ? "Session drifted" : "Practice starts clean"}
             </h3>
           </div>
@@ -242,11 +242,11 @@ function WithLeetGuard({ phase }: { phase: number }) {
   return (
     <div className="overflow-hidden rounded-lg border border-gray-300 bg-white shadow-lg">
       <BrowserBar url={phases[phase].withUrl} />
-      <div className="min-h-[480px] p-5">
-        <div className="mb-5 flex items-center justify-between">
+      <div className="p-4 md:min-h-[480px] md:p-5">
+        <div className="mb-5 flex items-start justify-between gap-3 sm:items-center">
           <div>
             <p className="text-xs font-mono text-gray-500">with leetguard</p>
-            <h3 className="mt-1 text-2xl font-normal text-black">
+            <h3 className="mt-1 text-xl font-normal text-black md:text-2xl">
               {solved ? "Scroll unlocked" : "Solve first"}
             </h3>
           </div>
@@ -293,9 +293,9 @@ export default function FocusCostTheatre() {
   const cursor = cursorTargets[visiblePhase];
 
   return (
-    <section className="px-6 pb-24">
+    <section className="px-4 pb-20 sm:px-6 md:pb-24">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-6 grid gap-3 sm:grid-cols-4">
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {phases.map((item, index) => (
             <div
               key={item.label}
@@ -330,7 +330,7 @@ export default function FocusCostTheatre() {
           <p className="text-xs font-mono text-gray-500">
             {activePhase.label.toLowerCase()} state
           </p>
-          <p className="mt-2 text-2xl font-normal text-black">
+          <p className="mt-2 text-xl font-normal text-black md:text-2xl">
             {visiblePhase === phases.length - 1
               ? "Same urge. Different order."
               : activePhase.title}

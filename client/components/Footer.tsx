@@ -8,15 +8,15 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-gray-200 bg-white px-6 pb-10 pt-20 md:pt-28 lg:pt-32">
+    <footer className="border-t border-gray-200 bg-white px-4 pb-10 pt-16 sm:px-6 md:pt-28 lg:pt-32">
       <div className="mx-auto max-w-6xl">
-        <div className="rounded-lg bg-black p-8 text-white md:p-10">
+        <div className="rounded-lg bg-black p-6 text-white sm:p-8 md:p-10">
           <div className="grid gap-8 md:grid-cols-[1fr_auto] md:items-end">
             <div>
               <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-400">
                 solve first
               </p>
-              <h2 className="mt-4 max-w-2xl text-4xl font-normal leading-tight text-white md:text-5xl">
+              <h2 className="mt-4 max-w-2xl text-3xl font-normal leading-tight text-white sm:text-4xl md:text-5xl">
                 Protect the first solve.
               </h2>
               <p className="mt-4 max-w-xl text-sm leading-relaxed text-gray-300">

@@ -23,7 +23,7 @@ export default function JobPostingPage({ job }: JobPostingPageProps) {
       <NavbarLight />
 
       <main>
-        <section className="px-6 pb-20 pt-36 md:pt-40">
+        <section className="px-4 pb-16 pt-32 sm:px-6 md:pb-20 md:pt-40">
           <div className="mx-auto max-w-6xl">
             <Link
               href="/careers#open-positions"
@@ -33,15 +33,15 @@ export default function JobPostingPage({ job }: JobPostingPageProps) {
               Back to open positions
             </Link>
 
-            <div className="mt-10 grid gap-10 border-y border-gray-200 py-12 lg:grid-cols-[1fr_auto] lg:items-end">
+            <div className="mt-8 grid gap-8 border-y border-gray-200 py-10 md:mt-10 md:gap-10 md:py-12 lg:grid-cols-[1fr_auto] lg:items-end">
               <div>
                 <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
                   {job.eyebrow}
                 </p>
-                <h1 className="mt-5 max-w-4xl text-6xl font-normal leading-none tracking-super-tight text-black md:text-7xl">
+                <h1 className="mt-5 max-w-4xl text-4xl font-normal leading-none tracking-super-tight text-black sm:text-5xl md:text-7xl">
                   {job.title}
                 </h1>
-                <p className="mt-8 max-w-3xl text-2xl font-normal leading-tight text-black md:text-3xl">
+                <p className="mt-6 max-w-3xl text-xl font-normal leading-tight text-black md:mt-8 md:text-3xl">
                   {job.headline}
                 </p>
               </div>
@@ -71,20 +71,20 @@ export default function JobPostingPage({ job }: JobPostingPageProps) {
           </div>
         </section>
 
-        <section className="px-6 pb-28">
+        <section className="px-4 pb-20 sm:px-6 md:pb-28">
           <div className="mx-auto grid max-w-6xl gap-14 lg:grid-cols-[0.72fr_1fr] lg:gap-20">
             <aside className="lg:sticky lg:top-28 lg:self-start">
               <div className="border-t border-gray-200 pt-8">
                 <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
                   role summary
                 </p>
-                <p className="mt-5 text-xl font-normal leading-relaxed text-black">
+                <p className="mt-5 text-lg font-normal leading-relaxed text-black md:text-xl">
                   {job.summary}
                 </p>
               </div>
             </aside>
 
-            <article className="space-y-14">
+            <article className="space-y-10 md:space-y-14">
               {job.sections.map((section) => (
                 <section key={section.title}>
                   <h2 className="text-2xl font-normal leading-tight text-black">
@@ -123,7 +123,7 @@ export default function JobPostingPage({ job }: JobPostingPageProps) {
           </div>
         </section>
 
-        <section className="px-6 pb-28">
+        <section className="px-4 pb-20 sm:px-6 md:pb-28">
           <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-3">
             <RoleList
               eyebrow="ownership"

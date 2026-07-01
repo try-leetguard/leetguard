@@ -66,21 +66,21 @@ export default function PrivacyPolicy() {
       <NavbarLight />
 
       <main>
-        <section className="px-6 pb-24 pt-40">
+        <section className="px-4 pb-20 pt-32 sm:px-6 md:pb-24 md:pt-40">
           <div className="mx-auto max-w-6xl">
             <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
               privacy policy
             </p>
 
             <div className="mt-6 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-              <div className="rounded-lg bg-black p-8 text-white md:p-10">
+              <div className="rounded-lg bg-black p-6 text-white sm:p-8 md:p-10">
                 <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-400">
                   the whole mood
                 </p>
-                <h1 className="mt-6 text-6xl font-normal leading-none tracking-super-tight md:text-7xl">
+                <h1 className="mt-6 text-4xl font-normal leading-none tracking-super-tight sm:text-5xl md:text-7xl">
                   No weird stuff.
                 </h1>
-                <p className="mt-8 max-w-2xl text-lg leading-relaxed text-gray-300">
+                <p className="mt-6 max-w-2xl text-base leading-relaxed text-gray-300 sm:text-lg md:mt-8">
                   LeetGuard needs enough data to block distractions, sync your
                   progress, and let you back in after the solve. That is the
                   assignment. Not a surveillance side quest.
@@ -92,7 +92,7 @@ export default function PrivacyPolicy() {
                   <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
                     last updated
                   </p>
-                  <p className="mt-4 text-4xl font-normal text-black">
+                  <p className="mt-4 text-3xl font-normal text-black md:text-4xl">
                     June 30, 2026
                   </p>
                 </div>
@@ -100,7 +100,7 @@ export default function PrivacyPolicy() {
                   <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
                     tiny thesis
                   </p>
-                  <p className="mt-4 text-3xl font-normal leading-tight text-black">
+                  <p className="mt-4 text-2xl font-normal leading-tight text-black md:text-3xl">
                     We protect focus. We do not flip your data into confetti.
                   </p>
                 </div>
@@ -109,14 +109,14 @@ export default function PrivacyPolicy() {
           </div>
         </section>
 
-        <section className="px-6 pb-24">
+        <section className="px-4 pb-20 sm:px-6 md:pb-24">
           <div className="mx-auto max-w-6xl">
             <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
               <div>
                 <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
                   data receipts
                 </p>
-                <h2 className="mt-4 text-4xl font-normal leading-tight md:text-5xl">
+                <h2 className="mt-4 text-3xl font-normal leading-tight sm:text-4xl md:text-5xl">
                   What enters the room.
                 </h2>
               </div>
@@ -130,12 +130,12 @@ export default function PrivacyPolicy() {
               {dataReceipts.map((item) => (
                 <div
                   key={item.title}
-                  className="min-h-[250px] rounded-lg border border-gray-300 bg-white p-5"
+                  className="min-h-[210px] rounded-lg border border-gray-300 bg-white p-5 md:min-h-[250px]"
                 >
                   <p className="text-xs font-mono uppercase tracking-[0.16em] text-gray-500">
                     {item.label}
                   </p>
-                  <h3 className="mt-14 text-2xl font-normal leading-tight">
+                  <h3 className="mt-8 text-2xl font-normal leading-tight md:mt-14">
                     {item.title}
                   </h3>
                   <p className="mt-4 text-sm leading-relaxed text-neutral-700">
@@ -147,12 +147,12 @@ export default function PrivacyPolicy() {
           </div>
         </section>
 
-        <section className="px-6 pb-24">
+        <section className="px-4 pb-20 sm:px-6 md:pb-24">
           <div className="mx-auto max-w-6xl">
             <div className="grid gap-5 md:grid-cols-2">
               {privacyMoves.map((move) => (
-                <section key={move.title} className="rounded-lg bg-gray-100 p-8">
-                  <h2 className="text-3xl font-normal leading-tight">
+                <section key={move.title} className="rounded-lg bg-gray-100 p-6 sm:p-8">
+                  <h2 className="text-2xl font-normal leading-tight md:text-3xl">
                     {move.title}
                   </h2>
                   <p className="mt-5 text-sm leading-relaxed text-neutral-700">
@@ -164,14 +164,14 @@ export default function PrivacyPolicy() {
           </div>
         </section>
 
-        <section className="px-6 pb-28">
+        <section className="px-4 pb-20 sm:px-6 md:pb-28">
           <div className="mx-auto max-w-6xl">
             <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-              <div className="rounded-lg bg-black p-8 text-white md:p-10">
+              <div className="rounded-lg bg-black p-6 text-white sm:p-8 md:p-10">
                 <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-400">
                   your controls
                 </p>
-                <h2 className="mt-5 text-5xl font-normal leading-tight">
+                <h2 className="mt-5 text-3xl font-normal leading-tight sm:text-4xl md:text-5xl">
                   You still get buttons.
                 </h2>
                 <p className="mt-6 text-sm leading-relaxed text-gray-300">

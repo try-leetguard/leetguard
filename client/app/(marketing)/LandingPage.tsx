@@ -144,8 +144,8 @@ export function WordsPullUp({
             animate={isInView ? "animate" : ""}
             custom={i}
             className={cn(
-              "text-xl text-center sm:text-4xl font-bold tracking-tighter md:text-7xl md:leading-[3rem]",
-              "pr-4", // class to separate words
+              "text-4xl text-center sm:text-5xl font-bold tracking-tighter md:text-7xl md:leading-[3rem]",
+              "pr-2 sm:pr-4", // class to separate words
               className
             )}
           >
@@ -163,8 +163,8 @@ export function WordsPullUp({
             animate={isInView ? "animate" : ""}
             custom={i + firstLine.length}
             className={cn(
-              "text-xl text-center sm:text-4xl font-bold tracking-tighter md:text-7xl md:leading-[6rem]",
-              "pr-4", // class to separate words
+              "text-4xl text-center sm:text-5xl font-bold tracking-tighter md:text-7xl md:leading-[6rem]",
+              "pr-2 sm:pr-4", // class to separate words
               className
             )}
           >
@@ -178,7 +178,7 @@ export function WordsPullUp({
 
 function HeroLoopStrip() {
   return (
-    <div className="mx-auto mt-8 grid max-w-3xl grid-cols-2 overflow-hidden rounded-lg border border-gray-200 bg-white text-left shadow-sm md:grid-cols-4">
+    <div className="mx-auto mt-6 grid max-w-3xl grid-cols-2 overflow-hidden rounded-lg border border-gray-200 bg-white text-left shadow-sm md:mt-8 md:grid-cols-4">
       {loopSteps.map((step, index) => (
         <motion.div
           key={step}
@@ -186,7 +186,7 @@ function HeroLoopStrip() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.35, delay: index * 0.08 }}
-          className="min-h-[76px] border-gray-200 p-4 even:border-l md:border-l md:first:border-l-0"
+          className="min-h-[68px] border-gray-200 p-3 even:border-l sm:p-4 md:min-h-[76px] md:border-l md:first:border-l-0"
         >
           <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-gray-500">
             0{index + 1}
@@ -202,14 +202,14 @@ function HeroLoopStrip() {
 
 function HomepagePreviews() {
   return (
-    <section className="px-6 py-28">
+    <section className="px-4 py-20 sm:px-6 md:py-28">
       <div className="mx-auto max-w-6xl">
         <div className="mb-12 grid gap-8 lg:grid-cols-[0.8fr_1fr] lg:items-end">
           <div>
             <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
               the trailer version
             </p>
-            <h2 className="mt-5 text-5xl font-normal leading-none tracking-super-tight text-black md:text-6xl">
+            <h2 className="mt-5 text-3xl font-normal leading-none tracking-super-tight text-black sm:text-4xl md:text-6xl">
               See the loop before the deep dive.
             </h2>
           </div>
@@ -273,7 +273,7 @@ function PreviewLink({
     <Link
       href={href}
       className={cn(
-        "group grid min-h-[360px] rounded-lg border border-gray-200 bg-white p-6 transition-colors duration-200 hover:border-black",
+        "group grid min-h-[300px] rounded-lg border border-gray-200 bg-white p-5 transition-colors duration-200 hover:border-black md:min-h-[360px] md:p-6",
         className
       )}
     >
@@ -281,7 +281,7 @@ function PreviewLink({
         <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
           {label}
         </p>
-        <h3 className="mt-4 max-w-xl text-3xl font-normal leading-tight text-black">
+        <h3 className="mt-4 max-w-xl text-2xl font-normal leading-tight text-black md:text-3xl">
           {title}
         </h3>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-neutral-700">
@@ -299,14 +299,14 @@ function PreviewLink({
 
 function MiniLoopPreview() {
   return (
-    <div className="grid gap-3 md:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
       {[
         { label: "attempt", value: "youtube.com", progress: "22%" },
         { label: "gate", value: "blocked", progress: "46%" },
         { label: "solve", value: "Two Sum", progress: "72%" },
         { label: "unlock", value: "1 / 1", progress: "100%" },
       ].map((item, index) => (
-        <div key={item.label} className="rounded-lg bg-gray-100 p-4">
+        <div key={item.label} className="rounded-lg bg-gray-100 p-3 sm:p-4">
           <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-gray-500">
             {item.label}
           </p>
@@ -332,7 +332,7 @@ function PricingPreview() {
       <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-400">
         free while we build
       </p>
-      <p className="mt-5 text-6xl font-normal leading-none">$0</p>
+      <p className="mt-5 text-5xl font-normal leading-none md:text-6xl">$0</p>
       <div className="mt-6 space-y-3 text-sm text-gray-200">
         {["No credit card", "Chrome extension", "Dashboard included"].map(
           (item) => (
@@ -350,7 +350,7 @@ function PricingPreview() {
 function DriftPreview() {
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_1.15fr]">
-      <div className="rounded-lg bg-gray-100 p-5">
+      <div className="rounded-lg bg-gray-100 p-4 sm:p-5">
         <div className="flex items-center justify-between">
           <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
             without leetguard
@@ -359,9 +359,9 @@ function DriftPreview() {
             0 / 1
           </span>
         </div>
-        <div className="mt-8 rounded-lg bg-black p-5 text-white">
+        <div className="mt-8 rounded-lg bg-black p-4 text-white sm:p-5">
           <p className="text-sm text-gray-300">Recommended next</p>
-          <p className="mt-4 text-3xl font-normal">One quick video</p>
+          <p className="mt-4 text-2xl font-normal sm:text-3xl">One quick video</p>
           <div className="mt-6 h-24 rounded bg-white/10" />
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
@@ -380,7 +380,7 @@ function DriftPreview() {
         </div>
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white p-5">
+      <div className="rounded-lg border border-gray-200 bg-white p-4 sm:p-5">
         <div className="flex items-center justify-between">
           <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
             with leetguard
@@ -392,7 +392,7 @@ function DriftPreview() {
         </div>
         <div className="mt-8 grid gap-4 md:grid-cols-2">
           <div>
-            <p className="text-2xl font-normal text-black">Two Sum</p>
+            <p className="text-xl font-normal text-black md:text-2xl">Two Sum</p>
             <div className="mt-5 space-y-2 rounded-lg bg-gray-50 p-4">
               <div className="h-2 w-10/12 rounded bg-gray-200" />
               <div className="h-2 w-8/12 rounded bg-gray-200" />
@@ -400,7 +400,7 @@ function DriftPreview() {
             </div>
           </div>
           <div>
-            <p className="text-2xl font-normal text-black">Accepted</p>
+            <p className="text-xl font-normal text-black md:text-2xl">Accepted</p>
             <div className="mt-5 h-2 overflow-hidden rounded-full bg-gray-200">
               <motion.div
                 initial={{ width: "0%" }}
@@ -422,21 +422,21 @@ function DriftPreview() {
 
 function NotesPreviewSection() {
   return (
-    <section className="px-6 pb-28 pt-8">
-      <div className="mx-auto max-w-6xl border-t border-gray-200 pt-16">
+    <section className="px-4 pb-20 pt-4 sm:px-6 md:pb-28 md:pt-8">
+      <div className="mx-auto max-w-6xl border-t border-gray-200 pt-12 md:pt-16">
         <div className="grid gap-10 lg:grid-cols-[0.78fr_1fr] lg:items-start">
           <div>
             <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
               notes
             </p>
-            <h2 className="mt-5 max-w-2xl text-5xl font-normal leading-none tracking-super-tight text-black md:text-6xl">
+            <h2 className="mt-5 max-w-2xl text-3xl font-normal leading-none tracking-super-tight text-black sm:text-4xl md:text-6xl">
               Build notes for the product we are building.
             </h2>
           </div>
 
           <Link
             href={`/notes/${featuredNote.slug}`}
-            className="group rounded-lg border border-gray-200 bg-white p-6 transition-colors duration-200 hover:border-black"
+            className="group rounded-lg border border-gray-200 bg-white p-5 transition-colors duration-200 hover:border-black sm:p-6"
           >
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
@@ -446,7 +446,7 @@ function NotesPreviewSection() {
                 {featuredNote.date} · {featuredNote.readTime}
               </p>
             </div>
-            <h3 className="mt-8 max-w-2xl text-4xl font-normal leading-tight text-black">
+            <h3 className="mt-8 max-w-2xl text-2xl font-normal leading-tight text-black sm:text-3xl md:text-4xl">
               {featuredNote.title}
             </h3>
             <p className="mt-4 max-w-2xl text-base leading-relaxed text-neutral-700">
@@ -475,8 +475,8 @@ export default function LandingPage() {
       <NavbarLight />
 
       {/* Hero Section */}
-      <div className="relative min-h-screen flex items-center justify-center pt-2 px-6 mb-5">
-        <div className="container mx-auto px-4 relative z-10">
+      <div className="relative flex items-start justify-center px-4 pb-14 pt-36 sm:px-6 md:mb-5 md:min-h-screen md:items-center md:pb-0 md:pt-2">
+        <div className="container relative z-10 mx-auto px-0 md:px-4">
           <div className="text-center max-w-4xl mx-auto mt-4">
 
 
@@ -484,13 +484,13 @@ export default function LandingPage() {
               <div className="mb-2 mt-4">
                 <WordsPullUp
                   text="Focus. Solve. Claim your day."
-                  className="text-8xl font-normal leading-none py-1 tracking-super-tight"
+                  className="font-normal leading-none py-1 tracking-super-tight"
                 />
               </div>
             </TextFade>
 
             <TextFade direction="up" delay={0.2}>
-              <p className="text-xl text-neutral-600 mb-4 max-w-lg mx-auto font-normal tracking-wide leading-loose">
+              <p className="mx-auto mb-4 max-w-lg text-base font-normal leading-relaxed tracking-wide text-neutral-600 sm:text-lg md:text-xl md:leading-loose">
                 Your coding prep, uninterrupted. Zero distractions. Only pure
                 LeetCode focus.
               </p>
@@ -498,7 +498,7 @@ export default function LandingPage() {
               <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
                 <Link
                   href="/signup"
-                  className="inline-flex items-center justify-center px-6 py-3 h-12 rounded-lg bg-black text-white text-sm font-medium transition-all duration-200 border border-black/20 hover:border-black/50 hover:text-white hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] hover:shadow-black/30"
+                  className="inline-flex h-12 w-full max-w-xs items-center justify-center rounded-lg border border-black/20 bg-black px-6 py-3 text-sm font-medium text-white transition-all duration-200 hover:border-black/50 hover:text-white hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] hover:shadow-black/30 sm:w-auto sm:max-w-none"
                 >
                   <span>Start Your Focus Journey</span>
                   <ArrowUpRight className="ml-2 w-5 h-5" />
@@ -512,7 +512,7 @@ export default function LandingPage() {
       </div>
 
       {/* Demo Image Section */}
-      <div className="mt-0 px-6">
+      <div className="mt-0 px-4 sm:px-6">
         <ProgressiveImage
           name="demo-hero"
           alt="Demo"
@@ -521,7 +521,7 @@ export default function LandingPage() {
           sizes="(max-width: 768px) calc(100vw - 3rem), 1024px"
           loading="eager"
           fetchPriority="high"
-          className="w-full max-w-5xl h-[320px] sm:h-[420px] lg:h-[500px] shadow-lg mx-auto mt-[-7rem] mb-12 z-20 relative border border-gray-200"
+          className="relative z-20 mx-auto mb-12 mt-[-2rem] h-[220px] w-full max-w-5xl border border-gray-200 shadow-lg sm:h-[420px] md:mt-[-7rem] lg:h-[500px]"
           imageClassName="object-cover object-top"
         />
       </div>

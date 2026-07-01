@@ -6,15 +6,15 @@ import Link from "next/link";
 
 export default function Features() {
   return (
-    <section id="features" className="pt-32 pb-24 px-6">
+    <section id="features" className="px-4 pb-20 pt-24 sm:px-6 md:pb-24 md:pt-32">
       <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col lg:flex-row items-center gap-12">
+        <div className="flex flex-col items-center gap-10 lg:flex-row lg:gap-12">
           {/* Left side - Header and Subheader */}
           <div className="flex-1 text-left flex flex-col justify-center">
-            <h2 className="text-7xl md:text-7.5xl font-normal text-black dark:text-black mb-8 leading-none py-1 tracking-super-tight">
+            <h2 className="mb-6 py-1 text-4xl font-normal leading-none tracking-super-tight text-black dark:text-black sm:text-5xl md:mb-8 md:text-7.5xl">
               Built for Focused Coders.
             </h2>
-            <p className="text-xl text-neutral-900 dark:text-neutral-900 max-w-2xl mx-auto font-normal tracking-wide leading-relaxed">
+            <p className="mx-auto max-w-2xl text-base font-normal leading-relaxed tracking-wide text-neutral-900 dark:text-neutral-900 sm:text-lg md:text-xl">
               LeetCode isn't boring - you're distracted. The grind may feel
               dull when your mind is split. Refocus for free. Today.
             </p>
@@ -35,7 +35,7 @@ export default function Features() {
               width={1000}
               height={750}
               sizes="(max-width: 1024px) calc(100vw - 3rem), 1000px"
-              className="w-full max-w-[1000px] shadow-lg border border-gray-200"
+              className="w-full max-w-[1000px] border border-gray-200 shadow-lg"
               imageClassName="object-cover object-[10%_top]"
             />
           </div>

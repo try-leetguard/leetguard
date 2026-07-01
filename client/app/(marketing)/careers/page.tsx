@@ -167,15 +167,15 @@ export default function CareersPage() {
     <div className="relative min-h-screen bg-white text-black">
       <NavbarLight />
 
-      <section className="px-6 pb-28 pt-40">
+      <section className="px-4 pb-20 pt-32 sm:px-6 md:pb-28 md:pt-40">
         <div className="mx-auto max-w-5xl text-center">
           <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
             careers
           </p>
-          <h1 className="text-6xl font-normal leading-none tracking-super-tight text-black md:text-7xl">
+          <h1 className="text-4xl font-normal leading-none tracking-super-tight text-black sm:text-5xl md:text-7xl">
             Build where focus gets made.
           </h1>
-          <p className="mx-auto mt-8 max-w-3xl text-xl font-normal leading-relaxed tracking-wide text-neutral-700">
+          <p className="mx-auto mt-6 max-w-3xl text-base font-normal leading-relaxed tracking-wide text-neutral-700 sm:text-lg md:mt-8 md:text-xl">
             We are a small team using AI, taste, and careful engineering to make
             practice happen before the internet takes over.
           </p>
@@ -194,19 +194,19 @@ export default function CareersPage() {
 
       <CareerWorkflowTheatre />
 
-      <section className="px-6 py-28">
+      <section className="px-4 py-20 sm:px-6 md:py-28">
         <div className="mx-auto max-w-6xl">
           <div className="mb-10 text-center">
             <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
               why
             </p>
-            <h2 className="mt-4 text-4xl font-normal leading-tight text-black md:text-5xl">
+            <h2 className="mt-4 text-3xl font-normal leading-tight text-black sm:text-4xl md:text-5xl">
               Our Mission
             </h2>
           </div>
 
           <div className="grid gap-10 md:grid-cols-2">
-            <p className="text-2xl font-normal leading-relaxed text-black md:text-3xl">
+            <p className="text-xl font-normal leading-relaxed text-black sm:text-2xl md:text-3xl">
               LeetGuard exists to help people do the hard useful thing before
               the easy distracting thing.
             </p>
@@ -227,13 +227,13 @@ export default function CareersPage() {
         </div>
       </section>
 
-      <section className="px-6 py-28">
+      <section className="px-4 py-20 sm:px-6 md:py-28">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto mb-14 max-w-3xl text-center">
             <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
               our values
             </p>
-            <h2 className="mt-5 text-5xl font-normal leading-tight text-black md:text-6xl">
+            <h2 className="mt-5 text-3xl font-normal leading-tight text-black sm:text-4xl md:text-6xl">
               Our Internal Core Values
             </h2>
             <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-neutral-700">
@@ -249,12 +249,12 @@ export default function CareersPage() {
               return (
                 <div
                   key={value.title}
-                  className="flex min-h-[340px] flex-col justify-center rounded-lg bg-gray-100 p-8 md:p-10"
+                  className="flex min-h-[280px] flex-col justify-center rounded-lg bg-gray-100 p-6 sm:p-8 md:min-h-[340px] md:p-10"
                 >
                   <div className="flex justify-start">
-                    <Icon className="h-24 w-24 text-black" />
+                    <Icon className="h-16 w-16 text-black sm:h-20 sm:w-20 md:h-24 md:w-24" />
                   </div>
-                  <h3 className="mt-12 text-3xl font-normal leading-tight text-black">
+                  <h3 className="mt-8 text-2xl font-normal leading-tight text-black md:mt-12 md:text-3xl">
                     {value.title}
                   </h3>
                   <p className="mt-5 max-w-xl text-sm leading-relaxed text-neutral-700">
@@ -269,14 +269,14 @@ export default function CareersPage() {
 
       <section
         id="open-positions"
-        className="scroll-mt-24 px-6 pb-32 pt-12"
+        className="scroll-mt-24 px-4 pb-20 pt-8 sm:px-6 md:pb-32 md:pt-12"
       >
         <div className="mx-auto max-w-6xl">
           <div className="mb-10 text-center">
             <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
               open positions
             </p>
-            <h2 className="mt-4 text-4xl font-normal leading-tight text-black md:text-5xl">
+            <h2 className="mt-4 text-3xl font-normal leading-tight text-black sm:text-4xl md:text-5xl">
               Find the lane where you can raise the bar.
             </h2>
             <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-neutral-700">
@@ -313,7 +313,7 @@ export default function CareersPage() {
                     <div className="flex min-w-0 items-center gap-5 px-3">
                       <department.icon className="h-5 w-5 shrink-0 text-gray-500" />
                       <div>
-                        <h3 className="text-2xl font-normal text-black">
+                        <h3 className="text-xl font-normal text-black md:text-2xl">
                           {department.name}
                         </h3>
                         <p className="mt-1 text-xs font-mono uppercase tracking-[0.16em] text-gray-500">
@@ -370,7 +370,7 @@ export default function CareersPage() {
                 <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-300">
                   not sure where you fit?
                 </p>
-                <h3 className="mt-3 text-3xl font-normal">
+                <h3 className="mt-3 text-2xl font-normal md:text-3xl">
                   Useful people rarely fit clean boxes.
                 </h3>
               </div>

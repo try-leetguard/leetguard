@@ -59,21 +59,21 @@ export default function PricingPage() {
     <div className="relative min-h-screen bg-white text-black">
       <NavbarLight />
 
-      <section className="px-6 pb-16 pt-40">
+      <section className="px-4 pb-12 pt-32 sm:px-6 md:pb-16 md:pt-40">
         <div className="mx-auto max-w-4xl text-center">
-          <h1 className="text-6xl font-normal leading-none tracking-super-tight text-black md:text-7xl">
+          <h1 className="text-4xl font-normal leading-none tracking-super-tight text-black sm:text-5xl md:text-7xl">
             Free means free.
           </h1>
-          <p className="mx-auto mt-8 max-w-2xl text-xl font-normal leading-relaxed tracking-wide text-neutral-700">
+          <p className="mx-auto mt-6 max-w-2xl text-base font-normal leading-relaxed tracking-wide text-neutral-700 sm:text-lg md:mt-8 md:text-xl">
             Start with the browser guard, dashboard, and daily unlock loop. No
             credit card, no billing puzzle.
           </p>
         </div>
       </section>
 
-      <section className="px-6 pb-24">
+      <section className="px-4 pb-20 sm:px-6 md:pb-24">
         <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="rounded-lg border border-gray-300 bg-white p-8 shadow-sm">
+          <div className="rounded-lg border border-gray-300 bg-white p-5 shadow-sm sm:p-8">
             <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <span className="w-fit rounded-full bg-black px-4 py-2 text-xs font-mono text-white">
                 free while we build
@@ -88,7 +88,7 @@ export default function PricingPage() {
                 LeetGuard Free
               </p>
               <div className="mt-3 flex items-end gap-3">
-                <span className="text-7xl font-normal leading-none tracking-super-tight text-black">
+                <span className="text-5xl font-normal leading-none tracking-super-tight text-black sm:text-6xl md:text-7xl">
                   $0
                 </span>
                 <span className="pb-2 text-sm font-mono text-gray-500">
@@ -133,11 +133,11 @@ export default function PricingPage() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-gray-300 bg-white p-6">
+          <div className="rounded-lg border border-gray-300 bg-white p-5 sm:p-6">
             <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
               no tricks
             </p>
-            <h2 className="mt-4 text-4xl font-normal leading-tight text-black">
+            <h2 className="mt-4 text-3xl font-normal leading-tight text-black md:text-4xl">
               The price should not be another thing to manage.
             </h2>
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
@@ -165,13 +165,13 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <section className="px-6 pb-28">
+      <section className="px-4 pb-20 sm:px-6 md:pb-28">
         <div className="mx-auto max-w-6xl">
           <div className="mb-10 text-center">
             <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
               comparison
             </p>
-            <h2 className="mt-4 text-4xl font-normal leading-tight text-black md:text-5xl">
+            <h2 className="mt-4 text-3xl font-normal leading-tight text-black sm:text-4xl md:text-5xl">
               Same internet. Different rules.
             </h2>
           </div>
@@ -187,7 +187,7 @@ export default function PricingPage() {
                 }`}
               >
                 <div className="flex items-center justify-between gap-4">
-                  <h3 className="text-3xl font-normal">{plan.title}</h3>
+                  <h3 className="text-2xl font-normal md:text-3xl">{plan.title}</h3>
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-mono ${
                       index === 0
