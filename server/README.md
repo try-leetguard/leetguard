@@ -1,131 +1,112 @@
 # LeetGuard Server
 
-Backend API for LeetGuard — authentication service using FastAPI and PostgreSQL.
+FastAPI backend for auth, goals, blocklists, progress, and extension sync.
 
----
+Normal development runs through Docker Compose from the repo root. The container still runs Uvicorn; Docker owns starting and stopping it.
 
-## Setup
+## Run Locally
 
-1. Clone repo
-2. Create virtual environment:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Create `.env` file with:
-
-   ```ini
-   # Database
-   DATABASE_URL=postgresql://leetguard_user:yourpassword@localhost:5432/leetguard
-
-   # JWT Tokens
-   SECRET_KEY=your_secret_key_here
-   REFRESH_SECRET_KEY=your_refresh_secret_key_here
-
-   # Email Service (Resend)
-   RESEND_API_KEY=your_resend_api_key_here
-   FROM_EMAIL=noreply@yourdomain.com
-
-   # Frontend URL
-   FRONTEND_URL=https://yourdomain.com
-
-   # Optional Settings
-   ENVIRONMENT=development
-   ACCESS_TOKEN_EXPIRE_MINUTES=30
-   REFRESH_TOKEN_EXPIRE_DAYS=7
-   VERIFICATION_CODE_EXPIRE_MINUTES=10
-   ```
-
-5. Make sure PostgreSQL is running and database/user created.
-
-## Run server
+From the repo root:
 
 ```bash
-uvicorn app.main:app --reload
+npm run dev:docker
 ```
 
-Server runs on http://127.0.0.1:8000
+Defaults:
 
-## Email Setup
+| Service | Address |
+| --- | --- |
+| API | `http://localhost:8000` |
+| Health check | `http://localhost:8000/health` |
+| Postgres from host tools | `localhost:5433` |
+| Postgres from the API container | `db:5432` |
 
-This application uses [Resend](https://resend.com) for sending emails. To set up:
+Local Postgres uses database `leetguard`, user `leetguard`, and password `leetguard`.
 
-1. Sign up for a free account at [resend.com](https://resend.com)
-2. Get your API key from the dashboard
-3. Add your domain or use the sandbox domain for testing
-4. Set the `RESEND_API_KEY` in your `.env` file
+The API container runs `alembic upgrade head` before starting.
+API secrets are loaded from `server/.env`; Compose overrides `DATABASE_URL` so the API always uses the Docker Postgres service.
 
-## API
-
-- `GET /health` — health check
-- `POST /auth/signup` — signup with email verification (returns email status)
-- `POST /auth/login` — login (requires email verification)
-- `POST /auth/refresh` — refresh access token
-- `GET /me` — get current user info
-- `POST /auth/verify-email-code` — verify email with 6-digit code
-- `POST /auth/resend-verification-code` — resend verification code
-
-## Testing
-
-The project includes a comprehensive test suite with unit, integration, and end-to-end tests.
-
-### Quick Test Commands
+Stop without deleting data:
 
 ```bash
-# Run all tests
-python run_tests.py all
-
-# Run specific test types
-python run_tests.py unit          # Unit tests only
-python run_tests.py integration   # Integration tests only
-python run_tests.py email         # Email integration tests
-
-# Run with coverage
-python run_tests.py coverage
-
-# Manual email test (requires RESEND_API_KEY)
-python run_tests.py manual-email
+npm run dev:docker:down
 ```
 
-### Test Structure
-
-```
-tests/
-├── conftest.py                    # Pytest configuration and fixtures
-├── unit/                          # Unit tests
-│   ├── test_auth.py              # Authentication unit tests
-│   └── test_email.py             # Email unit tests
-├── integration/                   # Integration tests
-│   ├── test_auth_endpoints.py    # API endpoint tests
-│   └── test_email_integration.py # Email integration tests
-└── e2e/                          # End-to-end tests (future)
-```
-
-### Running Tests Manually
+Stop and delete the local Postgres volume:
 
 ```bash
-# Run with pytest directly
-pytest tests/ -v
-
-# Run specific test file
-pytest tests/unit/test_auth.py -v
-
-# Run tests with markers
-pytest -m unit
-pytest -m integration
-pytest -m email
+npm run dev:docker:reset
 ```
 
-### Test Requirements
+## Environment
 
-- **Unit Tests**: No external dependencies, run quickly
-- **Integration Tests**: Require test database (SQLite)
-- **Email Tests**: Require `RESEND_API_KEY` for real email tests
+Docker Compose loads API secrets from `server/.env`:
 
-## License
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | Ignored by Docker Compose for the API container; Compose sets the Docker DB URL |
+| `SECRET_KEY` | Access token signing key |
+| `REFRESH_SECRET_KEY` | Refresh token signing key |
+| `RESEND_API_KEY` | Email provider API key |
+| `FROM_EMAIL` | Sender address |
+| `FRONTEND_URL` | Webapp origin for links and CORS |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth credentials |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | GitHub OAuth credentials |
 
-MIT License © Your Name
+Compose also accepts these shell variables for local infrastructure:
+
+| Variable | Purpose |
+| --- | --- |
+| `POSTGRES_DB` | Local database name |
+| `POSTGRES_USER` | Local database user |
+| `POSTGRES_PASSWORD` | Local database password |
+| `API_PORT` | Host port mapped to container port `8000` |
+| `POSTGRES_PORT` | Host port mapped to container port `5432` |
+
+`server/.env.docker.example` documents the local Docker defaults.
+
+## Migrations
+
+Create a migration:
+
+```bash
+docker compose exec api alembic revision --autogenerate -m "describe_change"
+```
+
+Apply migrations:
+
+```bash
+docker compose exec api alembic upgrade head
+```
+
+## Tests
+
+Run backend tests from a Python environment with server requirements installed:
+
+```bash
+cd server
+pytest
+```
+
+Tests require PostgreSQL. If `TEST_DATABASE_URL` is not set, pytest starts a temporary `postgres:16-alpine` container through testcontainers.
+
+To run against the Compose database instead:
+
+```bash
+cd server
+TEST_DATABASE_URL=postgresql+psycopg2://leetguard:leetguard@localhost:5433/leetguard pytest
+```
+
+## Local Python Escape Hatch
+
+Use this only when debugging outside Docker:
+
+```bash
+cd server
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+export DATABASE_URL=postgresql+psycopg2://leetguard:leetguard@localhost:5433/leetguard
+npm run migrate
+npm run dev
+```

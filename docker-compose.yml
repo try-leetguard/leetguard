@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-leetguard}
+      POSTGRES_USER: ${POSTGRES_USER:-leetguard}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-leetguard}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - leetguard_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-leetguard} -d ${POSTGRES_DB:-leetguard}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./server/.env
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # server/.env may point at a host-machine database. In Docker, the API
+      # must always use the Compose Postgres service.
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-leetguard}:${POSTGRES_PASSWORD:-leetguard}@db:5432/${POSTGRES_DB:-leetguard}
+      ENVIRONMENT: development
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ./server/app:/app/app
+      - ./server/alembic:/app/alembic
+      - ./server/alembic.ini:/app/alembic.ini
+    command: >
+      sh -c "alembic upgrade head &&
+             exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir app"
+
+volumes:
+  leetguard_postgres_data:

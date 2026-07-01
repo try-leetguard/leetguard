@@ -2,8 +2,12 @@ fastapi
 uvicorn
 sqlalchemy
 psycopg2-binary
+alembic
 python-dotenv
+email-validator
+python-multipart
 passlib[bcrypt]
+bcrypt<5
 PyJWT
 pydantic
 resend
