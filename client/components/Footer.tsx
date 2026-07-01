@@ -105,6 +105,14 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link
+                  href="/notes"
+                  className="text-sm text-neutral-700 transition-colors duration-200 hover:text-black hover:underline hover:underline-offset-4"
+                >
+                  Notes
+                </Link>
+              </li>
+              <li>
                 <a
                   href="https://www.linkedin.com/company/leetguard/"
                   className="text-sm text-neutral-700 transition-colors duration-200 hover:text-black hover:underline hover:underline-offset-4"

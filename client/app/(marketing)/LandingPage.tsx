@@ -1,16 +1,17 @@
 "use client";
 
 import { useEffect } from "react";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Check, LockKeyhole } from "lucide-react";
 import { motion, useInView } from "framer-motion";
 import * as React from "react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import NavbarLight from "@/components/NavbarLight";
 import Features from "@/components/Features";
-import Quote from "@/components/Quote";
 import Footer from "@/components/Footer";
 import LogoCarousel from "@/components/LogoCarousel";
 import ProgressiveImage from "@/components/ProgressiveImage";
+import { featuredNote } from "@/lib/notes";
 const companies = [
   { name: "adobe", logo: "/companies/adobe.svg" },
   { name: "amazon", logo: "/companies/amazon.svg" },
@@ -27,6 +28,13 @@ const companies = [
   { name: "ramp", logo: "/companies/ramp.svg" },
   { name: "reddit", logo: "/companies/reddit.svg" },
   { name: "uber", logo: "/companies/uber.svg" },
+] as const;
+
+const loopSteps = [
+  "Blocked tab",
+  "Solve one",
+  "Progress sync",
+  "Scroll unlocked",
 ] as const;
 
 export function TextFade({
@@ -168,6 +176,293 @@ export function WordsPullUp({
   );
 }
 
+function HeroLoopStrip() {
+  return (
+    <div className="mx-auto mt-8 grid max-w-3xl grid-cols-2 overflow-hidden rounded-lg border border-gray-200 bg-white text-left shadow-sm md:grid-cols-4">
+      {loopSteps.map((step, index) => (
+        <motion.div
+          key={step}
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.35, delay: index * 0.08 }}
+          className="min-h-[76px] border-gray-200 p-4 even:border-l md:border-l md:first:border-l-0"
+        >
+          <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-gray-500">
+            0{index + 1}
+          </p>
+          <p className="mt-3 text-sm font-medium leading-tight text-black">
+            {step}
+          </p>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+function HomepagePreviews() {
+  return (
+    <section className="px-6 py-28">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-12 grid gap-8 lg:grid-cols-[0.8fr_1fr] lg:items-end">
+          <div>
+            <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
+              the trailer version
+            </p>
+            <h2 className="mt-5 text-5xl font-normal leading-none tracking-super-tight text-black md:text-6xl">
+              See the loop before the deep dive.
+            </h2>
+          </div>
+          <p className="max-w-2xl text-lg leading-relaxed text-neutral-700 lg:justify-self-end">
+            Start with the behavior: a blocked tab, one solved problem, and
+            the day opening back up. The deeper pages carry the details.
+          </p>
+        </div>
+
+        <div className="grid gap-5 lg:grid-cols-3">
+          <PreviewLink
+            href="/features"
+            label="how it works"
+            title="Blocked, solved, unlocked."
+            copy="A compact view of the core product loop before the full theatre."
+            className="lg:col-span-2"
+          >
+            <MiniLoopPreview />
+          </PreviewLink>
+
+          <PreviewLink
+            href="/pricing"
+            label="pricing"
+            title="Free means free."
+            copy="No credit card. No billing puzzle. Start with the guard and dashboard."
+          >
+            <PricingPreview />
+          </PreviewLink>
+
+          <PreviewLink
+            href="/why-it-matters"
+            label="why it matters"
+            title="One tab becomes the session."
+            copy="The cost is not the click. It is the return trip."
+            className="lg:col-span-3"
+          >
+            <DriftPreview />
+          </PreviewLink>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PreviewLink({
+  href,
+  label,
+  title,
+  copy,
+  children,
+  className = "",
+}: {
+  href: string;
+  label: string;
+  title: string;
+  copy: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "group grid min-h-[360px] rounded-lg border border-gray-200 bg-white p-6 transition-colors duration-200 hover:border-black",
+        className
+      )}
+    >
+      <div>
+        <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
+          {label}
+        </p>
+        <h3 className="mt-4 max-w-xl text-3xl font-normal leading-tight text-black">
+          {title}
+        </h3>
+        <p className="mt-3 max-w-xl text-sm leading-relaxed text-neutral-700">
+          {copy}
+        </p>
+      </div>
+      <div className="mt-8 self-end">{children}</div>
+      <span className="mt-6 inline-flex items-center text-sm font-medium text-black">
+        Explore
+        <ArrowRight className="ml-2 h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+      </span>
+    </Link>
+  );
+}
+
+function MiniLoopPreview() {
+  return (
+    <div className="grid gap-3 md:grid-cols-4">
+      {[
+        { label: "attempt", value: "youtube.com", progress: "22%" },
+        { label: "gate", value: "blocked", progress: "46%" },
+        { label: "solve", value: "Two Sum", progress: "72%" },
+        { label: "unlock", value: "1 / 1", progress: "100%" },
+      ].map((item, index) => (
+        <div key={item.label} className="rounded-lg bg-gray-100 p-4">
+          <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-gray-500">
+            {item.label}
+          </p>
+          <p className="mt-4 text-lg font-medium text-black">{item.value}</p>
+          <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-gray-200">
+            <motion.div
+              initial={{ width: "0%" }}
+              whileInView={{ width: item.progress }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: index * 0.12 }}
+              className="h-full rounded-full bg-black"
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PricingPreview() {
+  return (
+    <div className="rounded-lg bg-black p-5 text-white">
+      <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-400">
+        free while we build
+      </p>
+      <p className="mt-5 text-6xl font-normal leading-none">$0</p>
+      <div className="mt-6 space-y-3 text-sm text-gray-200">
+        {["No credit card", "Chrome extension", "Dashboard included"].map(
+          (item) => (
+            <p key={item} className="flex items-center gap-3">
+              <Check className="h-4 w-4 text-white" />
+              <span>{item}</span>
+            </p>
+          )
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DriftPreview() {
+  return (
+    <div className="grid gap-4 lg:grid-cols-[1fr_1.15fr]">
+      <div className="rounded-lg bg-gray-100 p-5">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
+            without leetguard
+          </p>
+          <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-mono text-red-700">
+            0 / 1
+          </span>
+        </div>
+        <div className="mt-8 rounded-lg bg-black p-5 text-white">
+          <p className="text-sm text-gray-300">Recommended next</p>
+          <p className="mt-4 text-3xl font-normal">One quick video</p>
+          <div className="mt-6 h-24 rounded bg-white/10" />
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {["+5 min", "+12 min", "+28 min"].map((chip, index) => (
+            <motion.span
+              key={chip}
+              initial={{ opacity: 0, y: 8 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.35, delay: index * 0.14 }}
+              className="rounded-full border border-red-200 bg-white px-3 py-1 text-xs font-mono text-red-700"
+            >
+              {chip}
+            </motion.span>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-gray-200 bg-white p-5">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
+            with leetguard
+          </p>
+          <span className="inline-flex items-center gap-2 rounded-full bg-black px-3 py-1 text-xs font-mono text-white">
+            <LockKeyhole className="h-3 w-3" />
+            guarded
+          </span>
+        </div>
+        <div className="mt-8 grid gap-4 md:grid-cols-2">
+          <div>
+            <p className="text-2xl font-normal text-black">Two Sum</p>
+            <div className="mt-5 space-y-2 rounded-lg bg-gray-50 p-4">
+              <div className="h-2 w-10/12 rounded bg-gray-200" />
+              <div className="h-2 w-8/12 rounded bg-gray-200" />
+              <div className="h-2 w-9/12 rounded bg-gray-200" />
+            </div>
+          </div>
+          <div>
+            <p className="text-2xl font-normal text-black">Accepted</p>
+            <div className="mt-5 h-2 overflow-hidden rounded-full bg-gray-200">
+              <motion.div
+                initial={{ width: "0%" }}
+                whileInView={{ width: "100%" }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.85, delay: 0.2 }}
+                className="h-full rounded-full bg-green-500"
+              />
+            </div>
+            <p className="mt-4 text-sm text-neutral-700">
+              Scroll unlocked after the first solve.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NotesPreviewSection() {
+  return (
+    <section className="px-6 pb-28 pt-8">
+      <div className="mx-auto max-w-6xl border-t border-gray-200 pt-16">
+        <div className="grid gap-10 lg:grid-cols-[0.78fr_1fr] lg:items-start">
+          <div>
+            <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
+              notes
+            </p>
+            <h2 className="mt-5 max-w-2xl text-5xl font-normal leading-none tracking-super-tight text-black md:text-6xl">
+              Build notes for the product we are building.
+            </h2>
+          </div>
+
+          <Link
+            href={`/notes/${featuredNote.slug}`}
+            className="group rounded-lg border border-gray-200 bg-white p-6 transition-colors duration-200 hover:border-black"
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs font-mono uppercase tracking-[0.18em] text-gray-500">
+                {featuredNote.label}
+              </p>
+              <p className="text-sm text-neutral-600">
+                {featuredNote.date} · {featuredNote.readTime}
+              </p>
+            </div>
+            <h3 className="mt-8 max-w-2xl text-4xl font-normal leading-tight text-black">
+              {featuredNote.title}
+            </h3>
+            <p className="mt-4 max-w-2xl text-base leading-relaxed text-neutral-700">
+              {featuredNote.excerpt}
+            </p>
+            <span className="mt-8 inline-flex items-center text-sm font-medium text-black">
+              Read the first note
+              <ArrowRight className="ml-2 h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+            </span>
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function LandingPage() {
   useEffect(() => {
     // Set light mode by default
@@ -201,11 +496,16 @@ export default function LandingPage() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
-                <button className="inline-flex items-center justify-center px-6 py-3 h-12 rounded-lg bg-black text-white text-sm font-medium transition-all duration-200 border border-black/20 hover:border-black/50 hover:text-white hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] hover:shadow-black/30">
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center justify-center px-6 py-3 h-12 rounded-lg bg-black text-white text-sm font-medium transition-all duration-200 border border-black/20 hover:border-black/50 hover:text-white hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] hover:shadow-black/30"
+                >
                   <span>Start Your Focus Journey</span>
                   <ArrowUpRight className="ml-2 w-5 h-5" />
-                </button>
+                </Link>
               </div>
+
+              <HeroLoopStrip />
             </TextFade>
           </div>
         </div>
@@ -232,18 +532,12 @@ export default function LandingPage() {
         speedSeconds={50}
       />
 
+      <HomepagePreviews />
+
       <div id="features">
         <Features />
       </div>
-
-      {/* Separator Line */}
-      <div id="how-important" className="w-full flex justify-center py-8">
-        <div className="w-24 h-px"></div>
-      </div>
-
-      <div>
-        <Quote />
-      </div>
+      <NotesPreviewSection />
       <Footer />
     </div>
   );
