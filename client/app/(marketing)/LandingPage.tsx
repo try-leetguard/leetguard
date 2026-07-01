@@ -11,6 +11,7 @@ import Features from "@/components/Features";
 import Footer from "@/components/Footer";
 import LogoCarousel from "@/components/LogoCarousel";
 import ProgressiveImage from "@/components/ProgressiveImage";
+import SolveProgressDemo from "@/components/SolveProgressDemo";
 import { featuredNote } from "@/lib/notes";
 const companies = [
   { name: "adobe", logo: "/companies/adobe.svg" },
@@ -210,7 +211,7 @@ function HomepagePreviews() {
               the trailer version
             </p>
             <h2 className="mt-5 text-3xl font-normal leading-none tracking-super-tight text-black sm:text-4xl md:text-6xl">
-              See the loop before the deep dive.
+              See the loop before the dive.
             </h2>
           </div>
           <p className="max-w-2xl text-lg leading-relaxed text-neutral-700 lg:justify-self-end">
@@ -525,6 +526,8 @@ export default function LandingPage() {
           imageClassName="object-cover object-top"
         />
       </div>
+
+      <SolveProgressDemo />
 
       {/* Logo Carousel */}
       <LogoCarousel
